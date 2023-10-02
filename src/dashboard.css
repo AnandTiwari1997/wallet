@@ -1,0 +1,123 @@
+.add-account-button {
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 39%;
+  outline: none;
+  width: 80%;
+  border: 2px dashed #e5e9ed;
+  color: #7f8fa4;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.1s ease, color 0.1s ease;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.add-account-button:hover {
+  /* background-color: rgb(92, 173, 232); */
+  color: rgb(92, 173, 232);
+  border-color: rgb(92, 173, 232);
+}
+
+.account-card {
+  padding: 0.72%;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  height: 30%;
+  width: 250px;
+  -webkit-user-select: none;
+  user-select: none;
+  position: relative;
+  text-align: left;
+  margin: 0 1%;
+}
+
+.account-card:hover .pencil.icon {
+  opacity: 0.7;
+}
+
+.account-icon-container {
+  margin: 0 1rem 0 0.5rem;
+}
+
+.account-details-container {
+  flex: 1;
+}
+
+.pencil.icon {
+  z-index: 10;
+  align-self: flex-start;
+  position: absolute !important;
+  right: 0.2rem !important;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.pencil.icon:hover {
+  opacity: 1 !important;
+}
+
+.icon-square.simple {
+  box-shadow: none;
+}
+
+.icon-square {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  height: 34px;
+  line-height: 1em;
+  border-radius: 5px;
+  font-size: 34px;
+  flex-shrink: 0;
+}
+
+.icon-square.simple > span {
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
+}
+
+.icon-square > span {
+  font-size: 0.8em;
+  width: 0.75em;
+  height: 0.75em;
+}
+
+.account-icon {
+  background-color: transparent;
+  width: 26px;
+  height: 26px;
+  font-size: 26px;
+}
+
+.account-name {
+  /* font-size: 1.3rem; */
+  font-weight: 500;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.account-balance {
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+._1G4RrpLL512uJptsH35-hS {
+  background: rgb(255, 255, 255);
+  position: -webkit-sticky;
+  position: sticky;
+  z-index: 5;
+  top: 75px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.1rem 2rem;
+  text-align: center;
+  margin: 0 1% 1% 1%;
+  box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px, rgba(128, 135, 148, 0.56) 2px 2px 5px;
+}

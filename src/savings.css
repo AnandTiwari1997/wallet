@@ -1,0 +1,76 @@
+.savings-body {
+    width: calc(100% - 20px);
+    display: block;
+    background: white;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+}
+
+.savings-tabs-root {
+    overflow: hidden !important;
+    display: flex !important;
+    min-height: 2.5rem !important;
+    border-bottom: 1px solid gainsboro!important;
+    width: 100%;
+}
+
+.savings-tabs-flex-container {
+    align-items: center;
+    justify-content: center;
+}
+
+.savings-tab-root {
+    width: 50%;
+}
+
+.savings-tab-content {
+    width: 100%;
+    height: calc(100vh - 6rem - 22px);
+}
+
+.fund-name-width {
+    width: 30%;
+}
+
+.other-column-width {
+    width: 14%;
+}
+
+.tab-refresh-icon {
+    position: absolute;
+    right: 0;
+    margin: 0 20px;
+    height: 49px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.captcha-dialog {
+    height: 200px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.captcha-dialog-image {
+    height: 50px;
+    width: 100px;
+}
+
+.captcha-dialog-input {
+    height: 30px;
+    width: 100px;
+    margin-top: 20px;
+    background: transparent;
+    border-radius: 10px;
+}
+
+.captcha-dialog-action {
+    height: 40px;
+    width: 100px;
+    margin-top: 20px;
+}

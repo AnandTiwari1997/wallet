@@ -1,0 +1,208 @@
+.render-date-picker {
+    position: relative;
+    width: calc(100% - 4px);
+    overflow: hidden;
+    background: white;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: auto;
+    padding: 2px;
+}
+
+.render-header {
+    padding: 0 0.8rem;
+    display: flex;
+    width: fit-content;
+    height: 50px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.render-header-month-year {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.render-header-month-year select {
+    border: 0;
+    background: transparent;
+    padding: 10px 30px 10px 10px;
+    border-radius: 4px;
+    outline: 0;
+    color: #3e484f;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 600;
+    margin: 0 5px;
+}
+
+.render-header-month-year select:hover {
+    background-color: rgba(0,0,0,0.07);
+}
+
+.render-weekdays {
+    display: flex;
+    padding: 0;
+    width: 100%;
+}
+
+.render-weekday {
+    background: rgb(232, 232, 232);
+    color: rgb(0, 0, 0);
+    line-height: 2em;
+    font-weight: 600;
+    flex-basis: calc(100% / 7);
+    box-sizing: inherit;
+    text-align: center;
+    font-size: 0.75rem;
+}
+
+.render-month {
+    border-top: 1px solid gainsboro;
+    width: 100%;
+    margin: 0 0.3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+}
+
+.render-day {
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    background: transparent;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    border: 0;
+    padding: 0;
+    text-align: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    height: 3em;
+    line-height: 3.0em;
+}
+
+.render-day-number {
+    outline: 0;
+    font-weight: 300;
+    position: relative;
+    left: 0;
+    right: 0;
+    top: 5px;
+    bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: calc(100% - 10px);
+}
+
+.render-day-today .render-day-number {
+    font-weight: bolder;
+}
+
+.render-day-selection-edge-start {
+    border-top-left-radius: 1.333em;
+    border-bottom-left-radius: 1.333em;
+}
+
+.render-day-selection-edge-end {
+    border-top-right-radius: 1.333em;
+    border-bottom-right-radius: 1.333em;
+}
+
+.render-day-selection-edge-start, .render-day-selection-in-range, .render-day-selection-edge-end {
+    background: rgb(61, 145, 255);
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    height: calc(100% - 10px);
+    width: 100%;
+    pointer-events: none;
+}
+
+
+.render-day-start-of-week .render-day-selection-in-range, .render-day-start-of-month .render-day-selection-in-range,
+.render-day-start-of-week .render-day-in-soft-selection, .render-day-start-of-month .render-day-in-soft-selection,
+.render-day-start-of-week .render-day-end-soft-selection, .render-day-start-of-week .render-day-selection-edge-end,
+.render-day-start-of-month .render-day-end-soft-selection, .render-day-start-of-month .render-day-selection-edge-end {
+    border-top-left-radius: 1.333em;
+    border-bottom-left-radius: 1.333em;
+}
+
+.render-day-end-of-week .render-day-selection-in-range, .render-day-end-of-month .render-day-selection-in-range,
+.render-day-end-of-week .render-day-in-soft-selection, .render-day-end-of-month .render-day-in-soft-selection,
+.render-day-end-of-week .render-day-start-soft-selection, .render-day-end-of-week .render-day-selection-edge-start,
+.render-day-end-of-month .render-day-start-soft-selection, .render-day-end-of-month .render-day-selection-edge-start {
+    border-top-right-radius: 1.333em;
+    border-bottom-right-radius: 1.333em;
+}
+
+
+
+
+.render-day-not-in-current-month {
+    pointer-events: none;
+    color: #d5dce0;
+    cursor: none;
+}
+
+.render-day-not-in-current-month .rdrDayNumber span{
+}
+
+.render-day-start-soft-selection, .render-day-in-soft-selection, .render-day-end-soft-selection {
+    background: rgba(255, 255, 255, 0.09);
+    position: absolute;
+    top: 3px;
+    left: 0;
+    right: 0;
+    bottom: 3px;
+    pointer-events: none;
+    border: 0 solid rgb(61, 145, 255);
+    z-index: 1;
+}
+
+.render-day-start-soft-selection {
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 1.333em;
+    border-bottom-left-radius: 1.333em;
+    left: -2px;
+}
+
+.render-day-in-soft-selection {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+}
+
+.render-day-end-of-week .render-day-in-soft-selection, .render-day-end-of-week .render-day-start-soft-selection,
+.render-day-end-of-month .render-day-in-soft-selection, .render-day-end-of-month .render-day-start-soft-selection {
+    border-right-width: 1px;
+    right: -2px;
+}
+
+.render-day-start-of-week .render-day-in-soft-selection, .render-day-start-of-week .render-day-end-soft-selection,
+.render-day-start-of-month .render-day-in-soft-selection, .render-day-start-of-month .render-day-end-soft-selection {
+    border-left-width: 1px;
+    left: -2px;
+}
+
+.render-day-end-soft-selection {
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-top-right-radius: 1.333em;
+    border-bottom-right-radius: 1.333em;
+    right: -2px;
+}
+
+.render-day-selected {
+    color: white;
+}

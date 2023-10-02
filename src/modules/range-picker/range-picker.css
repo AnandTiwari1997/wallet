@@ -1,0 +1,112 @@
+.range-picker-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: white;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.range-picker-header {
+  padding: 0 0.8rem;
+  display: flex;
+  width: fit-content;
+  height: 35px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.range-picker-body {
+  width: 100%;
+  padding: 0.3rem;
+  display: grid;
+  font-size: 0.875rem;
+}
+
+.range-picker-options {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  grid-template-rows: repeat(4, -webkit-min-content);
+  grid-template-rows: repeat(4, min-content);
+  gap: 5px 5px;
+}
+
+.range-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 0px 5px;
+  cursor: pointer;
+}
+
+.input-checkbox-label, .MuiFormControlLabel-label {
+  font-weight: unset !important;
+  font-size: unset !important;
+  line-height: unset !important;
+  gap: 0 5px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  display: flex!important;
+  align-items: center!important;
+  height: 20px;
+}
+
+.range-picker-custom-range {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  /* height: 30px; */
+  padding-top: 10px;
+}
+
+.rdrMonth {
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.custom-date-range-apply-button-container {
+  margin: 5px 0;
+  place-content: center;
+  display: flex;
+}
+
+.custom-date-range-apply-button {
+  display: inline-flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  outline: 0px;
+  border: 0px;
+  margin: 0px;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  appearance: none;
+  text-decoration: none;
+  font-family: "Open Sans", sans-serif;
+  line-height: 1.75;
+  min-width: 64px;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,
+    box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,
+    border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,
+    color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 1px -2px,
+    rgba(0, 0, 0, 0.14) 0px 2px 2px 0px, rgba(0, 0, 0, 0.12) 0px 1px 5px 0px;
+  text-transform: none;
+  border-radius: 3px;
+  letter-spacing: 0.03rem;
+  padding: 0.28rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background-color: rgb(36, 112, 208);
+  color: rgb(255, 255, 255);
+}
