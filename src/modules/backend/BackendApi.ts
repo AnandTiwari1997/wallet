@@ -1,16 +1,20 @@
-import { MutualFundTransaction, ProvidentFundTransaction, Transaction } from '../../data/transaction-data';
+import { PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../data/transaction-data';
 import { parse } from 'date-fns';
 import { Account } from '../../data/account-data';
 import axios from 'axios';
 
 export interface ApiResponse<T> {
     results: T[];
-    numFound: number;
+    num_found: number;
 }
 
 export interface ApiCriteria {
     filters?: { key: string; value: string }[];
     sorts?: { key: string; ascending: boolean }[];
+    between?: { key: string; range: { start: string; end: string } }[];
+    offset: number;
+    limit: number;
+    groupBy?: { key: string }[];
 }
 
 export interface ApiRequestBody<T> {
@@ -18,8 +22,9 @@ export interface ApiRequestBody<T> {
     criteria?: ApiCriteria;
 }
 
-export const getAllTransactions = async (range: { from: Date; to: Date }): Promise<ApiResponse<Transaction>> => {
-    const response = await axios.post('http://localhost:8000/wallet/transactions', range, {
+export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transaction>, dispatch: any): Promise<ApiResponse<Transaction>> => {
+    dispatch(true);
+    const response = await axios.post('http://localhost:8000/wallet/transactions', apiRequestBody, {
         headers: {
             'Content-Type': 'application/json'
         }
@@ -27,11 +32,16 @@ export const getAllTransactions = async (range: { from: Date; to: Date }): Promi
     const results = response.data.results.map(
         (value: {
             transactionId: string;
-            account: Account;
+            account: number;
             transactionDate: string;
             amount: number;
             category: string;
-            transactionType: string;
+            labels: string[];
+            note: string;
+            currency: string;
+            paymentMode: PaymentMode;
+            transactionType: TransactionType;
+            transactionState: TransactionStatus;
         }) => {
             return new Transaction(
                 value.transactionId,
@@ -41,23 +51,29 @@ export const getAllTransactions = async (range: { from: Date; to: Date }): Promi
                 }),
                 value.amount,
                 value.category,
-                value.transactionType
+                value.labels,
+                value.note,
+                value.currency,
+                value.paymentMode,
+                value.transactionType,
+                value.transactionState
             );
         }
     );
-    return { results: results, numFound: results.length };
+    return { results: results, num_found: response.data.num_found };
 };
 
-export const getAccounts = async (): Promise<ApiResponse<Account>> => {
+export const getAccounts = async (dispatch: any): Promise<ApiResponse<Account>> => {
+    dispatch(true);
     const response = await fetch('http://localhost:8000/wallet/accounts');
     return response
         .json()
         .then((value) => {
-            return { results: value.results, numFound: value.numFound };
+            return { results: value.results, num_found: value.num_found };
         })
         .catch((reason) => {
             console.log(reason);
-            return { results: [], numFound: 0 };
+            return { results: [], num_found: 0 };
         });
 };
 
@@ -73,7 +89,8 @@ export const syncInvestmentAccountCaptcha = async (type: string, captcha: { [key
     });
 };
 
-export const getInvestmentsTransaction = async (type: string, requestBody: ApiRequestBody<any> = {}): Promise<any> => {
+export const getInvestmentsTransaction = async (type: string, requestBody: ApiRequestBody<any> = {}, dispatch: any): Promise<any> => {
+    dispatch(true);
     return await axios
         .post(`http://localhost:8000/wallet/investment/${type}/transactions`, requestBody, {
             headers: {

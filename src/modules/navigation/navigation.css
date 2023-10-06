@@ -7,14 +7,14 @@
     transition: all 0.25s ease 0s;
     font-family: Metropolis;
     width: 100%;
-  }
-  
-  .css-Navigation-list {
+}
+
+.css-Navigation-list {
     overflow-y: auto;
     max-height: calc(100% - 12rem);
-  }
-  
-  .css-Navigation-Item-Non-Active {
+}
+
+.css-Navigation-Item-Non-Active {
     color: rgb(255, 255, 255);
     /* padding: 0.8rem 0rem; */
     overflow: hidden;
@@ -29,18 +29,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .css-Navigation-Item-Non-Active:hover,
-  :focus-visible {
+}
+
+.css-Navigation-Item-Non-Active:hover,
+:focus-visible {
     color: rgb(73, 175, 217);
     text-decoration: none;
     cursor: pointer;
     outline: none;
     background-color: rgb(27, 42, 50);
-  }
-  
-  .css-Navigation-Item-Active {
+}
+
+.css-Navigation-Item-Active {
     /* color: white; */
     /* padding: 0.8rem 0rem; */
     overflow: hidden;
@@ -59,18 +59,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .css-Navigation-Item-Active:hover,
-  :focus-visible {
+}
+
+.css-Navigation-Item-Active:hover,
+:focus-visible {
     color: rgb(73, 175, 217);
     text-decoration: none;
     cursor: pointer;
     outline: none;
     background-color: rgb(27, 42, 50);
-  }
-  
-  .css-Navigation-Collapse-Button {
+}
+
+.css-Navigation-Collapse-Button {
     position: absolute;
     cursor: pointer;
     background-color: rgb(72, 87, 100);
@@ -86,13 +86,14 @@
     color: rgb(255, 255, 255);
     transition: all 0.25s ease 0s;
     width: 100%;
-  }
-  
-  .css-Navigation-Collapse-Button:hover,
-  :focus {
+}
+
+.css-Navigation-Collapse-Button:hover,
+:focus {
     color: rgb(92, 173, 232);
     font-weight: 600;
-  }
-  .css-Navigation-Collapse-Button:focus {
+}
+
+.css-Navigation-Collapse-Button:focus {
     background-color: rgb(27, 42, 50);
-  }
+}

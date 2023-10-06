@@ -1,9 +1,12 @@
 import CSS from 'csstype';
 import './accounts.css';
 import Table, { TableColumn } from './modules/table/table';
-import { Account, accounts } from './data/account-data';
+import { Account } from './data/account-data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee } from './icons/icons';
+import { useEffect, useState } from 'react';
+import { getAccounts } from './modules/backend/BackendApi';
+import { useGlobalLoadingState } from './index';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -12,6 +15,17 @@ const topDiv: CSS.Properties = {
 };
 
 const AccountPage = () => {
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [count, setCount] = useState<number>(0);
+    const [state, dispatch] = useGlobalLoadingState();
+
+    useEffect(() => {
+        getAccounts(dispatch).then((response) => {
+            setCount(response.num_found);
+            setAccounts(response.results);
+        });
+    }, [setAccounts, getAccounts]);
+
     const columns: TableColumn[] = [
         {
             key: 'accountType',
@@ -96,7 +110,7 @@ const AccountPage = () => {
         <>
             <div style={topDiv}>
                 <div className="account-table-division">
-                    <Table columns={columns} rows={accounts} groupByColumn={columns[0]} />
+                    <Table columns={columns} rows={accounts} groupByColumn={columns[0]} count={count} />
                 </div>
             </div>
         </>

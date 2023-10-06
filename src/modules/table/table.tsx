@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { expand, expandAll, right } from '../../icons/icons';
-import { ArrayUtil, Transaction } from '../../data/transaction-data';
+import { arrowLeft, arrowRight, expandAll } from '../../icons/icons';
+import { ArrayUtil } from '../../data/transaction-data';
 import './table.css';
 import CSS from 'csstype';
 import { Checkbox } from '@mui/material';
 import SortColumn, { SortedColumn } from './sort-column';
+import GroupByRows from './group-by-rows';
+import GroupByRow from './group-by-row';
+import { useGlobalLoadingState } from '../../index';
 
 export interface TableColumn {
     key: string;
@@ -17,9 +20,14 @@ export interface TableColumn {
     groupByKey?: (row: any) => string;
 }
 
-interface GroupedTableData<T> {
-    key: string;
+export interface TableData<T> {
     data: T[];
+    selected?: boolean;
+}
+
+export interface GroupedTableData<T> extends TableData<T> {
+    key: string;
+    expanded: boolean;
 }
 
 export interface SortableColumn {
@@ -29,147 +37,101 @@ export interface SortableColumn {
     placeAfter: boolean;
 }
 
-const intermediateExpandStyle: CSS.Properties = {
+export interface TablePagination {
+    pageSize: number;
+    pageNumber: number;
+}
+
+export const intermediateExpandStyle: CSS.Properties = {
     transform: 'rotate(-90deg)',
     transition: 'transform 150ms ease 0s'
 };
 
-const collapseAllStyle: CSS.Properties = {
+export const collapseAllStyle: CSS.Properties = {
     transform: 'rotate(-180deg)',
     transition: 'transform 150ms ease 0s'
 };
 
-const collapseStyle: CSS.Properties = {
+export const collapseStyle: CSS.Properties = {
     transform: 'rotate(-180deg)',
     transition: 'transform 150ms ease 0s'
 };
 
-const expandStyle: CSS.Properties = {
+export const expandStyle: CSS.Properties = {
     transform: 'rotate(0deg)',
     transition: 'transform 150ms ease 0s'
 };
+
+export const RowExpandContext = createContext<boolean | undefined>(undefined);
 
 const Table = ({
     columns,
     rows,
     groupByColumn,
     selectable,
-    onSort
+    onSort,
+    onPagination,
+    count
 }: {
     columns: TableColumn[];
     rows: any[];
     groupByColumn?: TableColumn | undefined;
     selectable?: boolean;
     onSort?: (sortedColumn: SortedColumn | undefined) => any | void;
+    onPagination?: (tablePagination: TablePagination) => any | void;
+    count: number;
 }) => {
-    const [tableData, setTableData] = useState<GroupedTableData<any>[]>([]);
+    const [tableData, setTableData] = useState<TableData<any>[]>([]);
     const [initialData, setInitialData] = useState<any[]>(rows);
-    const [expandedRows, setExpandedRows] = useState<string[]>([]);
-    const [selectedRows, setSelectedRows] = useState<{
-        [key: string]: Transaction;
-    }>({});
-    const [selectedCountPerGroup, setSelectedCountPerGroup] = useState<{
-        [key: string]: number;
-    }>({});
     const [sortColumn, setSortColumn] = useState<SortedColumn | undefined>(undefined);
-    const [columnAlignment, setColumnAlignment] = useState<{ [key: string]: string }>({});
+    const [isExpanded, setExpanded] = useState<boolean>(false);
+    const [isSelected, setSelected] = useState<boolean>(false);
+    const [isAllExpanded, setAllExpanded] = useState<boolean | undefined>(undefined);
+    const [isAllSelected, setAllSelect] = useState<boolean | undefined>(undefined);
+    const [selectedCount, setSelectedCount] = useState<number>(0);
+    const [expandedCount, setExpandedCount] = useState<number>(0);
+
+    // Table Pagination State
+    const [currentPageSize, setCurrentPageSize] = useState<number>(25);
+    const [currentPageNumber, setCurrentPageNumber] = useState<number>(0);
+
+    // Table Loading state
+    const [state, dispatch] = useGlobalLoadingState();
 
     useEffect(() => {
         setInitialData(rows);
-        columns.forEach((column) => {
-            columnAlignment[column.key] =
-                typeof tableData[0]?.data[0][column.key] === 'number' ||
-                tableData[0]?.data[0][column.key] instanceof Date
-                    ? 'end'
-                    : 'start';
-            setColumnAlignment({ ...columnAlignment });
-        });
         if (groupByColumn) {
             if (!groupByColumn.groupByKey) return;
             const groupedTransaction: { [key: string]: any[] } = ArrayUtil.groupBy(rows, groupByColumn.groupByKey);
             const newData: GroupedTableData<any>[] = Object.keys(groupedTransaction).map((transactionKey) => {
                 return {
                     key: transactionKey,
-                    data: groupedTransaction[transactionKey]
+                    data: groupedTransaction[transactionKey],
+                    expanded: false
                 };
             });
             setTableData(newData);
+        } else {
+            const newData: TableData<any>[] = ArrayUtil.map<any, TableData<any>>(rows, (item: any) => {
+                return { data: [item] };
+            });
+            setTableData(newData);
         }
+        dispatch(false);
     }, [rows]);
 
-    const getTableColumns = (): TableColumn[] => {
+    const _columns = (): TableColumn[] => {
         if (!groupByColumn) return columns;
         return columns.filter((value) => value.key !== groupByColumn.key);
     };
 
+    const _columnAlignment = (column: string) => {
+        if (initialData.length == 0) return 'end';
+        return typeof initialData[0][column] === 'number' || initialData[0][column] instanceof Date ? 'end' : 'start';
+    };
+
     const _columnWidth = () => {
         return (100 - (selectable ? 5 : 0) - (groupByColumn ? 5 : 0)) / columns.length;
-    };
-
-    const _handleRowSelection = (row: any) => {
-        const key: string = selectionKey(row);
-        if (groupByColumn && groupByColumn.groupByKey) {
-            const keyForGroupBy = groupByColumn.groupByKey(row);
-            if (selectedRows[key]) {
-                selectedCountPerGroup[keyForGroupBy] -= 1;
-            } else {
-                selectedCountPerGroup[keyForGroupBy] = (selectedCountPerGroup[keyForGroupBy] || 0) + 1;
-            }
-            setSelectedCountPerGroup({
-                ...selectedCountPerGroup
-            });
-        }
-        if (selectedRows[key]) {
-            delete selectedRows[key];
-        } else {
-            selectedRows[key] = row;
-        }
-        setSelectedRows({ ...selectedRows });
-    };
-
-    const _handleGlobalSelection = () => {
-        if (Object.keys(selectedRows).length === initialData.length) {
-            setSelectedRows({});
-            setSelectedCountPerGroup({});
-        } else {
-            tableData.forEach((value) => {
-                selectedCountPerGroup[value.key] = value.data.length;
-                value.data.forEach((value1) => (selectedRows[selectionKey(value1)] = value1));
-            });
-            setSelectedRows({ ...selectedRows });
-            setSelectedCountPerGroup({ ...selectedCountPerGroup });
-        }
-    };
-
-    const _handleGroupSelection = (groupedTableData: GroupedTableData<any>) => {
-        const isAllSelected = selectedCountPerGroup[groupedTableData.key] === groupedTableData.data.length;
-        groupedTableData.data.forEach((value) => {
-            const key: string = selectionKey(value);
-            if (isAllSelected) {
-                delete selectedRows[key];
-                selectedCountPerGroup[groupedTableData.key] -= 1;
-            } else {
-                if (!selectedRows[key]) {
-                    selectedCountPerGroup[groupedTableData.key] =
-                        (selectedCountPerGroup[groupedTableData.key] || 0) + 1;
-                }
-                selectedRows[key] = value;
-            }
-        });
-        setSelectedCountPerGroup({
-            ...selectedCountPerGroup
-        });
-        setSelectedRows({ ...selectedRows });
-    };
-
-    const selectionKey = (row: any): string => {
-        return Object.keys(row)
-            .map((key) => row[key])
-            .join('');
-    };
-
-    const isExpanded = (key: string): boolean => {
-        return expandedRows.includes(key);
     };
 
     const getSortOption = (column: TableColumn): SortableColumn => {
@@ -177,7 +139,7 @@ const Table = ({
             key: column.key,
             active: sortColumn?.column.key === column.key,
             ascending: sortColumn?.column.key === column.key ? sortColumn.ascending : true,
-            placeAfter: columnAlignment[column.key] === 'start'
+            placeAfter: _columnAlignment(column.key) === 'start'
         };
     };
 
@@ -186,44 +148,18 @@ const Table = ({
         if (onSort) onSort(sortedColumn);
     };
 
-    const renderRows = (dataRows: any[]) => {
-        return dataRows.map((row) => {
-            return (
-                <tr className="tr-body" key={Math.random()}>
-                    {selectable && (
-                        <td className="td-body" style={{ width: '5%' }}>
-                            <Checkbox
-                                style={{ padding: 0 }}
-                                checked={!!selectedRows[selectionKey(row)]}
-                                onChange={() => _handleRowSelection(row)}
-                            />
-                        </td>
-                    )}
-                    {groupByColumn && <td className="td-body" style={{ width: `${_columnWidth()}%` }}></td>}
-                    {groupByColumn && (
-                        <td className="td-body td-icon" style={{ width: '5%' }}>
-                            <span className="td-span">
-                                <button className="td-icon-button">
-                                    <i className="icon table-body-column-icon">
-                                        <FontAwesomeIcon icon={right} />
-                                    </i>
-                                </button>
-                            </span>
-                        </td>
-                    )}
-                    {getTableColumns().map((column) => {
-                        return (
-                            <td
-                                className={`td-body td-content-align-${columnAlignment[column.key]}`}
-                                style={{ width: `${_columnWidth()}%` }}
-                            >
-                                {column.customRender ? column.customRender(row) : row[column.key]}
-                            </td>
-                        );
-                    })}
-                </tr>
-            );
-        });
+    const _paginationPageDetails = () => {
+        let currentPageLimit = (currentPageNumber + 1) * currentPageSize;
+        let pageStart = currentPageLimit - currentPageSize + 1;
+        let pageEnd = count < currentPageLimit ? count : currentPageLimit;
+        return `${pageStart} - ${pageEnd} / ${count}`;
+    };
+
+    const _paginationDisabled = () => {
+        let currentPageLimit = (currentPageNumber + 1) * currentPageSize;
+        let pageStart = currentPageLimit - currentPageSize + 1;
+        let pageEnd = count < currentPageLimit ? count : currentPageLimit;
+        return currentPageSize > pageEnd - pageStart - 1;
     };
 
     return (
@@ -234,23 +170,20 @@ const Table = ({
                         <td className="td-header" style={{ width: '5%' }}>
                             <Checkbox
                                 style={{ padding: 0 }}
-                                onChange={_handleGlobalSelection}
-                                checked={Object.keys(selectedRows).length === initialData.length}
-                                indeterminate={
-                                    Object.keys(selectedRows).length > 0 &&
-                                    Object.keys(selectedRows).length !== initialData.length
-                                }
+                                onChange={() => {
+                                    setSelected(!isSelected);
+                                    setAllSelect(!isSelected);
+                                    setSelectedCount(isSelected ? 0 : initialData.length);
+                                }}
+                                checked={isSelected}
+                                indeterminate={selectedCount > 0 && !isSelected}
                             />
                         </td>
                     )}
                     {groupByColumn && (
-                        <td className="td-header" style={{ width: `${_columnWidth()}%` }}>
+                        <td className={`td-header`} style={{ width: `${_columnWidth()}%` }}>
                             {groupByColumn.sortable && (
-                                <SortColumn
-                                    column={groupByColumn}
-                                    sortOption={getSortOption(groupByColumn)}
-                                    onSort={_sort}
-                                >
+                                <SortColumn column={groupByColumn} sortOption={getSortOption(groupByColumn)} onSort={_sort}>
                                     <span className="td-span">{groupByColumn.label}</span>
                                 </SortColumn>
                             )}
@@ -263,118 +196,143 @@ const Table = ({
                                 <button
                                     className="td-icon-button"
                                     onClick={() => {
-                                        if (expandedRows.length === tableData?.length) {
-                                            setExpandedRows([]);
-                                        } else {
-                                            setExpandedRows(tableData.map((item) => item.key));
-                                        }
+                                        setExpanded(!isExpanded);
+                                        setAllExpanded(!isExpanded);
+                                        setExpandedCount(isExpanded ? 0 : tableData.length);
                                     }}
                                 >
-                                    <i
-                                        className="icon table-body-column-icon"
-                                        style={
-                                            expandedRows.length > 0
-                                                ? expandedRows.length === tableData.length
-                                                    ? collapseAllStyle
-                                                    : intermediateExpandStyle
-                                                : {}
-                                        }
-                                    >
+                                    <i className="icon table-body-column-icon" style={expandedCount > 0 ? (isExpanded ? collapseAllStyle : intermediateExpandStyle) : {}}>
                                         <FontAwesomeIcon icon={expandAll} />
                                     </i>
                                 </button>
                             </span>
                         </td>
                     )}
-                    {getTableColumns().map((column, index: number) => {
+                    {_columns().map((column, index: number) => {
                         return (
-                            <td
-                                className={`td-header td-content-align-${columnAlignment[column.key]}`}
-                                style={{ width: `${_columnWidth()}%` }}
-                            >
+                            <td className={`td-header td-content-align-${_columnAlignment(column.key)}`} style={{ width: `${_columnWidth()}%` }}>
                                 {column.sortable && (
                                     <SortColumn column={column} sortOption={getSortOption(column)} onSort={_sort}>
                                         <span className="td-span">{column.label}</span>
                                     </SortColumn>
                                 )}
-                                {!column.sortable && (
-                                    <span className={`${index === getTableColumns().length - 1 ? '' : 'td-span'}`}>
-                                        {column.label}
-                                    </span>
-                                )}
+                                {!column.sortable && <span className={`${index === _columns().length - 1 ? '' : 'td-span'}`}>{column.label}</span>}
                             </td>
                         );
                     })}
                 </tr>
+                {state && (
+                    <tr className="progress">
+                        <td className="indeterminate"></td>
+                    </tr>
+                )}
             </thead>
             <tbody className="tbody">
-                {groupByColumn &&
-                    tableData.map((groupedTableData: GroupedTableData<any>) => {
+                {state && <></>}
+                {!state &&
+                    tableData.map((groupedTableData: TableData<any>) => {
                         return (
                             <>
-                                <tr className="tr-body" key={Math.random()}>
-                                    {selectable && (
-                                        <td className="td-body" style={{ width: '5%' }}>
-                                            <Checkbox
-                                                style={{ padding: 0 }}
-                                                checked={
-                                                    selectedCountPerGroup[groupedTableData.key] ===
-                                                    groupedTableData.data.length
-                                                }
-                                                onChange={() => _handleGroupSelection(groupedTableData)}
-                                                indeterminate={
-                                                    selectedCountPerGroup[groupedTableData.key] > 0 &&
-                                                    selectedCountPerGroup[groupedTableData.key] !==
-                                                        groupedTableData.data.length
-                                                }
-                                            />
-                                        </td>
-                                    )}
-                                    <td className="td-body" style={{ width: `${_columnWidth()}%` }}>
-                                        {groupedTableData.key}
-                                    </td>
-                                    <td className="td-body td-icon" style={{ width: '5%' }}>
-                                        <span className="td-span">
-                                            <button
-                                                className="td-icon-button"
-                                                onClick={() => {
-                                                    if (isExpanded(groupedTableData.key)) {
-                                                        const index = expandedRows.indexOf(groupedTableData.key);
-                                                        setExpandedRows([
-                                                            ...expandedRows.slice(0, index),
-                                                            ...expandedRows.slice(index + 1)
-                                                        ]);
-                                                    } else {
-                                                        setExpandedRows([...expandedRows, groupedTableData.key]);
-                                                    }
-                                                }}
-                                            >
-                                                <i
-                                                    className="icon table-body-column-icon"
-                                                    style={
-                                                        isExpanded(groupedTableData.key) ? collapseStyle : expandStyle
-                                                    }
-                                                >
-                                                    <FontAwesomeIcon icon={expand} />
-                                                </i>
-                                            </button>
-                                        </span>
-                                    </td>
-                                    {getTableColumns().map((column) => (
-                                        <td
-                                            className={`td-body td-content-align-${columnAlignment[column.key]}`}
-                                            style={{ width: `${_columnWidth()}%` }}
-                                        >
-                                            {column.groupByRender && column.groupByRender(groupedTableData.data)}
-                                        </td>
-                                    ))}
-                                </tr>
-                                {isExpanded(groupedTableData.key) && renderRows(groupedTableData.data)}
+                                {' '}
+                                {groupByColumn ? (
+                                    <RowExpandContext.Provider value={isAllExpanded}>
+                                        <GroupByRows
+                                            columns={_columns()}
+                                            row={groupedTableData as GroupedTableData<any>}
+                                            selectable={selectable}
+                                            selected={isAllSelected}
+                                            onRowSelectionChange={(groupedTableData, count) => {
+                                                const newCount = groupedTableData ? selectedCount + count : selectedCount - count;
+                                                setSelectedCount(newCount);
+                                                setSelected(newCount === initialData.length);
+                                                setAllSelect(undefined);
+                                            }}
+                                            onRowExpansionChange={(state) => {
+                                                const newCount = state ? expandedCount + 1 : expandedCount - 1;
+                                                setExpandedCount(newCount);
+                                                setExpanded(newCount === tableData.length);
+                                                setAllExpanded(undefined);
+                                            }}
+                                        />
+                                    </RowExpandContext.Provider>
+                                ) : (
+                                    <GroupByRow
+                                        columns={_columns()}
+                                        row={groupedTableData.data[0]}
+                                        selectable={selectable}
+                                        selected={isAllSelected}
+                                        onRowSelectionChange={(item: any) => {
+                                            const newCount = item ? selectedCount + 1 : selectedCount - 1;
+                                            setSelectedCount(newCount);
+                                            setSelected(newCount === initialData.length);
+                                            setAllSelect(undefined);
+                                        }}
+                                    />
+                                )}
                             </>
                         );
                     })}
-                {!groupByColumn && renderRows(initialData)}
             </tbody>
+            <tfoot className="tfoot">
+                <tr className="tr-footer">
+                    <td className="td-footer">
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div className="td-footer-page-size-container">
+                                <div className="td-footer-page-size-title">Rows per Page</div>
+                                <select
+                                    className="td-select"
+                                    onChange={(event) => {
+                                        if (!onPagination) return;
+                                        let newPageSize = Number.parseInt(event.target.value);
+                                        setCurrentPageSize(newPageSize);
+                                        setCurrentPageNumber(0);
+                                        onPagination({
+                                            pageSize: Number.parseInt(event.target.value),
+                                            pageNumber: 0
+                                        });
+                                    }}
+                                >
+                                    <option value={25}>25</option>
+                                    <option value={50}>50</option>
+                                    <option value={75}>75</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                            <div className="td-footer-page-update">
+                                <button
+                                    className="td-icon-button"
+                                    disabled={currentPageNumber === 0}
+                                    onClick={() => {
+                                        if (!onPagination) return;
+                                        let newPageNumber = currentPageNumber - 1;
+                                        if (newPageNumber < 0) return;
+                                        setCurrentPageNumber(newPageNumber);
+                                        onPagination({ pageSize: currentPageSize, pageNumber: newPageNumber });
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={arrowLeft} />
+                                </button>
+                                <div className="td-footer-page-details">
+                                    <div>{_paginationPageDetails()}</div>
+                                </div>
+                                <button
+                                    className="td-icon-button"
+                                    disabled={currentPageNumber + 1 > count / currentPageSize}
+                                    onClick={() => {
+                                        if (!onPagination) return;
+                                        let newPageNumber = currentPageNumber + 1;
+                                        if (newPageNumber > count / currentPageSize) return;
+                                        setCurrentPageNumber(newPageNumber);
+                                        onPagination({ pageSize: currentPageSize, pageNumber: newPageNumber });
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={arrowRight} />
+                                </button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
         </table>
     );
 };

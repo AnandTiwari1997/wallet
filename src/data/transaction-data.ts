@@ -1,5 +1,4 @@
-import { parse, subDays } from 'date-fns';
-import { Account, accounts } from './account-data';
+import { parse } from 'date-fns';
 
 export class TransactionType {
     static INCOME = 'Income';
@@ -100,7 +99,7 @@ export class MutualFundTransaction {
     isCredit: boolean;
     nav: number;
     units: number;
-    latest_nav: number;
+    latestNav: number;
 
     constructor(
         portfolioNumber: string,
@@ -110,7 +109,7 @@ export class MutualFundTransaction {
         amount: number,
         nav: number,
         units: number,
-        latest_nav: number
+        latestNav: number
     ) {
         this.transactionId = transactionId;
         this.fundName = fundName;
@@ -120,21 +119,12 @@ export class MutualFundTransaction {
         this.isCredit = this.amount > 0;
         this.units = units;
         this.nav = nav;
-        this.latest_nav = latest_nav;
+        this.latestNav = latestNav;
     }
 
     static build = (item: any) => {
-        const date = MutualFundTransaction.parseDate(item.transactionDate);
-        return new MutualFundTransaction(
-            item.portfolioNumber,
-            item.fundName,
-            date,
-            item.transactionId,
-            item.amount,
-            item.nav,
-            item.units,
-            item.latest_nav
-        );
+        const date = new Date(item.transactionDate);
+        return new MutualFundTransaction(item.portfolioNumber, item.fundName, date, item.transactionId, item.amount, item.nav, item.units, item.latestNav);
     };
 
     static parseDate = (strDate: string) => {
@@ -146,31 +136,41 @@ export class MutualFundTransaction {
 
 export class Transaction {
     transactionId: string;
-    account: Account;
+    account: number;
     transactionDate: Date;
     amount: number;
     category: string;
-    labels?: string[];
-    note?: string;
-    currency?: string;
-    paymentMode?: PaymentMode;
+    labels: string[];
+    note: string;
+    currency: string;
+    paymentMode: PaymentMode;
     transactionType: TransactionType;
-    transactionState?: TransactionStatus;
+    transactionState: TransactionStatus;
 
     constructor(
         transactionId: string,
-        account: Account,
+        account: number,
         transactionDate: Date,
         amount: number,
         category: string,
-        transactionType: string
+        labels: string[],
+        note: string,
+        currency: string,
+        paymentMode: PaymentMode,
+        transactionType: TransactionType,
+        transactionState: TransactionStatus
     ) {
         this.transactionId = transactionId;
         this.account = account;
         this.transactionDate = transactionDate;
         this.amount = amount;
         this.category = category;
+        this.labels = labels;
+        this.note = note;
+        this.currency = currency;
+        this.paymentMode = paymentMode;
         this.transactionType = transactionType;
+        this.transactionState = transactionState;
     }
 
     /**

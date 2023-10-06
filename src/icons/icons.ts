@@ -1,26 +1,28 @@
 import {
-    faPencil,
-    faPlus,
-    faPiggyBank,
-    faCoins,
-    faMoneyBill,
-    faCaretLeft,
-    faCaretRight,
-    faArrowDown,
-    faArrowRight,
-    faArrowLeft,
-    faRupee,
-    faRupeeSign,
-    faIndianRupee,
     faAngleDoubleDown,
+    faAngleDoubleRight,
     faAngleDoubleUp,
     faAngleDown,
-    faAngleUp,
     faAngleRight,
-    faAngleDoubleRight,
+    faAngleUp,
+    faArrowDown,
+    faArrowLeft,
+    faArrowRight,
+    faArrowUp,
     faCaretDown,
+    faCaretLeft,
+    faCaretRight,
+    faClose,
+    faCoins,
+    faEye,
+    faIndianRupee,
+    faMoneyBill,
+    faPencil,
+    faPiggyBank,
+    faPlus,
     faRefresh,
-    faArrowUp
+    faRupee,
+    faRupeeSign
 } from '@fortawesome/free-solid-svg-icons';
 
 export const moneyBall = faMoneyBill;
@@ -46,3 +48,5 @@ export const caretDown = faCaretDown;
 export const refresh = faRefresh;
 export const sortUp = faArrowUp;
 export const sortDown = faArrowDown;
+export const view = faEye;
+export const close = faClose;

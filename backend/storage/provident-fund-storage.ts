@@ -1,59 +1,122 @@
-import { Criteria, Storage } from './storage.js';
+import { addGroupByClause, addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
 import { ProvidentFundTransaction } from '../models/provident-fund-transaction.js';
-import { MutualFundTransaction } from '../models/mutual-fund-transaction.js';
-import { ArrayUtil } from '../constant.js';
+import { sqlDatabaseProvider } from '../database/initialize-database.js';
+import { Database } from '../database/database.js';
+import { Logger } from '../logger/logger.js';
 
-class ProvidentFundStorage implements Storage<ProvidentFundTransaction> {
-    data: { [key: string]: ProvidentFundTransaction } = {};
+const logger: Logger = new Logger('ProvidentFundStorage');
 
-    get(id: string): ProvidentFundTransaction {
-        return this.data[id];
+class ProvidentFundStorage implements Database<ProvidentFundTransaction, string> {
+    find(id: string): Promise<ProvidentFundTransaction | undefined> {
+        return new Promise((resolve, reject) => {
+            sqlDatabaseProvider.database?.get<ProvidentFundTransaction>('SELECT * FROM provident_fund WHERE transactionId = ?;', id, (error, row) => {
+                if (error) {
+                    logger.error(`[Find] - Error On Find ${error.message}`);
+                    reject(error);
+                }
+                resolve(row);
+            });
+        });
     }
-    add(item: ProvidentFundTransaction): ProvidentFundTransaction {
+
+    async add(item: ProvidentFundTransaction): Promise<ProvidentFundTransaction | undefined> {
         const id = this.generateId(item);
-        if (this.data[id]) return this.data[id];
-        else {
+        let providentFundPromise = this.find(id);
+        return providentFundPromise.then((providentFundTransaction) => {
+            if (providentFundTransaction) return providentFundTransaction;
             item.transactionId = id;
-            this.data[id] = item;
-            return item;
-        }
-    }
-    getAll(criteria: Criteria): ProvidentFundTransaction[] {
-        let result = Object.values(this.data);
-        if (criteria.filters) {
-            criteria.filters.forEach((filter) => {
-                const key = filter.key as keyof ProvidentFundTransaction;
-                result = ArrayUtil.filter(result, (item) => item[key] === filter.value);
+            return new Promise((resolve, reject) => {
+                sqlDatabaseProvider.database?.run(
+                    'INSERT INTO provident_fund(transactionId, wageMonth, financialYear, transactionDate, description, transactionType, epfAmount, epsAmount, employeeContribution, employerContribution, pensionAmount) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+                    [
+                        item.transactionId,
+                        item.wageMonth,
+                        item.financialYear,
+                        item.transactionDate.toISOString(),
+                        item.description,
+                        item.transactionType,
+                        item.epfAmount,
+                        item.epsAmount,
+                        item.employeeContribution,
+                        item.employerContribution,
+                        item.pensionAmount
+                    ],
+                    (error) => {
+                        if (error) {
+                            logger.error(`[Add] - Error On Add ${error.message}`);
+                            reject(error);
+                            return;
+                        }
+                        resolve(item);
+                    }
+                );
             });
-        }
-        if (criteria.sorts) {
-            criteria.sorts.forEach((sort) => {
-                const key = sort.key as keyof ProvidentFundTransaction;
-                result = ArrayUtil.sort(result, (item) => item[key], sort.ascending);
+        });
+    }
+
+    findAll(criteria: Criteria): Promise<ProvidentFundTransaction[]> {
+        let findSQL = 'SELECT * FROM provident_fund';
+        let where = addWhereClause(findSQL, criteria);
+        findSQL = where.sql;
+        findSQL = addOrderByClause(findSQL, criteria);
+        findSQL = addLimitAndOffset(findSQL, criteria);
+        return new Promise<ProvidentFundTransaction[]>((resolve, reject) => {
+            sqlDatabaseProvider.database?.all<ProvidentFundTransaction>(findSQL, where.whereClauses, (error, rows) => {
+                if (error) {
+                    logger.error(`[FindAll] - Error On FindAll ${error.message}`);
+                    reject(error);
+                    return;
+                }
+                resolve(rows);
             });
-        }
-        return result;
+        });
     }
-    delete(id: string): boolean {
-        delete this.data[id];
-        return !this.data[id];
+
+    delete(id: string): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            sqlDatabaseProvider.database?.run('DELETE FROM provident_fund WHERE transactionId = ?;', id, (error) => {
+                if (error) {
+                    logger.error(`[Delete] - Error On Delete ${error.message}`);
+                    resolve(false);
+                    return;
+                }
+                resolve(true);
+            });
+        });
     }
-    deleteAll(): boolean {
-        this.data = {};
-        return Object.keys(this.data).length == 0;
+
+    deleteAll(): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            sqlDatabaseProvider.database?.run('DELETE FROM provident_fund;', (error) => {
+                if (error) {
+                    logger.error(`[DeleteAll] - Error On Delete ${error.message}`);
+                    resolve(false);
+                    return;
+                }
+                resolve(true);
+            });
+        });
     }
-    addAll(items: ProvidentFundTransaction[]): ProvidentFundTransaction[] {
-        const returnedData: ProvidentFundTransaction[] = [];
-        for (let item of items) {
-            returnedData.push(this.add(item));
-        }
-        return returnedData;
-    }
-    update(item: ProvidentFundTransaction): ProvidentFundTransaction | undefined {
-        if (this.data[item.transactionId]) {
-            this.data[item.transactionId] = item;
-            return this.data[item.transactionId];
-        }
+
+    async update(item: ProvidentFundTransaction): Promise<ProvidentFundTransaction | undefined> {
+        let providentFundPromise = this.find(item.transactionId);
+        return providentFundPromise
+            .then((providentFundTransaction) => {
+                if (providentFundTransaction) {
+                    let deletePromise = this.delete(providentFundTransaction.transactionId);
+                    return deletePromise.then((deleted) => {
+                        if (deleted) {
+                            return this.add(item);
+                        }
+                        return undefined;
+                    });
+                }
+                return undefined;
+            })
+            .catch((reason) => {
+                logger.error(`[Update] - Error On Delete ${reason}`);
+                return undefined;
+            });
     }
 
     generateId = (item: ProvidentFundTransaction): string => {
@@ -62,6 +125,50 @@ class ProvidentFundStorage implements Storage<ProvidentFundTransaction> {
             id = id + String(key);
         }
         return id;
+    };
+
+    findAllUsingGroupBy = (criteria: Criteria) => {
+        let innerSql = `SELECT financialYear
+                        FROM provident_fund`;
+        let where = addWhereClause(innerSql, criteria);
+        innerSql = where.sql;
+        innerSql = addGroupByClause(innerSql, criteria);
+        innerSql = addOrderByClause(innerSql, criteria);
+        innerSql = addLimitAndOffset(innerSql, criteria);
+        let findSQL = `SELECT *
+                       FROM provident_fund
+                       WHERE financialYear IN (${innerSql})
+                       ORDER BY transactionDate DESC`;
+        return new Promise<ProvidentFundTransaction[]>((resolve, reject) => {
+            sqlDatabaseProvider.database?.all<ProvidentFundTransaction>(findSQL, where.whereClauses, (error, rows) => {
+                if (error) {
+                    logger.error(`[findAllUsingGroupBy] - Error On findAllUsingGroupBy ${error.message}`);
+                    reject(error);
+                    return;
+                }
+                resolve(rows);
+            });
+        });
+    };
+
+    count = (criteria: Criteria) => {
+        let innerSql = `SELECT DISTINCT SUM(1) OVER () numFound
+                        FROM provident_fund`;
+        let where = addWhereClause(innerSql, criteria);
+        innerSql = where.sql;
+        innerSql = addGroupByClause(innerSql, criteria);
+        innerSql = addOrderByClause(innerSql, criteria);
+        return new Promise<number>((resolve, reject) => {
+            sqlDatabaseProvider.database?.get<any>(innerSql, where.whereClauses, (error, row) => {
+                if (error) {
+                    logger.error(`[Count] - Error On Count ${error.message}`);
+                    reject(error);
+                    return;
+                }
+                logger.info(row);
+                resolve(row.numFound);
+            });
+        });
     };
 }
 

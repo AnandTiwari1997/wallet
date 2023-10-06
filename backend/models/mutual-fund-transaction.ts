@@ -10,19 +10,9 @@ export class MutualFundTransaction {
     isCredit: boolean;
     nav: number;
     units: number;
-    latest_nav: number;
+    latestNav: number;
 
-    constructor(
-        transactionId: string,
-        portfolioNumber: string,
-        fundName: string,
-        transactionDate: string,
-        description: string,
-        amount: number,
-        nav: number,
-        units: number,
-        latest_nav: number
-    ) {
+    constructor(transactionId: string, portfolioNumber: string, fundName: string, transactionDate: string, description: string, amount: number, nav: number, units: number, latestNav: number) {
         this.transactionId = transactionId;
         this.fundName = fundName;
         this.portfolioNumber = portfolioNumber;
@@ -34,21 +24,11 @@ export class MutualFundTransaction {
         this.isCredit = this.amount > 0;
         this.units = units;
         this.nav = nav;
-        this.latest_nav = latest_nav;
+        this.latestNav = latestNav;
     }
 
     [Symbol.iterator]() {
-        let array = [
-            this.fundName,
-            this.portfolioNumber,
-            this.transactionDate,
-            this.description,
-            this.amount,
-            this.isCredit,
-            this.nav,
-            this.units,
-            this.latest_nav
-        ];
+        let array = [this.fundName, this.portfolioNumber, this.transactionDate, this.description, this.amount, this.isCredit, this.nav, this.units, this.latestNav];
         let i = 0;
         return {
             next: function () {
@@ -60,16 +40,6 @@ export class MutualFundTransaction {
 
 export class MutualFundTransactionBuilder {
     static build = (item: { [key: string]: any }) => {
-        return new MutualFundTransaction(
-            item.transactionId,
-            item.portfolioNumber,
-            item.fundName,
-            item.transactionDate,
-            item.description,
-            item.amount,
-            item.nav,
-            item.units,
-            item.latest_nav
-        );
+        return new MutualFundTransaction(item.transactionId, item.portfolioNumber, item.fundName, item.transactionDate, item.description, item.amount, item.nav, item.units, item.latestNav);
     };
 }

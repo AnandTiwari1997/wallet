@@ -5,6 +5,9 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { rootDirectoryPath } from '../server.js';
 import fs from 'fs';
+import { Logger } from '../logger/logger.js';
+
+const logger: Logger = new Logger('SyncProvider');
 
 export interface SyncProvider {
     sync: () => void;
@@ -22,12 +25,7 @@ export const syncProviderHelper = (name: string) => {
     syncProvider.sync();
 };
 
-export const fileProcessor = (
-    syncType: string,
-    inputFileName: string,
-    outputFileName: string,
-    callback: (data: any) => void
-) => {
+export const fileProcessor = (syncType: string, inputFileName: string, outputFileName: string, callback: (data: any) => void, error: () => void) => {
     const python = spawn(`python3`, [
         `${path.resolve(rootDirectoryPath, 'python', 'main.py')}`,
         syncType,
@@ -43,9 +41,10 @@ export const fileProcessor = (
     });
     python.stderr.setEncoding('utf8');
     python.stderr.on('data', function (data) {
-        console.log('stderr: ' + data);
+        logger.error('stderr: ' + data);
+        error();
     });
     python.on('close', (code) => {
-        console.log(`child process close all stdio with code ${code}`);
+        logger.info(`child process close all stdio with code ${code}`);
     });
 };

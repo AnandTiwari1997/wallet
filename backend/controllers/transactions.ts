@@ -1,22 +1,29 @@
-import { Transaction, transactions } from '../transaction-data.js';
-import { isAfter, isBefore, isSameDay, parseISO } from 'date-fns';
+import { accountTransactionStorage } from '../storage/account-transaction-storage.js';
 
 export const _getTransactions = (req: any, res: any) => {
     const range = req.body;
-    const results = transactions.filter((transaction) => {
-        return (
-            (isAfter(transaction.transactionDate, parseISO(range.from)) &&
-                isBefore(transaction.transactionDate, parseISO(range.to))) ||
-            isSameDay(transaction.transactionDate, parseISO(range.from)) ||
-            isSameDay(transaction.transactionDate, parseISO(range.to))
-        );
-    });
-    res.send({ results: results, num_found: results.length });
+    accountTransactionStorage
+        .findAllUsingGroupBy(req.body.criteria)
+        .then((transactions) => {
+            accountTransactionStorage
+                .count(req.body.criteria)
+                .then((numFound) => {
+                    res.send({ results: transactions, num_found: numFound });
+                })
+                .catch((reason) => res.send({ results: [], num_found: 0 }));
+        })
+        .catch((reason) => {
+            res.send({ results: [], num_found: 0 });
+        });
 };
 
 export const _getAccountTransactions = (req: any, res: any) => {
-    const filteredData = transactions.filter((currentValue: Transaction) => {
-        return currentValue.account.accountName === req.params.account;
-    });
-    res.send({ results: filteredData, num_found: filteredData.length });
+    accountTransactionStorage
+        .findAll(req.body.criteria)
+        .then((transactions) => {
+            res.send({ results: transactions, num_found: transactions.length });
+        })
+        .catch((reason) => {
+            res.send({ results: [], num_found: 0 });
+        });
 };

@@ -1,6 +1,6 @@
 import CSS from 'csstype';
 import { Button, Dialog, Tab, Tabs } from '@mui/material';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import '../src/savings.css';
 import MutualFund from './modules/savings/mutual-fund';
 import ProvidentFund from './modules/savings/provident-fund';
@@ -132,9 +132,10 @@ const SavingsPage = () => {
         setCaptchaUrl(undefined);
         console.log(inputRef.current?.value);
         if (inputRef.current?.value && captchaId) {
-            syncInvestmentAccountCaptcha(selectedTab, { id: captchaId, captcha: inputRef.current?.value }).then((r) =>
-                console.log(r)
-            );
+            syncInvestmentAccountCaptcha(selectedTab, {
+                id: captchaId,
+                captcha: inputRef.current?.value
+            }).then((r) => console.log(r));
         }
     };
 

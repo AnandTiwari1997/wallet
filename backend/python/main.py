@@ -53,6 +53,8 @@ class MutualFundProcessor(FundProcessor):
                 folio = folio_pat.match(i).group(2)
             if fund_name.match(i):
                 fun_name = fund_name.match(i).group(0)
+                if len(fun_name.split("-")) == 2:
+                    fun_name = fun_name.split("-")[1]
             txt = trans_details.search(i)
             if txt:
                 date = txt.group(1)
@@ -62,7 +64,7 @@ class MutualFundProcessor(FundProcessor):
                 price = txt.group(5)
                 unit_bal = txt.group(6)
                 self.dataItems.append([str(uuid.uuid4()), folio, fun_name, date, description, amount, price, units,
-                                       unit_bal, 0])
+                                       unit_bal])
             if latest_nav.match(i):
                 latest_nav_dict[fun_name] = latest_nav.match(i).group(1).replace(",", "")
                 
@@ -72,20 +74,20 @@ class MutualFundProcessor(FundProcessor):
     def save(self, file_format="json", file_path=None):
         df = DataFrame(self.dataItems,
                        columns=["transactionId", "portfolioNumber", "fundName", "transactionDate", "description",
-                                "amount", "nav", "units", "Unit_balance", "latest_nav"])
+                                "amount", "nav", "units", "unitBalance", "latestNav"])
         clean_txt(df.amount)
         clean_txt(df.units)
         clean_txt(df.nav)
-        clean_txt(df.Unit_balance)
-        clean_txt(df.latest_nav)
+        clean_txt(df.unitBalance)
+        clean_txt(df.latestNav)
 
         df.transactionDate = pd.to_datetime(df.transactionDate, dayfirst=True)
         df.transactionDate = df.transactionDate.dt.strftime('%d-%b-%Y')
         df.amount = df.amount.astype('float')
         df.units = df.units.astype('float')
         df.nav = df.nav.astype('float')
-        df.Unit_balance = df.Unit_balance.astype('float')
-        df.latest_nav = df.latest_nav.astype('float')
+        df.unitBalance = df.unitBalance.astype('float')
+        df.latestNav = df.latestNav.astype('float')
 
         if file_format == "json":
             save_to_json(df, file_path)

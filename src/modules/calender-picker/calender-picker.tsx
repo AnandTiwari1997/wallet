@@ -1,7 +1,7 @@
 import CSS from 'csstype';
 import './calender-picker.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { caretLeft, caretRight, caretDown } from '../../icons/icons';
+import { caretDown, caretLeft, caretRight } from '../../icons/icons';
 import { Fragment, useRef, useState } from 'react';
 import Overlay from '../overlay/overlay';
 import WeekPicker from '../week-picker/week-picker';
@@ -10,13 +10,9 @@ import MonthPicker from '../month-picker/month-picker';
 import YearPicker from '../year-picker/year-picker';
 import RangePicker from '../range-picker/range-picker';
 import {
+    addDays,
     differenceInDays,
     differenceInMonths,
-    startOfMonth,
-    startOfWeek,
-    startOfYear,
-    subDays,
-    addDays,
     format,
     isSameDay,
     isSameMonth,
@@ -24,7 +20,11 @@ import {
     isSameYear,
     isThisMonth,
     isThisWeek,
-    isThisYear
+    isThisYear,
+    startOfMonth,
+    startOfWeek,
+    startOfYear,
+    subDays
 } from 'date-fns/esm';
 
 const calenerPickerBoxStyle: CSS.Properties = {
@@ -43,13 +43,7 @@ export interface PickerData {
     values: { [key: string]: OnCalenderPickerChange | undefined };
 }
 
-const CalenderPicker = ({
-    onChange,
-    range
-}: {
-    onChange: (calenderPickerRange: OnCalenderPickerChange) => void;
-    range?: { from: Date; to: Date };
-}) => {
+const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: OnCalenderPickerChange) => void; range?: { from: Date; to: Date } }) => {
     const ref = useRef(null);
     const tabsValue: PickerData = {
         activePicker: 'range',
@@ -136,20 +130,7 @@ const CalenderPicker = ({
         });
     };
 
-    const months: string[] = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December'
-    ];
+    const months: string[] = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
     const valueList: { diff: number; unit: string; label: string }[] = [
         { diff: 0, unit: 'day', label: 'Today' },
@@ -169,11 +150,7 @@ const CalenderPicker = ({
         const end = range.rangeEnd;
         const unit = range.unit;
         if (unit === 'month') {
-            return isThisMonth(start)
-                ? `This Month`
-                : isThisYear(start)
-                ? `${months[start.getMonth()]}`
-                : `${months[start.getMonth()]} ${start.getFullYear()}`;
+            return isThisMonth(start) ? `This Month` : isThisYear(start) ? `${months[start.getMonth()]}` : `${months[start.getMonth()]} ${start.getFullYear()}`;
         } else if (unit === 'range') {
             if (isSameDay(end, new Date())) {
                 return (
@@ -183,24 +160,13 @@ const CalenderPicker = ({
                                 return differenceInDays(end, start) === currentValue.diff;
                             case 'month':
                                 return (
-                                    (isSameMonth(end, start) &&
-                                        isSameDay(start, startOfMonth(new Date())) &&
-                                        isSameDay(end, new Date()) &&
-                                        isSameYear(end, start)) ||
+                                    (isSameMonth(end, start) && isSameDay(start, startOfMonth(new Date())) && isSameDay(end, new Date()) && isSameYear(end, start)) ||
                                     (currentValue.diff > 0 && differenceInMonths(end, start) === currentValue.diff)
                                 );
                             case 'week':
-                                return (
-                                    isSameWeek(end, start) &&
-                                    isSameDay(start, startOfWeek(new Date())) &&
-                                    isSameDay(end, new Date())
-                                );
+                                return isSameWeek(end, start) && isSameDay(start, startOfWeek(new Date())) && isSameDay(end, new Date());
                             case 'year':
-                                return (
-                                    isSameYear(end, start) &&
-                                    isSameDay(start, startOfYear(new Date())) &&
-                                    isSameDay(end, new Date())
-                                );
+                                return isSameYear(end, start) && isSameDay(start, startOfYear(new Date())) && isSameDay(end, new Date());
                         }
                     })?.label || ''
                 );
@@ -260,20 +226,11 @@ const CalenderPicker = ({
             <i aria-hidden="true" className="icon" onClick={renderPreviousRange}>
                 <FontAwesomeIcon icon={caretLeft} />
             </i>
-            <div
-                className="css-wi57kk-GridEmotionStyles--headerRowItem-Header--headerRowItemNoPadding"
-                onClick={() => handleOpenPicker(false)}
-                id="selector"
-                ref={ref}
-            >
+            <div className="css-wi57kk-GridEmotionStyles--headerRowItem-Header--headerRowItemNoPadding" onClick={() => handleOpenPicker(false)} id="selector" ref={ref}>
                 <div className="css-1h182y4-TimeSelect--selectContainer-TimeSelect--styles-TimeSelect--render">
                     <div className="select-classes">
                         <div style={calenerPickerBoxStyle}>
-                            <input
-                                value={getShownLabel()}
-                                disabled={true}
-                                className="calender-picker-disabled-text-field"
-                            />
+                            <input value={getShownLabel()} disabled={true} className="calender-picker-disabled-text-field" />
                         </div>
                         <i aria-hidden="true" className="calender-picker-icon icon">
                             <FontAwesomeIcon icon={caretDown} />

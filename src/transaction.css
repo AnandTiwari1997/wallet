@@ -1,59 +1,59 @@
 .filter-header {
-  background: rgb(255, 255, 255);
-  position: sticky;
-  z-index: 5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 3rem;
-  padding: 1.1rem 2rem;
-  text-align: center;
-  box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px,
+    background: rgb(255, 255, 255);
+    position: sticky;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 3rem;
+    padding: 1.1rem 2rem;
+    text-align: center;
+    box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px,
     rgba(128, 135, 148, 0.56) 2px 2px 5px;
 }
 
 .table-header {
-  height: 50px;
-  width: calc(100% - 0px);
-  position: sticky;
-  /*margin: 0 10px;*/
-  top: 0;
-  z-index: 1;
+    height: 50px;
+    width: calc(100% - 0px);
+    position: sticky;
+    /*margin: 0 10px;*/
+    top: 0;
+    z-index: 1;
     box-shadow: rgba(0, 0, 0, 0.1) 4px 0px 8px;
 }
 
 .table-body {
-  width: calc(100% - 0px);
-  height: calc(100% - 50px);
-  /*margin: 0 10px;*/
+    width: calc(100% - 0px);
+    height: calc(100% - 50px);
+    /*margin: 0 10px;*/
 }
 
 .table-header-row {
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  align-items: center;
-  border-bottom: 1px solid rgb(224, 224, 224);
-  background: white;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    border-bottom: 1px solid rgb(224, 224, 224);
+    background: white;
 }
 
 .table-body-row {
-  min-height: 56px;
-  border: none;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-items: center;
-  border-bottom: 1px solid rgb(224, 224, 224);
-  background: white;
+    min-height: 56px;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    border-bottom: 1px solid rgb(224, 224, 224);
+    background: white;
 }
 
 .table-body-row-visible {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  min-height: 56px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    min-height: 56px;
 }
 
 .table-body-row-visible:hover {
@@ -61,50 +61,50 @@
 }
 
 .table-header-column {
-  display: flex;
-  align-items: center;
-  /*justify-content: center;*/
-  font-family: Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.875rem;
-  letter-spacing: 0.01071em;
-  text-align: left;
-  color: rgba(0, 0, 0, 0.87);
-  position: sticky;
-  font-weight: 700;
-  overflow: visible;
-  user-select: none;
-  opacity: 1;
-  transition: padding 150ms ease-in-out 0s;
+    display: flex;
+    align-items: center;
+    /*justify-content: center;*/
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.875rem;
+    letter-spacing: 0.01071em;
+    text-align: left;
+    color: rgba(0, 0, 0, 0.87);
+    position: sticky;
+    font-weight: 700;
+    overflow: visible;
+    user-select: none;
+    opacity: 1;
+    transition: padding 150ms ease-in-out 0s;
     padding: 0 10px;
     height: 100%;
 }
 
 .checkbox-column {
-  width: 5%;
-  cursor: pointer;
+    width: 5%;
+    cursor: pointer;
 }
 
 .other-column {
-  width: 20%;
+    width: 20%;
 }
 
 .table-body-column {
-  display: flex;
-  align-items: center;
-  /*justify-content: center;*/
-  font-family: Roboto, Helvetica, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 0.875rem;
-  letter-spacing: 0.01071em;
-  text-align: center;
+    display: flex;
+    align-items: center;
+    /*justify-content: center;*/
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 0.875rem;
+    letter-spacing: 0.01071em;
+    text-align: center;
     padding: 0 10px;
     user-select: none;
 }
 
 .table-body-column-icon {
-  font-size: 0.8rem !important;
-  height: 1em !important;
-  margin: 0 !important;
+    font-size: 0.8rem !important;
+    height: 1em !important;
+    margin: 0 !important;
 }
 
 .table-body-expanded-body {
@@ -122,9 +122,9 @@
 .amount-column {
     font-weight: 600;
     /*color:rgba(128, 135, 148, 0.56);*/
-  justify-content: flex-end;
-  right: 1%;
-  position: relative;
+    justify-content: flex-end;
+    right: 1%;
+    position: relative;
 }
 
 .icon-button {

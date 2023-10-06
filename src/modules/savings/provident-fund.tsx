@@ -1,45 +1,40 @@
 import { useEffect, useState } from 'react';
 import { ArrayUtil, MutualFundTransaction, ProvidentFundTransaction } from '../../data/transaction-data';
-import { ApiCriteria, ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../backend/BackendApi';
-import {
-    collapseAllStyle,
-    collapsedStyle,
-    collapseStyle,
-    expandedStyle,
-    expandStyle,
-    expenseStyle,
-    incomeStyle,
-    intermediateExpandStyle
-} from '../../savings';
+import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../backend/BackendApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { expand, expandAll, indianRupee, right } from '../../icons/icons';
+import { indianRupee } from '../../icons/icons';
 import { format } from 'date-fns/esm';
 import Table, { TableColumn } from '../table/table';
 import { darkGreen, darkRed } from '../../App';
+import { useGlobalLoadingState } from '../../index';
 
 const ProvidentFund = () => {
     const [initialData, setInitialData] = useState<ProvidentFundTransaction[]>([]);
+    const [count, setCount] = useState<number>(0);
+    const [state, dispatch] = useGlobalLoadingState();
 
     const buildCriteria = (
         filters: { key: string; value: string }[] = [],
-        sorts: { key: string; ascending: boolean }[] = []
+        sorts: {
+            key: string;
+            ascending: boolean;
+        }[] = []
     ) => {
         return {
             filters: [...filters],
-            sorts: [...sorts]
+            sorts: [...sorts],
+            groupBy: [{ key: 'financialYear' }],
+            offset: 0,
+            limit: 25
         };
     };
 
     const fetchInvestmentTransactions = (requestBody: ApiRequestBody<ProvidentFundTransaction>) => {
-        getInvestmentsTransaction('provident_fund', requestBody)
+        getInvestmentsTransaction('provident_fund', requestBody, dispatch)
             .then((response: ApiResponse<any>) => {
-                const formattedTransactions: ProvidentFundTransaction[] = ArrayUtil.map(response.results, (item: any) =>
-                    ProvidentFundTransaction.build(item)
-                );
-                const sortedTransactions = ArrayUtil.sort(
-                    formattedTransactions,
-                    (item: ProvidentFundTransaction) => item.financialYear
-                );
+                setCount(response.num_found);
+                const formattedTransactions: ProvidentFundTransaction[] = ArrayUtil.map(response.results, (item: any) => ProvidentFundTransaction.build(item));
+                const sortedTransactions = ArrayUtil.sort(formattedTransactions, (item: ProvidentFundTransaction) => item.financialYear);
                 setInitialData(sortedTransactions);
             })
             .catch((reason) => {
@@ -77,7 +72,13 @@ const ProvidentFund = () => {
                 return (
                     <div style={{ display: 'block' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Transaction:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700'
+                            }}
+                        >
                             {format(rows[0].transactionDate, 'dd MMM yyy')}
                         </div>
                     </div>
@@ -177,6 +178,7 @@ const ProvidentFund = () => {
     return (
         <Table
             columns={columns}
+            count={count}
             rows={initialData}
             groupByColumn={columns[0]}
             onSort={(sortedColumn) => {
@@ -188,7 +190,12 @@ const ProvidentFund = () => {
                     fetchInvestmentTransactions({
                         criteria: buildCriteria(
                             [],
-                            [{ key: sortedColumn?.column.key, ascending: sortedColumn?.ascending }]
+                            [
+                                {
+                                    key: sortedColumn?.column.key,
+                                    ascending: sortedColumn?.ascending
+                                }
+                            ]
                         )
                     });
             }}

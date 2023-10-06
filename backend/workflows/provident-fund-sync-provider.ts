@@ -22,19 +22,14 @@ export class ProvidentFundSyncProvider implements SyncProvider {
             console.log(`[ProvidentFundSyncProvider]: Removed Reports Folder`);
             let driverBuilder = new Builder().forBrowser('chrome');
             driverBuilder.setChromeOptions(
-                new Options()
-                    .setUserPreferences({ 'download.default_directory': downloadDirectory })
-                    .headless()
-                    .windowSize({ width: 1200, height: 1100 })
+                new Options().setUserPreferences({ 'download.default_directory': downloadDirectory }).headless().windowSize({ width: 1200, height: 1100 })
             );
             let driver = await driverBuilder.build();
             let years: string[] = [];
             try {
                 let id = new Date().getTime().toString();
                 await driver.get('https://passbook.epfindia.gov.in/MemberPassBook/login');
-                console.log(
-                    `[ProvidentFundSyncProvider]: Opened https://passbook.epfindia.gov.in/MemberPassBook/login`
-                );
+                console.log(`[ProvidentFundSyncProvider]: Opened https://passbook.epfindia.gov.in/MemberPassBook/login`);
                 let username = await driver.findElement(By.id('username'));
                 await username.sendKeys('101563804709');
                 console.log(`[ProvidentFundSyncProvider]: Entered Username`);
@@ -69,10 +64,7 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                 console.log(`[ProvidentFundSyncProvider]: Clicked Login`);
                 await driver.wait(until.elementLocated(By.xpath('//a[@data-name="passbook"]')), 10000);
                 console.log(`[ProvidentFundSyncProvider]: Located Passbook`);
-                await driver.wait(
-                    until.elementIsVisible(driver.findElement(By.xpath('//a[@data-name="passbook"]'))),
-                    10000
-                );
+                await driver.wait(until.elementIsVisible(driver.findElement(By.xpath('//a[@data-name="passbook"]'))), 10000);
                 console.log(`[ProvidentFundSyncProvider]: Passbook now visible`);
                 await driver.findElement(By.xpath('//a[@data-name="passbook"]')).click();
                 console.log(`[ProvidentFundSyncProvider]: Clicked Passbook`);
@@ -86,18 +78,10 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                         await driver.findElement(By.xpath(`//a[@data-year="${text}"]`)).click();
                         console.log(`[ProvidentFundSyncProvider]: Clicked ${text}]`);
                         await driver.sleep(5000);
-                        await driver.wait(
-                            until.elementLocated(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`)),
-                            10000
-                        );
+                        await driver.wait(until.elementLocated(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`)), 10000);
                         console.log(`[ProvidentFundSyncProvider]: Located Download As PDF`);
                         await driver.sleep(5000);
-                        await driver.wait(
-                            until.elementIsVisible(
-                                driver.findElement(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`))
-                            ),
-                            10000
-                        );
+                        await driver.wait(until.elementIsVisible(driver.findElement(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`))), 10000);
                         console.log(`[ProvidentFundSyncProvider]: Download As PDF Visible`);
                         await driver.sleep(5000);
                         await driver.findElement(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`)).click();
@@ -112,11 +96,7 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                         await driver.findElement(By.id('downloadPassbook')).click();
                         console.log(`[ProvidentFundSyncProvider]: Clicked DownloadPassbook`);
                         await driver.sleep(5000);
-                        await driver
-                            .findElement(
-                                By.xpath('//div[@class="modal-header modal-header1"]/button[@class="btn-close"]')
-                            )
-                            .click();
+                        await driver.findElement(By.xpath('//div[@class="modal-header modal-header1"]/button[@class="btn-close"]')).click();
                         console.log(`[ProvidentFundSyncProvider]: Closed Download Modal`);
                         await driver.sleep(5000);
                     }
@@ -147,7 +127,8 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                             syncTracker.status = 'COMPLETED';
                             syncTracker.endTime = new Date();
                             syncTrackerStorage.update(syncTracker);
-                        }
+                        },
+                        () => {}
                     );
                 }
                 console.log(`Data from the pipes:`);

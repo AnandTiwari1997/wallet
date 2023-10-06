@@ -2,10 +2,11 @@ import CSS from 'csstype';
 import './dashboard.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Account } from './data/account-data';
-import { plus, edit } from './icons/icons';
+import { edit, plus } from './icons/icons';
 import CalenderPicker from './modules/calender-picker/calender-picker';
 import { useEffect, useState } from 'react';
 import { getAccounts } from './modules/backend/BackendApi';
+import { useGlobalLoadingState } from './index';
 
 const accountTopDivStyle: CSS.Properties = {
     display: 'flex',
@@ -47,9 +48,10 @@ const topDiv: CSS.Properties = {
 
 const DashboardPage = () => {
     const [accounts, setAccounts] = useState<Account[]>([]);
+    const [state, dispatch] = useGlobalLoadingState();
 
     useEffect(() => {
-        getAccounts().then((response) => {
+        getAccounts(dispatch).then((response) => {
             setAccounts(response.results);
         });
     }, [setAccounts, getAccounts]);
@@ -68,11 +70,7 @@ const DashboardPage = () => {
                 </i>
 
                 <div className="account-icon-container">
-                    <div className="account-icon icon-square simple">
-                        <span>
-                            <FontAwesomeIcon icon={account.accountIcon} />
-                        </span>
-                    </div>
+                    <img src={account.accountIcon} className="account-icon" style={{ border: `1px solid ${account.accountBackgroundColor}` }} />
                 </div>
                 <div className="account-details-container">
                     <div className="account-name">
