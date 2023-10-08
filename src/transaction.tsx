@@ -37,16 +37,16 @@ const TransactionPage = () => {
 
     const [state, dispatch] = useGlobalLoadingState();
 
-    const _getCriteria = (offset: number, limit: number) => {
+    const _getCriteria = (start: Date, end: Date, offset: number, limit: number) => {
         return {
-            groupBy: [{ key: 'date' }],
-            sorts: [{ key: 'transactionDate', ascending: false }],
+            groupBy: [{ key: 'dated' }],
+            sorts: [{ key: 'dated', ascending: false }],
             between: [
                 {
-                    key: 'transactionDate',
+                    key: 'transaction_date',
                     range: {
-                        start: range.from.toISOString(),
-                        end: range.to.toISOString()
+                        start: start.toISOString(),
+                        end: end.toISOString()
                     }
                 }
             ],
@@ -58,7 +58,7 @@ const TransactionPage = () => {
     useEffect(() => {
         getAllTransactions(
             {
-                criteria: _getCriteria(0, 25)
+                criteria: _getCriteria(range.from, range.to, 0, 25)
             },
             dispatch
         ).then((response) => {
@@ -191,7 +191,7 @@ const TransactionPage = () => {
                         setRange({ from: item.rangeStart, to: item.rangeEnd });
                         getAllTransactions(
                             {
-                                criteria: _getCriteria(0, 25)
+                                criteria: _getCriteria(item.rangeStart, item.rangeEnd, 0, 25)
                             },
                             dispatch
                         ).then((response) => {
@@ -213,7 +213,7 @@ const TransactionPage = () => {
                     onPagination={(tablePagination: TablePagination) => {
                         getAllTransactions(
                             {
-                                criteria: _getCriteria(tablePagination.pageNumber, tablePagination.pageSize)
+                                criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
                             },
                             dispatch
                         ).then((response) => {

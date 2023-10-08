@@ -121,7 +121,6 @@
 
 .amount-column {
     font-weight: 600;
-    /*color:rgba(128, 135, 148, 0.56);*/
     justify-content: flex-end;
     right: 1%;
     position: relative;
@@ -134,7 +133,7 @@
     outline: none;
     border-radius: 50%;
     border: none;
-    cursor: inherit;
+    cursor: pointer;
 }
 
 .icon-button:focus {

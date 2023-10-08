@@ -1,5 +1,7 @@
 export const API_PATH = {
+    GET_BANKS: '/wallet/banks',
     GET_ACCOUNTS: '/wallet/accounts',
+    ADD_ACCOUNT: '/wallet/accounts',
     SYNC_ACCOUNT: '/wallet/account/:account/sync',
     SYNC_ALL_ACCOUNT: '/wallet/account/sync',
     GET_ALL_ACCOUNTS_TRANSACTIONS: '/wallet/transactions',

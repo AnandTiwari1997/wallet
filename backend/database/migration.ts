@@ -1,75 +1,73 @@
 export const migrations: { [key: string]: string } = {
-    V1: `CREATE TABLE IF NOT EXISTS accounts
+    V1: `CREATE TABLE IF NOT EXISTS bank
          (
-             id                     INTEGER PRIMARY KEY NOT NULL,
-             accountName            TEXT                NOT NULL,
-             accountBalance         REAL                NOT NULL,
-             initialBalance         REAL                NOT NULL,
-             bankAccountNumber      TEXT,
-             accountType            TEXT                NOT NULL,
-             accountIcon            TEXT,
-             accountBackgroundColor TEXT,
-             bankAccountType        TEXT
+             id             INT8 NOT NULL,
+             name           TEXT NOT NULL,
+             icon           TEXT NOT NULL,
+             alert_email_id TEXT NOT NULL,
+             primary_color  TEXT NOT NULL,
+             CONSTRAINT bank_id_pk PRIMARY KEY (id)
          );`,
-    V2: `CREATE TABLE IF NOT EXISTS mutual_fund
+    V2: `CREATE TABLE IF NOT EXISTS account
          (
-             transactionId   TEXT PRIMARY KEY NOT NULL,
-             fundName        TEXT             NOT NULL,
-             portfolioNumber TEXT             NOT NULL,
-             transactionDate TEXT             NOT NULL,
-             description     TEXT,
-             amount          REAL             NOT NULL,
-             isCredit        INTEGER          NOT NULL,
-             nav             REAL             NOT NULL,
-             units           REAL             NOT NULL,
-             latestNav       REAL             NOT NULL
+             id                       INT8             NOT NULL,
+             account_name             TEXT             NOT NULL,
+             account_balance          DOUBLE PRECISION NOT NULL,
+             initial_balance          DOUBLE PRECISION NOT NULL,
+             bank_account_number      TEXT,
+             account_type             TEXT             NOT NULL,
+             account_icon             TEXT,
+             account_background_color TEXT,
+             bank_account_type        TEXT,
+             bank                     INT8             NOT NULL,
+             last_synced_on           TIMESTAMPTZ,
+             CONSTRAINT account_id_pk PRIMARY KEY (id),
+             CONSTRAINT accounts_bank_fk FOREIGN KEY (bank) REFERENCES bank (id)
          );`,
-    V3: `CREATE TABLE IF NOT EXISTS provident_fund
+    V3: `CREATE TABLE IF NOT EXISTS mutual_fund
          (
-             transactionId        TEXT PRIMARY KEY NOT NULL,
-             wageMonth            TEXT             NOT NULL,
-             financialYear        TEXT             NOT NULL,
-             transactionDate      REAL             NOT NULL,
-             description          TEXT,
-             transactionType      TEXT             NOT NULL,
-             epfAmount            REAL             NOT NULL,
-             epsAmount            REAL             NOT NULL,
-             employeeContribution REAL             NOT NULL,
-             employerContribution REAL             NOT NULL,
-             pensionAmount        REAL             NOT NULL
+             transaction_id   TEXT             NOT NULL,
+             fund_name        TEXT             NOT NULL,
+             portfolio_number TEXT             NOT NULL,
+             transaction_date TIMESTAMPTZ      NOT NULL,
+             description      TEXT,
+             amount           DOUBLE PRECISION NOT NULL,
+             is_credit        BOOLEAN          NOT NULL,
+             nav              DOUBLE PRECISION NOT NULL,
+             units            DOUBLE PRECISION NOT NULL,
+             latest_nav       DOUBLE PRECISION NOT NULL,
+             CONSTRAINT mutual_fund_transactionId_pk PRIMARY KEY (transaction_id)
          );`,
-    V4: `CREATE TABLE IF NOT EXISTS account_transaction
+    V4: `CREATE TABLE IF NOT EXISTS provident_fund
          (
-             transactionId    TEXT PRIMARY KEY NOT NULL,
-             account          TEXT             NOT NULL,
-             transactionDate  TEXT             NOT NULL,
-             amount           REAL             NOT NULL,
-             category         TEXT             NOT NULL,
-             labels           TEXT             NOT NULL,
-             note             TEXT             NOT NULL,
-             currency         TEXT             NOT NULL,
-             paymentMode      TEXT             NOT NULL,
-             transactionType  TEXT             NOT NULL,
-             transactionState TEXT             NOT NULL
+             transaction_id        TEXT             NOT NULL,
+             wage_month            TEXT             NOT NULL,
+             financial_year        TEXT             NOT NULL,
+             transaction_date      TIMESTAMPTZ      NOT NULL,
+             description           TEXT,
+             transaction_type      TEXT             NOT NULL,
+             epfAmount             DOUBLE PRECISION NOT NULL,
+             epsAmount             DOUBLE PRECISION NOT NULL,
+             employee_contribution DOUBLE PRECISION NOT NULL,
+             employer_contribution DOUBLE PRECISION NOT NULL,
+             pension_amount        DOUBLE PRECISION NOT NULL,
+             CONSTRAINT provident_fund_transactionId_pk PRIMARY KEY (transaction_id)
          );`,
-    V5: `CREATE TABLE IF NOT EXISTS bank
+    V5: `CREATE TABLE IF NOT EXISTS account_transaction
          (
-             id           INTEGER PRIMARY KEY NOT NULL,
-             name         TEXT                NOT NULL,
-             icon         TEXT                NOT NULL,
-             alertEmailId TEXT                NOT NULL,
-             primaryColor TEXT                NOT NULL
-         );`,
-    V6: `ALTER TABLE accounts
-        ADD COLUMN bank INTEGER DEFAULT 0;`,
-    V7: `ALTER TABLE account_transaction
-        DROP COLUMN account;`,
-    V8: `ALTER TABLE account_transaction
-        ADD COLUMN account INTEGER NOT NULL DEFAULT 0;`,
-    v9: `ALTER TABLE accounts
-        ADD COLUMN lastSyncedOn TEXT;`,
-    V10: `ALTER TABLE account_transaction
-        ADD COLUMN date TEXT;`,
-    V11: `UPDATE account_transaction
-          SET date = substr(transactionDate, 0, 11);`
+             transaction_id    TEXT             NOT NULL,
+             account           INT8             NOT NULL,
+             transaction_date  TIMESTAMPTZ      NOT NULL,
+             amount            DOUBLE PRECISION NOT NULL,
+             category          TEXT             NOT NULL,
+             labels            TEXT             NOT NULL,
+             note              TEXT             NOT NULL,
+             currency          TEXT             NOT NULL,
+             payment_mode      TEXT             NOT NULL,
+             transaction_type  TEXT             NOT NULL,
+             transaction_state TEXT             NOT NULL,
+             dated             DATE             NOT NULL,
+             CONSTRAINT account_transaction_transactionId_pk PRIMARY KEY (transaction_id),
+             CONSTRAINT account_transaction_account_fk FOREIGN KEY (account) REFERENCES account (id)
+         );`
 };

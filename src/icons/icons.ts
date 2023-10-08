@@ -14,6 +14,7 @@ import {
     faCaretRight,
     faClose,
     faCoins,
+    faEllipsisVertical,
     faEye,
     faIndianRupee,
     faMoneyBill,
@@ -50,3 +51,4 @@ export const sortUp = faArrowUp;
 export const sortDown = faArrowDown;
 export const view = faEye;
 export const close = faClose;
+export const menu = faEllipsisVertical;

@@ -166,7 +166,8 @@ class ProvidentFundStorage implements Database<ProvidentFundTransaction, string>
                     return;
                 }
                 logger.info(row);
-                resolve(row.numFound);
+                if (row) resolve(row.numFound);
+                else resolve(0);
             });
         });
     };

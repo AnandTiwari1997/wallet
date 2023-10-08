@@ -1,99 +1,91 @@
-import Sqlite3 from "sqlite3";
-import { migrations } from "./migration.js";
-import path from "path";
-import { rootDirectoryPath } from "../server.js";
-import fs from "fs";
-import { Logger } from "../logger/logger.js";
-import { bankStorage } from "../storage/bank-storage.js";
-import { accountStorage } from "../storage/account-storage.js";
+import Sqlite3 from 'sqlite3';
+import { migrations } from './migration.js';
+import { Logger } from '../logger/logger.js';
+import pkg, { PoolClient } from 'pg';
+import { bankStorage } from '../storage/bank-storage.js';
+import { accountStorage } from '../storage/account-storage.js';
 
-const logger: Logger = new Logger("DatabaseProvider");
+const { Pool } = pkg;
+const logger: Logger = new Logger('DatabaseProvider');
 
 class DatabaseProvider {
-  database: Sqlite3.Database | undefined;
+    database: Sqlite3.Database | undefined;
+    pool: any;
 
-  initDatabase() {
-    if (!fs.existsSync(path.resolve(rootDirectoryPath, "database-data")))
-      fs.mkdirSync(path.resolve(rootDirectoryPath, "database-data"));
-    this.database = new Sqlite3.Database(
-      path.resolve(rootDirectoryPath, "database-data", "wallet.db"),
-      Sqlite3.OPEN_READWRITE | Sqlite3.OPEN_CREATE,
-      (err) => {
-        if (err) {
-          console.error(err.message);
-          return;
+    constructor() {
+        this.pool = new Pool({
+            host: 'localhost',
+            database: 'wallet',
+            user: 'postgres',
+            password: 'postgres',
+            max: 20,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 2000
+        });
+        logger.info('Database Connected');
+        this.pool.on('release', (err: Error, client: PoolClient) => logger.debug(`Connection Released`));
+        this.pool.on('connect', (client: PoolClient) => logger.debug(`Database Client Connected`));
+        this.getClient().then(async (client: PoolClient) => {
+            await client.query(`CREATE TABLE IF NOT EXISTS migration
+                                (
+                                    id  TEXT PRIMARY KEY NOT NULL,
+                                    sql TEXT             NOT NULL
+                                );`);
+            let queryResult = await client.query<{ id: string }>('SELECT id FROM migration');
+            let stringArray = queryResult.rows.map((value) => value.id);
+            await this.runMigrations(client, stringArray);
+            logger.debug('Migrations Successfully Applied');
+            let countQueryResult = await client.query<{ count: number }>(`SELECT COUNT(*) as count
+                                                                          FROM bank`);
+            bankStorage.setCurrentRowIndex(countQueryResult.rows[0].count);
+            countQueryResult = await client.query<{ count: number }>(`SELECT COUNT(*) as count
+                                                                      FROM account`);
+            accountStorage.setCurrentRowIndex(countQueryResult.rows[0].count);
+            this.releaseClient(client);
+        });
+    }
+
+    async runMigrations(client: PoolClient, ids: string[]) {
+        for (const key of Object.keys(migrations)) {
+            if (ids.includes(key)) continue;
+            await client.query(migrations[key]);
+            await this.execute<any>('INSERT INTO migration(id, sql) VALUES ($1, $2);', [key, migrations[key]], true);
+            logger.debug(`Migrations Successful for ${key}`);
         }
-        logger.info("SQLite Connection Established");
-      },
-    );
-    this.database.on("open", () => {
-      this.database?.serialize(() => {
-        this.database?.run(
-          `CREATE TABLE IF NOT EXISTS migration
-           (
-               id  TEXT PRIMARY KEY NOT NULL,
-               sql TEXT             NOT NULL
-           );`,
-        );
-        this.database?.all<{ id: string; sql: string }>(
-          `SELECT id
-           FROM migration`,
-          (error, rows) => {
-            let ids: string[] = [];
-            if (rows.length) {
-              for (const row of rows) {
-                ids.push(row.id);
-              }
-            }
-            this.runMigrations(ids);
-            logger.debug("Migrations Successfully Applied");
-          },
-        );
-        this.database?.get<number>(
-          `SELECT COUNT(*) as count
-           FROM bank`,
-          (error, row) => {
-            if (error) return;
-            bankStorage.setCurrentRowIndex(row + 1);
-          },
-        );
-        this.database?.get<number>(
-          `SELECT COUNT(*) as count
-           FROM accounts`,
-          (error, row) => {
-            if (error) return;
-            accountStorage.setCurrentRowIndex(row + 1);
-          },
-        );
-      });
-    });
-    this.database.on("error", (error: Error) => {
-      logger.error(`Following Error while running Query ${error.message}`);
-    });
-  }
+    }
 
-  runMigrations(ids: string[]) {
-    if (!this.database) return;
-    this.database.serialize(() => {
-      Object.keys(migrations).forEach((key: string) => {
-        if (ids.includes(key)) return;
-        this.database?.run(migrations[key]);
-        const statement = this.database?.prepare(
-          `INSERT INTO migration(id, sql)
-           VALUES (?, ?);`,
-        );
-        statement?.run(key, migrations[key]);
-        logger.debug(`Migrations Successful for ${key}`);
-      });
-    });
-  }
+    getClient() {
+        return this.pool.connect();
+    }
 
-  closeDatabase() {
-    this.database?.close((error) => {
-      logger.info("SQLite Connection Closed");
-    });
-  }
+    releaseClient(client: PoolClient) {
+        client.release();
+    }
+
+    closeDatabase() {
+        this.database?.close((error) => {
+            logger.info('SQLite Connection Closed');
+        });
+    }
+
+    async execute<T extends pkg.QueryResultRow>(text: string, params: any[], transactional: boolean) {
+        const start = Date.now();
+        const client: PoolClient = await this.getClient();
+        try {
+            if (transactional) await client.query('BEGIN');
+            const queryResult = await client.query<T>(text, params);
+            const duration = Date.now() - start;
+            if (transactional) await client.query('COMMIT');
+            logger.debug(`Took ${duration}s to fetch ${queryResult.rowCount} records for query ${text}`);
+            return queryResult;
+        } catch (e) {
+            if (transactional) await client.query('ROLLBACK');
+            logger.error(`Query Error: ${e}`);
+            throw e;
+        } finally {
+            this.releaseClient(client);
+        }
+    }
 }
 
 export const sqlDatabaseProvider = new DatabaseProvider();
-export const sqlDatabase = sqlDatabaseProvider.database;

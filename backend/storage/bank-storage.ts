@@ -20,7 +20,7 @@ class BankStorage implements Database<Bank, number> {
         return new Promise((resolve, reject) => {
             sqlDatabaseProvider.database?.run(
                 'INSERT INTO bank(id, name, icon, alertEmailId, primaryColor) VALUES(?, ?, ?, ?, ?);',
-                [item.id, item.name, item.icon, item.alertEmailId, item.primaryColor],
+                [item.id, item.name, item.icon, item.alert_email_id, item.primary_color],
                 (error) => {
                     if (error) {
                         logger.error(`[Add] - Error On Add ${error.message}`);
@@ -61,34 +61,29 @@ class BankStorage implements Database<Bank, number> {
         });
     }
 
-    find(id: number): Promise<Bank | undefined> {
-        return new Promise((resolve, reject) => {
-            sqlDatabaseProvider.database?.get<Bank>('SELECT * FROM bank WHERE id = ?;', id, (error, row) => {
-                if (error) {
-                    logger.error(`[Find] - Error On Find ${error.message}`);
-                    reject(error);
-                }
-                resolve(row);
-            });
-        });
+    async find(id: number): Promise<Bank | undefined> {
+        try {
+            let queryResult = await sqlDatabaseProvider.execute<Bank>('SELECT * FROM bank WHERE id = $1;', [id], false);
+            return queryResult.rows[0];
+        } catch (error) {
+            logger.error(`[find] - Error On Find ${error}`);
+            return undefined;
+        }
     }
 
-    findAll(criteria: Criteria): Promise<Bank[]> {
-        let findSQL = 'SELECT * FROM bank';
-        let where = addWhereClause(findSQL, criteria);
-        findSQL = where.sql;
-        findSQL = addOrderByClause(findSQL, criteria);
-        findSQL = addLimitAndOffset(findSQL, criteria);
-        return new Promise<Bank[]>((resolve, reject) => {
-            sqlDatabaseProvider.database?.all<Bank>(findSQL, where.whereClauses, (error, rows) => {
-                if (error) {
-                    logger.error(`[FindAll] - Error On FindAll ${error.message}`);
-                    reject(error);
-                    return;
-                }
-                resolve(rows);
-            });
-        });
+    async findAll(criteria: Criteria): Promise<Bank[]> {
+        try {
+            let findSQL = 'SELECT * FROM bank';
+            let where = addWhereClause(findSQL, criteria);
+            findSQL = where.sql;
+            findSQL = addOrderByClause(findSQL, criteria);
+            findSQL = addLimitAndOffset(findSQL, criteria);
+            let queryResult = await sqlDatabaseProvider.execute<Bank>(findSQL, where.whereClauses, false);
+            return queryResult.rows;
+        } catch (error) {
+            logger.error(`[findAll] - Error On FindAll ${error}`);
+            return [];
+        }
     }
 
     async update(item: Bank): Promise<Bank | undefined> {

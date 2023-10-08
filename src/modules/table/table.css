@@ -50,6 +50,10 @@
     align-items: center;
 }
 
+.td-body {
+    padding: 10px;
+}
+
 .td-span {
     display: flex;
     align-items: center;
@@ -216,6 +220,8 @@
     height: 48px;
     display: block;
     border-top: 1px solid lightgray;
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.875rem;
 }
 
 .tr-footer {

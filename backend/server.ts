@@ -5,11 +5,11 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { connection, reconnectMailServer } from './workflows/mail-service.js';
 import { _getInvestmentTransactions, _investmentSyncCaptcha, _syncInvestment } from './controllers/investment-fund-controller.js';
-import { _getAccounts, _syncAccount, _syncAllAccount } from './controllers/account-controller.js';
+import { _addAccount, _getAccounts, _syncAccount, _syncAccounts } from './controllers/account-controller.js';
 import { _getAccountTransactions, _getTransactions } from './controllers/transactions.js';
 import { BankAccountTransactionSyncProvider } from './workflows/bank-account-transaction-sync-provider.js';
-import { sqlDatabaseProvider } from './database/initialize-database.js';
 import { Logger, LoggerLevel } from './logger/logger.js';
+import { _getBanks } from './controllers/bank-controller.js';
 
 Logger.level = LoggerLevel.DEBUG;
 
@@ -30,21 +30,26 @@ const logger: Logger = new Logger('Server Main');
 
 app.listen(port, () => {
     logger.info(`Backend Server Started listening on ${port}`);
-    logger.info('Preparing Results for API calls');
-
-    sqlDatabaseProvider.initDatabase();
     connection.connect();
     reconnectMailServer();
-
     let bankAccountTransactionSyncProvider = new BankAccountTransactionSyncProvider();
     bankAccountTransactionSyncProvider.sync();
 });
 
+// Bank Controller
+app.get(API_PATH.GET_BANKS, _getBanks);
+
+// Account Controller
 app.get(API_PATH.GET_ACCOUNTS, _getAccounts);
+app.post(API_PATH.ADD_ACCOUNT, _addAccount);
 app.get(API_PATH.SYNC_ACCOUNT, _syncAccount);
-app.get(API_PATH.SYNC_ALL_ACCOUNT, _syncAllAccount);
+app.get(API_PATH.SYNC_ALL_ACCOUNT, _syncAccounts);
+
+// Account Transaction Controller
 app.post(API_PATH.GET_ALL_ACCOUNTS_TRANSACTIONS, _getTransactions);
 app.get(API_PATH.GET_ACCOUNT_TRANSACTIONS, _getAccountTransactions);
+
+// Investment Fund Controller
 app.post(API_PATH.GET_INVESTMENT_TRANSACTIONS, _getInvestmentTransactions);
 app.get(API_PATH.SYNC_INVESTMENT, _syncInvestment);
 app.post(API_PATH.POST_INVESTMENT_SYNC_CAPTCHA, _investmentSyncCaptcha);

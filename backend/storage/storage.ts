@@ -24,11 +24,12 @@ export interface Criteria {
 export const addWhereClause = (sql: string, criteria: Criteria) => {
     let whereClauseValues: any[] = [];
     let whereClause = [];
+    let count = 1;
     if (criteria.filters) {
         whereClause.push(
             criteria.filters.map((item) => {
                 whereClauseValues.push(item.value);
-                return `${item.key} = ?`;
+                return `${item.key} = $${count++}`;
             })
         );
     }
@@ -37,7 +38,7 @@ export const addWhereClause = (sql: string, criteria: Criteria) => {
             criteria.between.map((item) => {
                 whereClauseValues.push(item.range.start);
                 whereClauseValues.push(item.range.end);
-                return `${item.key} BETWEEN ? AND ?`;
+                return `${item.key} BETWEEN $${count++} AND $${count++}`;
             })
         );
     }

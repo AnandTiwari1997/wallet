@@ -171,7 +171,8 @@ class MutualFundStorage implements Database<MutualFundTransaction, string> {
                     return;
                 }
                 logger.info(row);
-                resolve(row.numFound);
+                if (row) resolve(row.numFound);
+                else resolve(0);
             });
         });
     };

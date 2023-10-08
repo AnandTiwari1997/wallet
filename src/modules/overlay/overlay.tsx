@@ -8,6 +8,7 @@ const Overlay = ({ open, close, children, onBackdrop, triggerBy }: { [key: strin
         if (!open) return;
         const popover = document.getElementById('overlay-container')!;
         const invoker = document.querySelector('[id=' + triggerBy + ']')!;
+        console.log(invoker);
         computePosition(invoker, popover, {
             placement: 'bottom-start',
             strategy: 'absolute'
@@ -15,7 +16,11 @@ const Overlay = ({ open, close, children, onBackdrop, triggerBy }: { [key: strin
             Object.assign(popover.style, {
                 left: `${x}px`,
                 top: `${y}px`,
-                position: 'absolute'
+                position: 'absolute',
+                background: 'white',
+                boxShadow: 'rgba(0, 0, 0, 0.2) 0px 5px 5px -3px, rgba(0, 0, 0, 0.14) 0px 8px 10px 1px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px',
+                marginTop: '5px',
+                zIndex: '1001'
             });
         });
     }, [open, triggerBy]);

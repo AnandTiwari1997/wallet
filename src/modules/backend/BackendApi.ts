@@ -22,6 +22,10 @@ export interface ApiRequestBody<T> {
     criteria?: ApiCriteria;
 }
 
+export const getBanks = async (): Promise<any> => {
+    return await axios.get('http://localhost:8000/wallet/banks').then((value) => value.data);
+};
+
 export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transaction>, dispatch: any): Promise<ApiResponse<Transaction>> => {
     dispatch(true);
     const response = await axios.post('http://localhost:8000/wallet/transactions', apiRequestBody, {
@@ -75,6 +79,18 @@ export const getAccounts = async (dispatch: any): Promise<ApiResponse<Account>> 
             console.log(reason);
             return { results: [], num_found: 0 };
         });
+};
+
+export const addAccount = async (account: Account): Promise<ApiResponse<Account>> => {
+    return await axios.post<any, ApiResponse<Account>, any>(
+        'http://localhost:8000/wallet/accounts',
+        { data: account },
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    );
 };
 
 export const syncInvestmentAccount = (type: string): EventSource => {

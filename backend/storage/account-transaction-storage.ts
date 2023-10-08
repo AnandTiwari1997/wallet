@@ -9,37 +9,34 @@ const logger: Logger = new Logger('AccountTransactionStorage');
 class AccountTransactionStorage implements Database<Transaction, string> {
     async add(item: Transaction): Promise<Transaction | undefined> {
         const id = this.generateId(item);
-        let providentFundPromise = this.find(id);
-        const providentFundTransaction = await providentFundPromise;
-        if (providentFundTransaction) return providentFundTransaction;
-        item.transactionId = id;
-        return new Promise((resolve, reject) => {
-            sqlDatabaseProvider.database?.run(
-                'INSERT INTO account_transaction(transactionId, account, transactionDate, amount, transactionType, category, paymentMode, note, labels, currency, transactionState, date) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);',
+        let accountTransactionPromise = this.find(id);
+        const accountTransaction = await accountTransactionPromise;
+        if (accountTransaction) return accountTransaction;
+        item.transaction_id = id;
+        try {
+            let queryResult = await sqlDatabaseProvider.execute<Transaction>(
+                'INSERT INTO account_transaction(transaction_id, account, transaction_date, amount, transaction_type, category, payment_mode, note, labels, currency, transaction_state, dated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *;',
                 [
-                    item.transactionId,
+                    item.transaction_id,
                     item.account,
-                    item.transactionDate.toISOString(),
+                    item.transaction_date,
                     item.amount,
-                    item.transactionType,
+                    item.transaction_type,
                     item.category,
-                    item.paymentMode,
+                    item.payment_mode,
                     item.note,
                     item.labels,
                     item.currency,
-                    item.transactionState,
-                    item.transactionDate.toISOString().slice(0, 10)
+                    item.transaction_state,
+                    item.transaction_date
                 ],
-                (error) => {
-                    if (error) {
-                        logger.error(`[Add] - Error On Add ${error.message}`);
-                        reject(error);
-                        return;
-                    }
-                    resolve(item);
-                }
+                true
             );
-        });
+            return queryResult.rows[0];
+        } catch (error) {
+            logger.error(`[Add] - Error On Add ${error}`);
+            return;
+        }
     }
 
     delete(id: string): Promise<boolean> {
@@ -50,38 +47,30 @@ class AccountTransactionStorage implements Database<Transaction, string> {
         return Promise.resolve(false);
     }
 
-    find(id: string): Promise<Transaction | undefined> {
-        return new Promise((resolve, reject) => {
-            sqlDatabaseProvider.database?.get<Transaction>('SELECT * FROM account_transaction WHERE transactionId = ?;', id, (error, row) => {
-                if (error) {
-                    logger.error(`[Find] - Error On Find ${error.message}`);
-                    reject(error);
-                }
-                resolve(row);
-            });
-        });
+    async find(id: string): Promise<Transaction | undefined> {
+        try {
+            let queryResult = await sqlDatabaseProvider.execute<Transaction>('SELECT * FROM account_transaction WHERE transaction_id = $1;', [id], false);
+            return queryResult.rows[0];
+        } catch (error) {
+            logger.error(`[Find] - Error On Find ${error}`);
+            return;
+        }
     }
 
-    findAll(criteria: Criteria): Promise<Transaction[]> {
-        let findSQL = 'SELECT * FROM account_transaction';
-        let where = addWhereClause(findSQL, criteria);
-        findSQL = where.sql;
-        findSQL = addOrderByClause(findSQL, criteria);
-        findSQL = addLimitAndOffset(findSQL, criteria);
-        return new Promise<Transaction[]>((resolve, reject) => {
-            sqlDatabaseProvider.database?.all<Transaction>(findSQL, where.whereClauses, (error, rows) => {
-                if (error) {
-                    logger.error(`[FindAll] - Error On FindAll ${error.message}`);
-                    reject(error);
-                    return;
-                }
-                let newRows = rows.map((row) => {
-                    row.transactionDate = new Date(row.transactionDate);
-                    return row;
-                });
-                resolve(newRows);
-            });
-        });
+    async findAll(criteria: Criteria): Promise<Transaction[]> {
+        try {
+            let findSQL = `SELECT dated
+                           FROM account_transaction`;
+            let where = addWhereClause(findSQL, criteria);
+            findSQL = where.sql;
+            findSQL = addOrderByClause(findSQL, criteria);
+            findSQL = addLimitAndOffset(findSQL, criteria);
+            let queryResults = await sqlDatabaseProvider.execute<Transaction>(findSQL, where.whereClauses, false);
+            return queryResults.rows;
+        } catch (error) {
+            logger.error(`[FindAll] - Error On FindAll ${error}`);
+            return [];
+        }
     }
 
     update(item: Transaction): Promise<Transaction | undefined> {
@@ -89,60 +78,42 @@ class AccountTransactionStorage implements Database<Transaction, string> {
     }
 
     generateId = (item: Transaction): string => {
-        let id = '';
-        for (let key of item) {
-            id = id + String(key);
+        return item.transaction_date.toISOString() + '_' + item.account.toString() + '_' + item.amount;
+    };
+
+    async findAllUsingGroupBy(criteria: Criteria) {
+        try {
+            let innerSql = `SELECT dated
+                            FROM account_transaction`;
+            let where = addWhereClause(innerSql, criteria);
+            innerSql = where.sql;
+            innerSql = addGroupByClause(innerSql, criteria);
+            innerSql = addOrderByClause(innerSql, criteria);
+            innerSql = addLimitAndOffset(innerSql, criteria);
+            let outerSql = `SELECT a.dated
+                            FROM ${innerSql} a`;
+            let findSQL = `SELECT *
+                           FROM account_transaction
+                           WHERE dated IN (${innerSql})`;
+            findSQL = addOrderByClause(findSQL, criteria);
+            let queryResults = await sqlDatabaseProvider.execute<Transaction>(findSQL, where.whereClauses, false);
+            return queryResults.rows;
+        } catch (error) {
+            logger.error(`[FindAllUsingGroupBy] - Error On FindAllUsingGroupBy ${error}`);
+            return;
         }
-        return id;
-    };
+    }
 
-    findAllUsingGroupBy = (criteria: Criteria) => {
-        let innerSql = `SELECT date
+    async count(criteria: Criteria) {
+        let innerSql = `SELECT DISTINCT SUM(1) OVER () as num_found
                         FROM account_transaction`;
         let where = addWhereClause(innerSql, criteria);
         innerSql = where.sql;
         innerSql = addGroupByClause(innerSql, criteria);
-        innerSql = addOrderByClause(innerSql, criteria);
-        innerSql = addLimitAndOffset(innerSql, criteria);
-        let findSQL = `SELECT *
-                       FROM account_transaction
-                       WHERE date IN (${innerSql})
-                       ORDER BY transactionDate DESC`;
-        return new Promise<Transaction[]>((resolve, reject) => {
-            sqlDatabaseProvider.database?.all<Transaction>(findSQL, where.whereClauses, (error, rows) => {
-                if (error) {
-                    logger.error(`[findAllUsingGroupBy] - Error On findAllUsingGroupBy ${error.message}`);
-                    reject(error);
-                    return;
-                }
-                let newRows = rows.map((row) => {
-                    row.transactionDate = new Date(row.transactionDate);
-                    return row;
-                });
-                resolve(newRows);
-            });
-        });
-    };
-
-    count = (criteria: Criteria) => {
-        let innerSql = `SELECT DISTINCT SUM(1) OVER () numFound
-                        FROM account_transaction`;
-        let where = addWhereClause(innerSql, criteria);
-        innerSql = where.sql;
-        innerSql = addGroupByClause(innerSql, criteria);
-        innerSql = addOrderByClause(innerSql, criteria);
-        return new Promise<number>((resolve, reject) => {
-            sqlDatabaseProvider.database?.get<any>(innerSql, where.whereClauses, (error, row) => {
-                if (error) {
-                    logger.error(`[Count] - Error On Count ${error.message}`);
-                    reject(error);
-                    return;
-                }
-                logger.info(row);
-                resolve(row.numFound);
-            });
-        });
-    };
+        // innerSql = addOrderByClause(innerSql, criteria);
+        let queryResult = await sqlDatabaseProvider.execute<{ num_found: number }>(innerSql, where.whereClauses, false);
+        return queryResult.rows[0].num_found;
+    }
 }
 
 export const accountTransactionStorage = new AccountTransactionStorage();
