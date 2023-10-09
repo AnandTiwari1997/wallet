@@ -23,7 +23,7 @@ const ProvidentFund = () => {
         return {
             filters: [...filters],
             sorts: [...sorts],
-            groupBy: [{ key: 'financialYear' }],
+            groupBy: [{ key: 'financial_year' }],
             offset: 0,
             limit: 25
         };
@@ -43,7 +43,7 @@ const ProvidentFund = () => {
     };
 
     useEffect(() => {
-        fetchInvestmentTransactions({ criteria: buildCriteria([], [{ key: 'transactionDate', ascending: false }]) });
+        fetchInvestmentTransactions({ criteria: buildCriteria([], [{ key: 'transaction_date', ascending: false }]) });
     }, [setInitialData]);
 
     const columns: TableColumn[] = [
@@ -184,7 +184,7 @@ const ProvidentFund = () => {
             onSort={(sortedColumn) => {
                 if (!sortedColumn)
                     fetchInvestmentTransactions({
-                        criteria: buildCriteria([], [{ key: 'transactionDate', ascending: false }])
+                        criteria: buildCriteria([], [{ key: 'transaction_date', ascending: false }])
                     });
                 else
                     fetchInvestmentTransactions({

@@ -1,112 +1,110 @@
-import { bank, coins, moneyBall } from '../icons/icons';
-
 export interface Account {
-    id: number;
-    accountName: string;
-    accountBalance: number;
-    initialBalance: number;
-    bankAccountNumber?: string;
-    accountType: string;
-    accountIcon?: any;
-    accountBackgroundColor?: string;
-    bankAccountType?: string;
-    bank?: Bank | number;
+    account_id: number;
+    account_name: string;
+    account_balance: number;
+    initial_balance: number;
+    bank_account_number: string;
+    account_type: string;
+    account_icon: any;
+    account_background_color: string;
+    bank_account_type: string;
+    bank: Bank | undefined;
 }
 
 export interface Bank {
-    id: number;
+    bank_id: number;
     name: string;
     icon: string;
-    alertEmailId: string;
-    primaryColor: string;
+    alert_email_id: string;
+    primary_color: string;
 }
 
-export const bankData: Bank[] = [
-    {
-        id: 0,
-        name: '',
-        icon: '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="coins" class="svg-inline--fa fa-coins "\n     role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">\n    <path fill="currentColor"\n          d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 204.9 384 221.7 384 240c0 4-.7 7.9-2.1 11.7c-4.6 13.2-17 25.3-35 35.5c0 0 0 0 0 0c-.1 .1-.3 .1-.4 .2l0 0 0 0c-.3 .2-.6 .3-.9 .5c-35 19.4-90.8 32-153.6 32c-59.6 0-112.9-11.3-148.2-29.1c-1.9-.9-3.7-1.9-5.5-2.9C14.3 274.6 0 258 0 240c0-34.8 53.4-64.5 128-75.4c10.5-1.5 21.4-2.7 32.7-3.5zM416 240c0-21.9-10.6-39.9-24.1-53.4c28.3-4.4 54.2-11.4 76.2-20.5c16.3-6.8 31.5-15.2 43.9-25.5V176c0 19.3-16.5 37.1-43.8 50.9c-14.6 7.4-32.4 13.7-52.4 18.5c.1-1.8 .2-3.5 .2-5.3zm-32 96c0 18-14.3 34.6-38.4 48c-1.8 1-3.6 1.9-5.5 2.9C304.9 404.7 251.6 416 192 416c-62.8 0-118.6-12.6-153.6-32C14.3 370.6 0 354 0 336V300.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 342.6 135.8 352 192 352s108.6-9.4 148.1-25.9c7.8-3.2 15.3-6.9 22.4-10.9c6.1-3.4 11.8-7.2 17.2-11.2c1.5-1.1 2.9-2.3 4.3-3.4V304v5.7V336zm32 0V304 278.1c19-4.2 36.5-9.5 52.1-16c16.3-6.8 31.5-15.2 43.9-25.5V272c0 10.5-5 21-14.9 30.9c-16.3 16.3-45 29.7-81.3 38.4c.1-1.7 .2-3.5 .2-5.3zM192 448c56.2 0 108.6-9.4 148.1-25.9c16.3-6.8 31.5-15.2 43.9-25.5V432c0 44.2-86 80-192 80S0 476.2 0 432V396.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 438.6 135.8 448 192 448z"/>\n</svg>',
-        alertEmailId: '',
-        primaryColor: '#008000'
-    },
-    {
-        id: 1,
-        name: 'Axis Bank',
-        icon: '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="axis-bank" xmlns="http://www.w3.org/2000/svg"\n     class="svg-inline--fa" viewBox="0 0 1552 1346">\n    <path id="path880" fill="currentColor" d="m1551.8 1345.7h-482.5l-293-511.2h482.5z"/>\n    <path id="path884" fill="currentColor" d="m774.5 0.2l242 416.4-534.5 929.1h-481.7z"/>\n</svg>',
-        alertEmailId: 'alerts@axisbank.com',
-        primaryColor: '#AE285D'
-    }
-];
+// export const bankData: Bank[] = [
+//     {
+//         id: 0,
+//         name: '',
+//         icon: '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="coins" class="svg-inline--fa fa-coins "\n     role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">\n    <path fill="currentColor"\n          d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 204.9 384 221.7 384 240c0 4-.7 7.9-2.1 11.7c-4.6 13.2-17 25.3-35 35.5c0 0 0 0 0 0c-.1 .1-.3 .1-.4 .2l0 0 0 0c-.3 .2-.6 .3-.9 .5c-35 19.4-90.8 32-153.6 32c-59.6 0-112.9-11.3-148.2-29.1c-1.9-.9-3.7-1.9-5.5-2.9C14.3 274.6 0 258 0 240c0-34.8 53.4-64.5 128-75.4c10.5-1.5 21.4-2.7 32.7-3.5zM416 240c0-21.9-10.6-39.9-24.1-53.4c28.3-4.4 54.2-11.4 76.2-20.5c16.3-6.8 31.5-15.2 43.9-25.5V176c0 19.3-16.5 37.1-43.8 50.9c-14.6 7.4-32.4 13.7-52.4 18.5c.1-1.8 .2-3.5 .2-5.3zm-32 96c0 18-14.3 34.6-38.4 48c-1.8 1-3.6 1.9-5.5 2.9C304.9 404.7 251.6 416 192 416c-62.8 0-118.6-12.6-153.6-32C14.3 370.6 0 354 0 336V300.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 342.6 135.8 352 192 352s108.6-9.4 148.1-25.9c7.8-3.2 15.3-6.9 22.4-10.9c6.1-3.4 11.8-7.2 17.2-11.2c1.5-1.1 2.9-2.3 4.3-3.4V304v5.7V336zm32 0V304 278.1c19-4.2 36.5-9.5 52.1-16c16.3-6.8 31.5-15.2 43.9-25.5V272c0 10.5-5 21-14.9 30.9c-16.3 16.3-45 29.7-81.3 38.4c.1-1.7 .2-3.5 .2-5.3zM192 448c56.2 0 108.6-9.4 148.1-25.9c16.3-6.8 31.5-15.2 43.9-25.5V432c0 44.2-86 80-192 80S0 476.2 0 432V396.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 438.6 135.8 448 192 448z"/>\n</svg>',
+//         alert_email_id: '',
+//         primary_color: '#008000'
+//     },
+//     {
+//         id: 1,
+//         name: 'Axis Bank',
+//         icon: '<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="axis-bank" xmlns="http://www.w3.org/2000/svg"\n     class="svg-inline--fa" viewBox="0 0 1552 1346">\n    <path id="path880" fill="currentColor" d="m1551.8 1345.7h-482.5l-293-511.2h482.5z"/>\n    <path id="path884" fill="currentColor" d="m774.5 0.2l242 416.4-534.5 929.1h-481.7z"/>\n</svg>',
+//         alert_email_id: 'alerts@axisbank.com',
+//         primary_color: '#AE285D'
+//     }
+// ];
 
-export const accountData: Account[] = [
-    {
-        id: 1,
-        accountName: 'AXIS BANK',
-        bankAccountNumber: '6789012345',
-        initialBalance: 10000,
-        accountIcon: bank,
-        accountBackgroundColor: 'maroon',
-        accountBalance: 10000,
-        accountType: 'BANK',
-        bankAccountType: 'SAVING_ACCOUNT',
-        bank: bankData[1]
-    },
-    {
-        id: 2,
-        accountName: 'CASH',
-        bankAccountNumber: '5678901234',
-        initialBalance: 20000,
-        accountIcon: coins,
-        accountBackgroundColor: 'green',
-        accountBalance: 20000,
-        accountType: 'CASH',
-        bank: bankData[0]
-    },
-    {
-        id: 3,
-        accountName: 'STATE BANK OF INDIA',
-        bankAccountNumber: '4567890123',
-        initialBalance: 30000,
-        accountIcon: moneyBall,
-        accountBackgroundColor: 'blue',
-        accountBalance: 30000,
-        accountType: 'BANK',
-        bankAccountType: 'CURRENT_ACCOUNT',
-        bank: bankData[1]
-    },
-    {
-        id: 4,
-        accountName: 'BANK OF INDIA',
-        bankAccountNumber: '3456789012',
-        initialBalance: 40000,
-        accountIcon: bank,
-        accountBackgroundColor: 'purple',
-        accountBalance: 40000,
-        accountType: 'BANK',
-        bankAccountType: 'SAVING_ACCOUNT',
-        bank: bankData[1]
-    },
-    {
-        id: 5,
-        accountName: 'ICICI BANK',
-        bankAccountNumber: '2345678901',
-        initialBalance: 50000,
-        accountIcon: bank,
-        accountBackgroundColor: 'brown',
-        accountBalance: 50000,
-        accountType: 'BANK',
-        bankAccountType: 'SAVING_ACCOUNT',
-        bank: bankData[1]
-    },
-    {
-        id: 6,
-        accountName: 'UNRESERVED CASH',
-        bankAccountNumber: '1234567890',
-        initialBalance: 60000,
-        accountIcon: coins,
-        accountBackgroundColor: 'darkblue',
-        accountBalance: 60000,
-        accountType: 'CASH',
-        bank: bankData[0]
-    }
-];
+// export const accountData: Account[] = [
+//     {
+//         id: 1,
+//         accountName: 'AXIS BANK',
+//         bankAccountNumber: '6789012345',
+//         initialBalance: 10000,
+//         accountIcon: bank,
+//         accountBackgroundColor: 'maroon',
+//         accountBalance: 10000,
+//         accountType: 'BANK',
+//         bankAccountType: 'SAVING_ACCOUNT',
+//         bank: bankData[1]
+//     },
+//     {
+//         id: 2,
+//         accountName: 'CASH',
+//         bankAccountNumber: '5678901234',
+//         initialBalance: 20000,
+//         accountIcon: coins,
+//         accountBackgroundColor: 'green',
+//         accountBalance: 20000,
+//         accountType: 'CASH',
+//         bank: bankData[0]
+//     },
+//     {
+//         id: 3,
+//         accountName: 'STATE BANK OF INDIA',
+//         bankAccountNumber: '4567890123',
+//         initialBalance: 30000,
+//         accountIcon: moneyBall,
+//         accountBackgroundColor: 'blue',
+//         accountBalance: 30000,
+//         accountType: 'BANK',
+//         bankAccountType: 'CURRENT_ACCOUNT',
+//         bank: bankData[1]
+//     },
+//     {
+//         id: 4,
+//         accountName: 'BANK OF INDIA',
+//         bankAccountNumber: '3456789012',
+//         initialBalance: 40000,
+//         accountIcon: bank,
+//         accountBackgroundColor: 'purple',
+//         accountBalance: 40000,
+//         accountType: 'BANK',
+//         bankAccountType: 'SAVING_ACCOUNT',
+//         bank: bankData[1]
+//     },
+//     {
+//         id: 5,
+//         accountName: 'ICICI BANK',
+//         bankAccountNumber: '2345678901',
+//         initialBalance: 50000,
+//         accountIcon: bank,
+//         accountBackgroundColor: 'brown',
+//         accountBalance: 50000,
+//         accountType: 'BANK',
+//         bankAccountType: 'SAVING_ACCOUNT',
+//         bank: bankData[1]
+//     },
+//     {
+//         id: 6,
+//         accountName: 'UNRESERVED CASH',
+//         bankAccountNumber: '1234567890',
+//         initialBalance: 60000,
+//         accountIcon: coins,
+//         accountBackgroundColor: 'darkblue',
+//         accountBalance: 60000,
+//         accountType: 'CASH',
+//         bank: bankData[0]
+//     }
+// ];

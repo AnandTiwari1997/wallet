@@ -42,7 +42,7 @@
 
 .account-icon-container {
     margin: 0 1rem 0 0.5rem;
-    height: 36px;
+    height: 30px;
 }
 
 .account-details-container {
@@ -92,9 +92,13 @@
 
 .account-icon {
     background-color: transparent;
-    /*width: 26px;*/
     height: 100%;
-    /*font-size: 26px;*/
+    font-size: 26px;
+    display: block;
+}
+
+.account-icon svg {
+    height: 100%;
 }
 
 .account-name {

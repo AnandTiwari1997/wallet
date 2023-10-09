@@ -1,11 +1,14 @@
 export const API_PATH = {
     GET_BANKS: '/wallet/banks',
-    GET_ACCOUNTS: '/wallet/accounts',
-    ADD_ACCOUNT: '/wallet/accounts',
-    SYNC_ACCOUNT: '/wallet/account/:account/sync',
-    SYNC_ALL_ACCOUNT: '/wallet/account/sync',
+    // Account Endpoints
+    ACCOUNTS: '/wallet/accounts',
+    SYNC_ACCOUNTS: '/wallet/account/sync',
+
+    // Transaction Endpoints
     GET_ALL_ACCOUNTS_TRANSACTIONS: '/wallet/transactions',
     GET_ACCOUNT_TRANSACTIONS: '/wallet/:account/transactions',
+
+    // Investment Endpoints
     GET_INVESTMENT_TRANSACTIONS: '/wallet/investment/:investmentType/transactions',
     SYNC_INVESTMENT: '/wallet/investment/:investmentType/sync',
     POST_INVESTMENT_SYNC_CAPTCHA: '/wallet/investment/:investmentType/sync/captcha'
@@ -15,7 +18,12 @@ export const MUTUAL_FUND = 'mutual_fund';
 export const PROVIDENT_FUND = 'provident_fund';
 
 export class ArrayUtil {
-    static groupBy<T>(arr: T[], fn: (item: T) => string): { [key: string]: T[] } {
+    static groupBy<T>(
+        arr: T[],
+        fn: (item: T) => string
+    ): {
+        [key: string]: T[];
+    } {
         return arr.reduce<Record<string, T[]>>((prev, curr) => {
             const groupKey = fn(curr);
             const group = prev[groupKey] || [];

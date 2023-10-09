@@ -12,8 +12,8 @@ export interface ApiCriteria {
     filters?: { key: string; value: string }[];
     sorts?: { key: string; ascending: boolean }[];
     between?: { key: string; range: { start: string; end: string } }[];
-    offset: number;
-    limit: number;
+    offset?: number;
+    limit?: number;
     groupBy?: { key: string }[];
 }
 
@@ -91,6 +91,30 @@ export const addAccount = async (account: Account): Promise<ApiResponse<Account>
             }
         }
     );
+};
+
+export const updateAccount = async (account: Account): Promise<ApiResponse<Account>> => {
+    return await axios.put<any, ApiResponse<Account>, any>(
+        'http://localhost:8000/wallet/accounts',
+        { data: account },
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }
+    );
+};
+
+export const syncAccount = async (apiRequest: ApiRequestBody<Account>): Promise<{ message: string }> => {
+    return await axios.post<any, { message: string }, any>(`http://localhost:8000/wallet/account/sync`, apiRequest, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+};
+
+export const syncAccounts = async (): Promise<{ message: string }> => {
+    return await axios.get<any, { message: string }, any>(`http://localhost:8000/wallet/account/sync`);
 };
 
 export const syncInvestmentAccount = (type: string): EventSource => {

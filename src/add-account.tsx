@@ -1,17 +1,46 @@
 import Select, { SelectOption } from './modules/select/select';
 import TextBox from './modules/text-box/text-box';
 import { Account, Bank } from './data/account-data';
-import { useState } from 'react';
-import { addAccount, ApiResponse, getBanks } from './modules/backend/BackendApi';
+import { useEffect, useState } from 'react';
+import { addAccount, ApiResponse, getBanks, updateAccount } from './modules/backend/BackendApi';
 
-const AddAccount = ({ onSubmit }: { onSubmit: (success: boolean, data: Account | undefined) => any | void }) => {
+const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (success: boolean, data: Account | undefined) => any | void }) => {
     const [accountType, setAccountType] = useState<string>('CASH');
     const [accountName, setAccountName] = useState<string>('');
     const [initialBalance, setInitialBalance] = useState<string>('0');
     const [bankAccountType, setBankAccountType] = useState<string>('SAVING_ACCOUNT');
     const [bankAccountNumber, setBankAccountNumber] = useState<string>('');
     const [bank, setBank] = useState<number>(0);
-    const [banks, setBanks] = useState<SelectOption[]>([]);
+    const [banks, setBanks] = useState<{
+        [key: string]: Bank;
+    }>({});
+    const [bankOption, setBankOption] = useState<SelectOption[]>([]);
+    const [edit, setEdit] = useState<boolean>(false);
+
+    const _getBanks = () => {
+        getBanks().then((value: ApiResponse<Bank>) => {
+            let options: SelectOption[] = value.results
+                .filter((value1) => {
+                    return value1.bank_id.toString() !== '0';
+                })
+                .map((value1) => {
+                    banks[value1.bank_id] = value1;
+                    return { value: value1.bank_id, label: value1.name };
+                });
+            setBankOption(options);
+        });
+    };
+
+    useEffect(() => {
+        setEdit(!!account);
+        setAccountType(account ? account.account_type : 'CASH');
+        setAccountName(account ? account.account_name : '');
+        setInitialBalance(account ? account.initial_balance.toString() : '0');
+        setBankAccountType(account ? account.bank_account_type : 'SAVING_ACCOUNT');
+        setBankAccountNumber(account ? account.bank_account_number : '');
+        setBank(account ? (account.bank ? account.bank.bank_id : 0) : 0);
+        _getBanks();
+    }, [account]);
 
     return (
         <>
@@ -19,6 +48,7 @@ const AddAccount = ({ onSubmit }: { onSubmit: (success: boolean, data: Account |
                 <div>
                     <p style={{ margin: '0.5em 0' }}>Account Type</p>
                     <Select
+                        selectedOption={accountType}
                         options={[
                             { value: 'CASH', label: 'Cash' },
                             { value: 'BANK', label: 'Bank' },
@@ -26,28 +56,23 @@ const AddAccount = ({ onSubmit }: { onSubmit: (success: boolean, data: Account |
                             { value: 'CREDIT_CARD', label: 'Credit Card' }
                         ]}
                         onChange={(event) => {
-                            if (event.target.value === 'BANK' && banks.length === 0) {
-                                getBanks().then((value: ApiResponse<Bank>) => {
-                                    console.log(value);
-                                    let options: SelectOption[] = value.results.map((value1) => {
-                                        return { value: value1.id, label: value1.name };
-                                    });
-                                    setBanks(options);
-                                });
+                            if (event.target.value === 'BANK') {
+                                _getBanks();
                             } else {
-                                setBanks([]);
+                                setBankOption([]);
                             }
                             setAccountType(event.target.value);
                         }}
                     />
                     <p style={{ margin: '0.5em 0' }}>Account Name</p>
-                    <TextBox value={setAccountName} placeholder={'Enter Account Name'} />
+                    <TextBox setValue={setAccountName} value={accountName} placeholder={'Enter Account Name'} />
 
                     {accountType === 'BANK' && (
                         <>
                             <p style={{ margin: '0.5em 0' }}>Bank</p>
                             <Select
-                                options={banks}
+                                selectedOption={bank}
+                                options={bankOption}
                                 onChange={(event) => {
                                     setBank(Number.parseInt(event.target.value));
                                 }}
@@ -55,6 +80,7 @@ const AddAccount = ({ onSubmit }: { onSubmit: (success: boolean, data: Account |
 
                             <p style={{ margin: '0.5em 0' }}>Bank Account Type</p>
                             <Select
+                                selectedOption={bankAccountType}
                                 options={[
                                     { value: 'SAVING_ACCOUNT', label: 'Saving Account' },
                                     { value: 'CURRENT_ACCOUNT', label: 'Current Account' }
@@ -65,40 +91,47 @@ const AddAccount = ({ onSubmit }: { onSubmit: (success: boolean, data: Account |
                             />
 
                             <p style={{ margin: '0.5em 0' }}>Bank Account Number</p>
-                            <TextBox value={setBankAccountNumber} placeholder={'Enter Bank Account Number'} />
+                            <TextBox setValue={setBankAccountNumber} value={bankAccountNumber} placeholder={'Enter Bank Account Number'} />
                         </>
                     )}
 
                     <p style={{ margin: '0.5em 0' }}>Initial Balance</p>
-                    <TextBox value={setInitialBalance} type={'number'} placeholder={'Enter Initial Balance'} />
+                    <TextBox setValue={setInitialBalance} value={initialBalance} type={'number'} placeholder={'Enter Initial Balance'} />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button
                             className="button"
                             onClick={() => {
-                                setBanks([]);
+                                setBankOption([]);
                                 let account: Account = {
-                                    id: 0,
-                                    accountName: accountName,
-                                    accountBalance: Number.parseFloat(initialBalance),
-                                    initialBalance: Number.parseFloat(initialBalance),
-                                    bankAccountNumber: bankAccountNumber,
-                                    accountType: accountType,
-                                    bankAccountType: bankAccountType,
-                                    accountIcon: '',
-                                    accountBackgroundColor: '',
-                                    bank: bank
+                                    account_id: 0,
+                                    account_name: accountName,
+                                    account_balance: Number.parseFloat(initialBalance),
+                                    initial_balance: Number.parseFloat(initialBalance),
+                                    bank_account_number: bankAccountNumber,
+                                    account_type: accountType,
+                                    bank_account_type: bankAccountType,
+                                    account_icon: '',
+                                    account_background_color: '',
+                                    bank: banks[bank]
                                 };
-                                addAccount(account)
-                                    .then((value) => {
-                                        console.log(value.results[0]);
-                                        console.log(value.num_found);
-
-                                        onSubmit(true, value.results[0]);
-                                    })
-                                    .catch((reason) => {
-                                        onSubmit(true, undefined);
-                                    });
+                                if (edit) {
+                                    updateAccount(account)
+                                        .then((value) => {
+                                            onSubmit(true, value.results[0]);
+                                        })
+                                        .catch((reason) => {
+                                            onSubmit(true, undefined);
+                                        });
+                                } else {
+                                    addAccount(account)
+                                        .then((value) => {
+                                            onSubmit(true, value.results[0]);
+                                        })
+                                        .catch((reason) => {
+                                            onSubmit(true, undefined);
+                                        });
+                                }
                             }}
                         >
                             Add

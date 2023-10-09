@@ -23,7 +23,7 @@ const MutualFund = () => {
         return {
             filters: [...filters],
             sorts: [...sorts],
-            groupBy: [{ key: 'fundName' }],
+            groupBy: [{ key: 'fund_name' }],
             offset: 0,
             limit: 25
         };
@@ -44,7 +44,7 @@ const MutualFund = () => {
 
     useEffect(() => {
         fetchInvestmentTransactions({
-            criteria: buildCriteria([], [{ key: 'transactionDate', ascending: false }])
+            criteria: buildCriteria([], [{ key: 'transaction_date', ascending: false }])
         });
     }, [setInitialData]);
 
@@ -197,7 +197,7 @@ const MutualFund = () => {
             onSort={(sortedColumn) => {
                 if (!sortedColumn)
                     fetchInvestmentTransactions({
-                        criteria: buildCriteria([], [{ key: 'transactionDate', ascending: false }])
+                        criteria: buildCriteria([], [{ key: 'transaction_date', ascending: false }])
                     });
                 else
                     fetchInvestmentTransactions({

@@ -6,10 +6,10 @@ export interface SelectOption {
     label: string;
 }
 
-const Select = ({ options, onChange }: { options: SelectOption[]; onChange: ChangeEventHandler<HTMLSelectElement> | undefined }) => {
+const Select = ({ options, onChange, selectedOption }: { options: SelectOption[]; onChange: ChangeEventHandler<HTMLSelectElement> | undefined; selectedOption?: any }) => {
     return (
         <div className="select">
-            <select onChange={onChange}>
+            <select onChange={onChange} value={selectedOption}>
                 {options.map((option) => (
                     <option value={option.value}>{option.label}</option>
                 ))}

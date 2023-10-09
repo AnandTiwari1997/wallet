@@ -90,8 +90,6 @@ class AccountTransactionStorage implements Database<Transaction, string> {
             innerSql = addGroupByClause(innerSql, criteria);
             innerSql = addOrderByClause(innerSql, criteria);
             innerSql = addLimitAndOffset(innerSql, criteria);
-            let outerSql = `SELECT a.dated
-                            FROM ${innerSql} a`;
             let findSQL = `SELECT *
                            FROM account_transaction
                            WHERE dated IN (${innerSql})`;
@@ -110,7 +108,6 @@ class AccountTransactionStorage implements Database<Transaction, string> {
         let where = addWhereClause(innerSql, criteria);
         innerSql = where.sql;
         innerSql = addGroupByClause(innerSql, criteria);
-        // innerSql = addOrderByClause(innerSql, criteria);
         let queryResult = await sqlDatabaseProvider.execute<{ num_found: number }>(innerSql, where.whereClauses, false);
         return queryResult.rows[0].num_found;
     }

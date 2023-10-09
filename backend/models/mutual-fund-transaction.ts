@@ -12,13 +12,11 @@ export class MutualFundTransaction {
     units: number;
     latestNav: number;
 
-    constructor(transactionId: string, portfolioNumber: string, fundName: string, transactionDate: string, description: string, amount: number, nav: number, units: number, latestNav: number) {
+    constructor(transactionId: string, portfolioNumber: string, fundName: string, transactionDate: Date, description: string, amount: number, nav: number, units: number, latestNav: number) {
         this.transactionId = transactionId;
         this.fundName = fundName;
         this.portfolioNumber = portfolioNumber;
-        this.transactionDate = parse(transactionDate, 'dd-MMM-yyyy', new Date(), {
-            weekStartsOn: 0
-        });
+        this.transactionDate = transactionDate;
         this.description = description;
         this.amount = amount;
         this.isCredit = this.amount > 0;
@@ -38,8 +36,47 @@ export class MutualFundTransaction {
     }
 }
 
+export interface IMutualFundTransaction {
+    transaction_id: string;
+    fundName: string;
+    portfolio_number: string;
+    transaction_date: string;
+    description: string;
+    amount: number;
+    is_credit: boolean;
+    nav: number;
+    units: number;
+    latest_nav: number;
+}
+
 export class MutualFundTransactionBuilder {
     static build = (item: { [key: string]: any }) => {
-        return new MutualFundTransaction(item.transactionId, item.portfolioNumber, item.fundName, item.transactionDate, item.description, item.amount, item.nav, item.units, item.latestNav);
+        return new MutualFundTransaction(
+            item.transactionId,
+            item.portfolioNumber,
+            item.fundName,
+            parse(item.transactionDate, 'dd-MMM-yyyy', new Date(), {
+                weekStartsOn: 0
+            }),
+            item.description,
+            item.amount,
+            item.nav,
+            item.units,
+            item.latestNav
+        );
+    };
+
+    static buildFromEntity = (item: { [key: string]: any }) => {
+        return new MutualFundTransaction(
+            item.transaction_id,
+            item.portfolio_number,
+            item.fund_name,
+            new Date(item.transaction_date),
+            item.description,
+            item.amount,
+            item.nav,
+            item.units,
+            item.latest_nav
+        );
     };
 }

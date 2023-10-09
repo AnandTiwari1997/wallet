@@ -58,28 +58,26 @@ const DashboardPage = () => {
 
     const accountCards = accounts.map((account) => {
         const backgroundColor: CSS.Properties = {
-            backgroundColor: `${account.accountBackgroundColor ? account.accountBackgroundColor : '#e5e9ed'}`,
-            color: `${account.accountBackgroundColor ? 'rgb(255, 255, 255)' : 'black'}`,
+            backgroundColor: `${typeof account.bank === 'object' ? account.bank.primary_color : '#e5e9ed'}`,
+            color: `${typeof account.bank === 'object' && account.bank.primary_color ? 'rgb(255, 255, 255)' : 'black'}`,
             display: 'flex',
             alignItems: 'center'
         };
         return (
-            <div key={account.id} className="account-card" style={backgroundColor}>
+            <div key={account.account_id} className="account-card" style={backgroundColor}>
                 <i aria-hidden="true" className="pencil alternate icon" onClick={() => console.log('Edit Clicked')}>
                     <FontAwesomeIcon aria-hidden="true" className="icon pencil" icon={edit} />
                 </i>
 
-                <div className="account-icon-container">
-                    <img src={account.accountIcon} className="account-icon" style={{ border: `1px solid ${account.accountBackgroundColor}` }} />
-                </div>
+                <div className="account-icon-container">{account.bank && <i className="account-icon" dangerouslySetInnerHTML={{ __html: account.bank.icon }}></i>}</div>
                 <div className="account-details-container">
                     <div className="account-name">
                         <span>
-                            <span>{account.accountName}</span>
+                            <span>{account.account_name}</span>
                         </span>
                     </div>
                     <div className="account-balance">
-                        <span className="">{account.initialBalance}</span>
+                        <span className="">{account.initial_balance}</span>
                     </div>
                 </div>
             </div>

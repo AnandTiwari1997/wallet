@@ -47,11 +47,11 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
                                     if (transaction) {
                                         accountStorage
                                             .findAll({
-                                                filters: [{ key: 'bank', value: `${bank.id}` }]
+                                                filters: [{ key: 'bank', value: `${bank.bank_id}` }]
                                             })
                                             .then((accounts) => {
                                                 accounts.forEach((account) => {
-                                                    transaction.account = account.id;
+                                                    transaction.account = account.account_id;
                                                     accountTransactionStorage.add(transaction).then((updatedTransaction) => {
                                                         if (updatedTransaction) {
                                                             account.last_synced_on = new Date();
@@ -77,20 +77,21 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
 
     syncInitial(accounts: Account[], deltaSync: boolean) {
         accounts.forEach((account) => {
-            bankStorage.find(account.bank).then((bank) => {
+            if (!account.bank) return;
+            bankStorage.find(account.bank?.bank_id).then((bank) => {
                 if (!bank) return;
                 let syncDate = deltaSync ? account.last_synced_on : subYears(startOfYear(new Date()), 3);
                 connection.search(
                     [
                         ['SINCE', syncDate],
-                        ['FROM', bank.alert_email_id]
+                        ['HEADER', 'FROM', bank.alert_email_id]
                     ],
                     (error, uids) => {
                         if (error) {
                             logger.error(error.message);
                             return;
                         }
-                        const iFetch = connection.seq.fetch(uids, {
+                        const iFetch = connection.fetch(uids, {
                             bodies: ''
                         });
                         iFetch.on('message', function (msg, sequenceNumber) {
@@ -100,14 +101,13 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
                                         logger.error(error.message);
                                         return;
                                     }
-                                    if (!parsedMail.text) return;
+                                    if (!parsedMail.text && !parsedMail.html) return;
                                     if (!parsedMail.from?.value[0].address) return;
-                                    if (!account.bank) return;
                                     const bankProcessor: BankProcessor | undefined = BankProcessorFactory.getProcessor(bank.alert_email_id);
                                     if (bankProcessor) {
                                         const transaction = bankProcessor.process(parsedMail);
                                         if (transaction) {
-                                            transaction.account = account.id;
+                                            transaction.account = account.account_id;
                                             accountTransactionStorage.add(transaction).then((updatedTransaction) => {
                                                 if (updatedTransaction) {
                                                     account.last_synced_on = new Date();

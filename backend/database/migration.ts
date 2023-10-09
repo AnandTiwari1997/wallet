@@ -1,16 +1,16 @@
 export const migrations: { [key: string]: string } = {
     V1: `CREATE TABLE IF NOT EXISTS bank
          (
-             id             INT8 NOT NULL,
+             bank_id        INT8 NOT NULL,
              name           TEXT NOT NULL,
              icon           TEXT NOT NULL,
              alert_email_id TEXT NOT NULL,
              primary_color  TEXT NOT NULL,
-             CONSTRAINT bank_id_pk PRIMARY KEY (id)
+             CONSTRAINT bank_id_pk PRIMARY KEY (bank_id)
          );`,
     V2: `CREATE TABLE IF NOT EXISTS account
          (
-             id                       INT8             NOT NULL,
+             account_id               INT8             NOT NULL,
              account_name             TEXT             NOT NULL,
              account_balance          DOUBLE PRECISION NOT NULL,
              initial_balance          DOUBLE PRECISION NOT NULL,
@@ -21,8 +21,8 @@ export const migrations: { [key: string]: string } = {
              bank_account_type        TEXT,
              bank                     INT8             NOT NULL,
              last_synced_on           TIMESTAMPTZ,
-             CONSTRAINT account_id_pk PRIMARY KEY (id),
-             CONSTRAINT accounts_bank_fk FOREIGN KEY (bank) REFERENCES bank (id)
+             CONSTRAINT account_id_pk PRIMARY KEY (account_id),
+             CONSTRAINT accounts_bank_fk FOREIGN KEY (bank) REFERENCES bank (bank_id)
          );`,
     V3: `CREATE TABLE IF NOT EXISTS mutual_fund
          (
@@ -46,8 +46,8 @@ export const migrations: { [key: string]: string } = {
              transaction_date      TIMESTAMPTZ      NOT NULL,
              description           TEXT,
              transaction_type      TEXT             NOT NULL,
-             epfAmount             DOUBLE PRECISION NOT NULL,
-             epsAmount             DOUBLE PRECISION NOT NULL,
+             epf_amount            DOUBLE PRECISION NOT NULL,
+             eps_amount            DOUBLE PRECISION NOT NULL,
              employee_contribution DOUBLE PRECISION NOT NULL,
              employer_contribution DOUBLE PRECISION NOT NULL,
              pension_amount        DOUBLE PRECISION NOT NULL,
@@ -68,6 +68,6 @@ export const migrations: { [key: string]: string } = {
              transaction_state TEXT             NOT NULL,
              dated             DATE             NOT NULL,
              CONSTRAINT account_transaction_transactionId_pk PRIMARY KEY (transaction_id),
-             CONSTRAINT account_transaction_account_fk FOREIGN KEY (account) REFERENCES account (id)
+             CONSTRAINT account_transaction_account_fk FOREIGN KEY (account) REFERENCES account (account_id)
          );`
 };

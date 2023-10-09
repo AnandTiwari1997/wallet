@@ -1,11 +1,11 @@
 import CSS from 'csstype';
 import './accounts.css';
 import Table, { TableColumn } from './modules/table/table';
-import { Account, accountData } from './data/account-data';
+import { Account } from './data/account-data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee, menu } from './icons/icons';
 import { useEffect, useState } from 'react';
-import { getAccounts } from './modules/backend/BackendApi';
+import { getAccounts, syncAccount } from './modules/backend/BackendApi';
 import Dialog from './modules/dialog/dialog';
 import Menu from './modules/menu/menu';
 import MenuOption from './modules/menu/menu-option';
@@ -18,12 +18,13 @@ const topDiv: CSS.Properties = {
 };
 
 const AccountPage = () => {
-    const [accounts, setAccounts] = useState<Account[]>(accountData);
-    const [count, setCount] = useState<number>(accountData.length);
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [count, setCount] = useState<number>(0);
     const [showAddAccount, setShowAddAccount] = useState(false);
     const [showAccountMenu, setShowAccountMenu] = useState(false);
     const [accountMenuOptionFor, setAccountMenuOptionFor] = useState<number>(0);
     const [state, dispatch] = useState();
+    const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
 
     useEffect(() => {
         getAccounts(dispatch).then((response) => {
@@ -37,7 +38,7 @@ const AccountPage = () => {
             key: 'accountType',
             label: 'Account Type',
             groupByKey: (row: Account) => {
-                return row.accountType;
+                return row.account_type;
             }
         },
         {
@@ -47,15 +48,15 @@ const AccountPage = () => {
                 return (
                     <div style={{ display: 'block' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Account Used:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{rows[0].accountName}</div>
+                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{rows[0].account_name}</div>
                     </div>
                 );
             },
             customRender: (row: Account) => {
                 return (
                     <div style={{ display: 'flex', flexDirection: 'row' }}>
-                        {typeof row.bank === 'object' && <i className="icon" dangerouslySetInnerHTML={{ __html: row.bank.icon }}></i>}
-                        <div>{row.accountName}</div>
+                        {row.bank && <i className="icon" dangerouslySetInnerHTML={{ __html: row.bank.icon }}></i>}
+                        <div>{row.account_name}</div>
                     </div>
                 );
             }
@@ -71,7 +72,7 @@ const AccountPage = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {rows[0].initialBalance}
+                            {rows[0].initial_balance}
                         </div>
                     </div>
                 );
@@ -82,7 +83,7 @@ const AccountPage = () => {
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.initialBalance}
+                        {row.initial_balance}
                     </div>
                 );
             }
@@ -98,7 +99,7 @@ const AccountPage = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {rows[0].accountBalance}
+                            {rows[0].account_balance}
                         </div>
                     </div>
                 );
@@ -109,7 +110,7 @@ const AccountPage = () => {
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.accountBalance}
+                        {row.account_balance}
                     </div>
                 );
             }
@@ -122,9 +123,9 @@ const AccountPage = () => {
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                         <button
                             className="icon-button"
-                            id={`account-menu-${row.id}`}
+                            id={`account-menu-${row.account_id}`}
                             onClick={() => {
-                                setAccountMenuOptionFor(row.id);
+                                setAccountMenuOptionFor(row.account_id);
                                 setShowAccountMenu(true);
                             }}
                         >
@@ -140,8 +141,28 @@ const AccountPage = () => {
                             }}
                             menuFor={`account-menu-${accountMenuOptionFor}`}
                         >
-                            <MenuOption label={'Edit'} />
-                            <MenuOption label={'Sync'} />
+                            <MenuOption
+                                label={'Edit'}
+                                onMenuOptionClick={(event) => {
+                                    setSelectedAccount(row);
+                                    setShowAddAccount(true);
+                                }}
+                            />
+                            <MenuOption
+                                label={'Sync'}
+                                onMenuOptionClick={(event) => {
+                                    syncAccount({
+                                        criteria: {
+                                            filters: [
+                                                { key: 'account_type', value: 'BANK' },
+                                                { key: 'account_id', value: row.account_id.toString() }
+                                            ]
+                                        }
+                                    }).then((response) => {
+                                        console.log(response.message);
+                                    });
+                                }}
+                            />
                             <MenuOption label={'Delete'} />
                         </Menu>
                     </div>
@@ -171,8 +192,16 @@ const AccountPage = () => {
                     <Table columns={columns} rows={accounts} groupByColumn={columns[0]} count={count} />
                 </div>
             </div>
-            <Dialog open={showAddAccount} onClose={() => setShowAddAccount(false)} header="Account">
+            <Dialog
+                open={showAddAccount}
+                onClose={() => {
+                    setShowAddAccount(false);
+                    setSelectedAccount(undefined);
+                }}
+                header="Account"
+            >
                 <AddAccount
+                    account={selectedAccount}
                     onSubmit={(success, data) => {
                         if (success) {
                             getAccounts(dispatch).then((response) => {
@@ -183,6 +212,7 @@ const AccountPage = () => {
                         } else {
                             console.log(`Error occurred while adding Account ${data}.`);
                         }
+                        setSelectedAccount(undefined);
                         setShowAddAccount(false);
                     }}
                 />

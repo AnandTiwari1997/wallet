@@ -1,12 +1,12 @@
 export class Bank {
-    id: number;
+    bank_id: number;
     name: string;
     icon: string;
     alert_email_id: string;
     primary_color: string;
 
-    constructor(id: number, name: string, icon: string, alert_email_id: string, primary_color: string) {
-        this.id = id;
+    constructor(bank_id: number, name: string, icon: string, alert_email_id: string, primary_color: string) {
+        this.bank_id = bank_id;
         this.name = name;
         this.icon = icon;
         this.alert_email_id = alert_email_id;
@@ -14,24 +14,16 @@ export class Bank {
     }
 }
 
-export class BankDto {
-    id: number;
+export interface IBank {
+    bank_id: number;
     name: string;
     icon: string;
-    alertEmailId: string;
-    primaryColor: string;
-
-    constructor(id: number, name: string, icon: string, alertEmailId: string, primaryColor: string) {
-        this.id = id;
-        this.name = name;
-        this.icon = icon;
-        this.alertEmailId = alertEmailId;
-        this.primaryColor = primaryColor;
-    }
+    alert_email_id: string;
+    primary_color: string;
 }
 
-export class BankDtoBuilder {
-    static build = (bank: Bank) => {
-        return new BankDto(bank.id, bank.name, bank.icon, bank.alert_email_id, bank.primary_color);
+export class BankBuilder {
+    static build = (bank: IBank) => {
+        return new Bank(bank.bank_id, bank.name, bank.icon, bank.alert_email_id, bank.primary_color);
     };
 }

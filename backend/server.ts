@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import { connection, reconnectMailServer } from './workflows/mail-service.js';
 import { _getInvestmentTransactions, _investmentSyncCaptcha, _syncInvestment } from './controllers/investment-fund-controller.js';
-import { _addAccount, _getAccounts, _syncAccount, _syncAccounts } from './controllers/account-controller.js';
+import { _addAccount, _deleteAccount, _getAccounts, _syncAccounts, _updateAccount } from './controllers/account-controller.js';
 import { _getAccountTransactions, _getTransactions } from './controllers/transactions.js';
 import { BankAccountTransactionSyncProvider } from './workflows/bank-account-transaction-sync-provider.js';
 import { Logger, LoggerLevel } from './logger/logger.js';
@@ -40,10 +40,11 @@ app.listen(port, () => {
 app.get(API_PATH.GET_BANKS, _getBanks);
 
 // Account Controller
-app.get(API_PATH.GET_ACCOUNTS, _getAccounts);
-app.post(API_PATH.ADD_ACCOUNT, _addAccount);
-app.get(API_PATH.SYNC_ACCOUNT, _syncAccount);
-app.get(API_PATH.SYNC_ALL_ACCOUNT, _syncAccounts);
+app.get(API_PATH.ACCOUNTS, _getAccounts);
+app.post(API_PATH.ACCOUNTS, _addAccount);
+app.put(API_PATH.ACCOUNTS, _updateAccount);
+app.delete(API_PATH.ACCOUNTS, _deleteAccount);
+app.post(API_PATH.SYNC_ACCOUNTS, _syncAccounts);
 
 // Account Transaction Controller
 app.post(API_PATH.GET_ALL_ACCOUNTS_TRANSACTIONS, _getTransactions);

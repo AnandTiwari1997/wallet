@@ -1,12 +1,13 @@
 import './text-box.css';
 
-const TextBox = ({ value, ...props }: { value: any; [key: string]: any }) => {
+const TextBox = ({ value, setValue, ...props }: { value: any; [key: string]: any }) => {
     return (
         <input
             className="input"
+            value={value}
             {...props}
             onChange={(event) => {
-                value(event.target.value);
+                setValue(event.target.value);
             }}
         />
     );
