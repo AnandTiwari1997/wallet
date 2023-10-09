@@ -1,12 +1,12 @@
 import CSS from 'csstype';
 import { Button, Dialog, Tab, Tabs } from '@mui/material';
 import { Fragment, useRef, useState } from 'react';
-import '../src/savings.css';
-import MutualFund from './modules/savings/mutual-fund';
-import ProvidentFund from './modules/savings/provident-fund';
+import './savings.css';
+import MutualFund from './mutual-fund';
+import ProvidentFund from './provident-fund';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { refresh } from './icons/icons';
-import { syncInvestmentAccount, syncInvestmentAccountCaptcha } from './modules/backend/BackendApi';
+import { refresh } from '../../icons/icons';
+import { syncInvestmentAccount, syncInvestmentAccountCaptcha } from '../../modules/backend/BackendApi';
 
 const topDiv: CSS.Properties = {
     display: 'flex',

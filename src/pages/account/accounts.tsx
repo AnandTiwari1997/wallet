@@ -1,14 +1,14 @@
 import CSS from 'csstype';
 import './accounts.css';
-import Table, { TableColumn } from './modules/table/table';
-import { Account } from './data/account-data';
+import Table, { TableColumn } from '../../modules/table/table';
+import { Account } from '../../data/account-data';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { indianRupee, menu } from './icons/icons';
+import { indianRupee, menu } from '../../icons/icons';
 import { useEffect, useState } from 'react';
-import { getAccounts, syncAccount } from './modules/backend/BackendApi';
-import Dialog from './modules/dialog/dialog';
-import Menu from './modules/menu/menu';
-import MenuOption from './modules/menu/menu-option';
+import { getAccounts, syncAccount } from '../../modules/backend/BackendApi';
+import Dialog from '../../modules/dialog/dialog';
+import Menu from '../../modules/menu/menu';
+import MenuOption from '../../modules/menu/menu-option';
 import AddAccount from './add-account';
 
 const topDiv: CSS.Properties = {

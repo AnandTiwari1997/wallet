@@ -3,8 +3,8 @@ import { indianRupee } from '../../icons/icons';
 import { ArrayUtil, MutualFundTransaction } from '../../data/transaction-data';
 import { format } from 'date-fns/esm';
 import { useEffect, useState } from 'react';
-import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../backend/BackendApi';
-import Table, { TableColumn } from '../table/table';
+import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
+import Table, { TableColumn } from '../../modules/table/table';
 import { darkGreen, darkRed } from '../../App';
 import { useGlobalLoadingState } from '../../index';
 

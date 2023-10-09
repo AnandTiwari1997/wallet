@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ArrayUtil, MutualFundTransaction, ProvidentFundTransaction } from '../../data/transaction-data';
-import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../backend/BackendApi';
+import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee } from '../../icons/icons';
 import { format } from 'date-fns/esm';
-import Table, { TableColumn } from '../table/table';
+import Table, { TableColumn } from '../../modules/table/table';
 import { darkGreen, darkRed } from '../../App';
 import { useGlobalLoadingState } from '../../index';
 

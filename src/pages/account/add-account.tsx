@@ -1,8 +1,8 @@
-import Select, { SelectOption } from './modules/select/select';
-import TextBox from './modules/text-box/text-box';
-import { Account, Bank } from './data/account-data';
+import Select, { SelectOption } from '../../modules/select/select';
+import TextBox from '../../modules/text-box/text-box';
+import { Account, Bank } from '../../data/account-data';
 import { useEffect, useState } from 'react';
-import { addAccount, ApiResponse, getBanks, updateAccount } from './modules/backend/BackendApi';
+import { addAccount, ApiResponse, getBanks, updateAccount } from '../../modules/backend/BackendApi';
 
 const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (success: boolean, data: Account | undefined) => any | void }) => {
     const [accountType, setAccountType] = useState<string>('CASH');

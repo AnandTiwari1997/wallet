@@ -1,12 +1,12 @@
 import CSS from 'csstype';
 import './dashboard.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Account } from './data/account-data';
-import { edit, plus } from './icons/icons';
-import CalenderPicker from './modules/calender-picker/calender-picker';
+import { Account } from '../../data/account-data';
+import { edit, plus } from '../../icons/icons';
+import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import { useEffect, useState } from 'react';
-import { getAccounts } from './modules/backend/BackendApi';
-import { useGlobalLoadingState } from './index';
+import { getAccounts } from '../../modules/backend/BackendApi';
+import { useGlobalLoadingState } from '../../index';
 
 const accountTopDivStyle: CSS.Properties = {
     display: 'flex',

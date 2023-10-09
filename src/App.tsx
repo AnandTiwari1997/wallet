@@ -3,10 +3,10 @@ import Navigation from './modules/navigation/navigation';
 import CSS from 'csstype';
 import Header from './modules/header/header';
 import { Route, Routes } from 'react-router-dom';
-import DashboardPage from './dashboard';
-import TransactionPage from './transaction';
-import SavingsPage from './savings';
-import AccountPage from './accounts';
+import DashboardPage from './pages/dashboard/dashboard';
+import TransactionPage from './pages/transaction/transaction';
+import SavingsPage from './pages/savings/savings';
+import AccountPage from './pages/account/accounts';
 
 const mainStyle: CSS.Properties = {
     minHeight: '100vh',

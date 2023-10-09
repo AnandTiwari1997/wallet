@@ -1,17 +1,17 @@
-import CalenderPicker from './modules/calender-picker/calender-picker';
+import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import CSS from 'csstype';
 import './transaction.css';
-import { ArrayUtil, Transaction, TransactionType } from './data/transaction-data';
+import { ArrayUtil, Transaction, TransactionType } from '../../data/transaction-data';
 import { useEffect, useState } from 'react';
-import { indianRupee, view } from './icons/icons';
+import { indianRupee, view } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getAllTransactions } from './modules/backend/BackendApi';
-import Table, { TableColumn, TablePagination } from './modules/table/table';
+import { getAllTransactions } from '../../modules/backend/BackendApi';
+import Table, { TableColumn, TablePagination } from '../../modules/table/table';
 import { startOfYear } from 'date-fns/esm';
 import { format } from 'date-fns';
-import { darkGreen, darkRed } from './App';
-import Dialog from './modules/dialog/dialog';
-import { useGlobalLoadingState } from './index';
+import { darkGreen, darkRed } from '../../App';
+import Dialog from '../../modules/dialog/dialog';
+import { useGlobalLoadingState } from '../../index';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
