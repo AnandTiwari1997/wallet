@@ -134,3 +134,4 @@ dist
 /build/static/**
 /build/static/css/**
 /build/static/js/**
+/build/
