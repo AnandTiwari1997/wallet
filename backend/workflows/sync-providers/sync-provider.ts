@@ -25,12 +25,13 @@ export const syncProviderHelper = (name: string) => {
     syncProvider.sync();
 };
 
-export const fileProcessor = (syncType: string, inputFileName: string, outputFileName: string, callback: (data: any) => void, error: () => void) => {
+export const fileProcessor = (syncType: string, inputFileName: string, outputFileName: string, filePassword: string, callback: (data: any) => void, error: () => void) => {
     const python = spawn(`python3`, [
         `${path.resolve(rootDirectoryPath, 'python', 'main.py')}`,
         syncType,
         `${path.resolve(rootDirectoryPath, 'reports', syncType, inputFileName)}`,
-        `${path.resolve(rootDirectoryPath, 'reports', syncType, outputFileName)}`
+        `${path.resolve(rootDirectoryPath, 'reports', syncType, outputFileName)}`,
+        `${filePassword}`
     ]);
     python.stdout.setEncoding('utf8');
     python.stdout.on('data', () => {

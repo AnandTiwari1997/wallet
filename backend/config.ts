@@ -30,3 +30,14 @@ export const mailServerParam = {
     user: process.env.MAIL_USER || '',
     password: process.env.MAIL_PASSWORD || ''
 };
+
+export const pfParam = {
+    username: process.env.PF_USERNAME || '',
+    password: process.env.PF_PASSWORD || ''
+};
+
+export const mfParam = {
+    email: process.env.MF_EMAIL || '',
+    panNo: process.env.MF_PAN_NO || '',
+    password: process.env.MF_PASSWORD || ''
+};

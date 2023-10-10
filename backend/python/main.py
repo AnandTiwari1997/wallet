@@ -189,13 +189,14 @@ if __name__ == '__main__':
     processor_type = sys.argv[1]
     input_file = sys.argv[2]
     output_file = sys.argv[3]
+    password = sys.argv[4]
 #     print(f'Input File {input_file}')
 #     print(f'Output File {input_file}')
     if processor_type == "mutual_fund":
         mutual_fund = MutualFundProcessor()
     else:
         mutual_fund = ProvidentFundProcessor()
-    mutual_fund.process(input_file, "Anand@1997")
+    mutual_fund.process(input_file, password)
     mutual_fund.save(file_path=output_file)
     with open(output_file, 'r') as file:
         json_data = json.load(file)

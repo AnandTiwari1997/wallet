@@ -9,6 +9,7 @@ import { fileProcessor, SyncProvider } from './sync-provider.js';
 import { captchaStorage } from '../../database/repository/captcha-storage.js';
 import { rootDirectoryPath } from '../../server.js';
 import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
+import { pfParam } from '../../config.js';
 
 export class ProvidentFundSyncProvider implements SyncProvider {
     sync(): void {
@@ -34,10 +35,10 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                 await driver.get('https://passbook.epfindia.gov.in/MemberPassBook/login');
                 console.log(`[ProvidentFundSyncProvider]: Opened https://passbook.epfindia.gov.in/MemberPassBook/login`);
                 let username = await driver.findElement(By.id('username'));
-                await username.sendKeys('101563804709');
+                await username.sendKeys(pfParam.username);
                 console.log(`[ProvidentFundSyncProvider]: Entered Username`);
                 let password = await driver.findElement(By.id('password'));
-                await password.sendKeys('JaiShreeRam@2023');
+                await password.sendKeys(pfParam.password);
                 console.log(`[ProvidentFundSyncProvider]: Entered Password`);
                 let imageElement = await driver.findElement(By.id('captcha_id'));
                 let captchaInput = await driver.findElement(By.id('captcha'));
@@ -119,6 +120,7 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                         'provident_fund',
                         `PYBOM00464460000024760_${year}.pdf`,
                         `PYBOM00464460000024760_${year}_OUTPUT.json`,
+                        '',
                         (data: any) => {
                             let newData = data.replaceAll("'", '"');
                             const parsedData: { [key: string]: string }[] = JSON.parse(newData);

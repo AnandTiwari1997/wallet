@@ -10,6 +10,7 @@ import { simpleParser } from 'mailparser';
 import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
 import { mutualFundRepository } from '../../database/repository/mutual-fund-repository.js';
 import { MutualFundTransactionBuilder } from '../../database/models/mutual-fund-transaction.js';
+import { mfParam } from '../../config.js';
 
 export class MutualFundSyncProvider implements SyncProvider {
     sync(): void {
@@ -64,17 +65,17 @@ export class MutualFundSyncProvider implements SyncProvider {
                 await driver.findElement(By.id('mat-radio-5')).click();
                 await driver.sleep(2000);
                 console.log(`[MutualFundSyncProvider]: Selected Non Zero Folio`);
-                await driver.findElement(By.id('mat-input-0')).sendKeys('anandtiwari887@gmail.com');
+                await driver.findElement(By.id('mat-input-0')).sendKeys(mfParam.email);
                 await driver.sleep(2000);
 
                 console.log(`[MutualFundSyncProvider]: Entered Email`);
-                await driver.findElement(By.id('mat-input-1')).sendKeys('AWDPT2993E');
+                await driver.findElement(By.id('mat-input-1')).sendKeys(mfParam.panNo);
                 await driver.sleep(2000);
                 console.log(`[MutualFundSyncProvider]: Enter PAN`);
-                await driver.findElement(By.id('mat-input-2')).sendKeys('Anand@1997');
+                await driver.findElement(By.id('mat-input-2')).sendKeys(mfParam.password);
                 await driver.sleep(2000);
                 console.log(`[MutualFundSyncProvider]: Entered Password`);
-                await driver.findElement(By.id('mat-input-3')).sendKeys('Anand@1997');
+                await driver.findElement(By.id('mat-input-3')).sendKeys(mfParam.password);
                 await driver.sleep(2000);
                 console.log(`[MutualFundSyncProvider]: Entered Password Again`);
                 await driver.wait(until.elementLocated(By.xpath(`//button[@type='submit' and @class='check-now-btn']`)), 10000);
@@ -129,6 +130,7 @@ export class MutualFundSyncProvider implements SyncProvider {
                                                             'mutual_fund',
                                                             `${fileName}.pdf`,
                                                             `${fileName}.json`,
+                                                            `${mfParam.password}`,
                                                             async (data: any) => {
                                                                 eventEmitter.removeListener('mail', getMFMail);
                                                                 let newData = data.replaceAll("'", '"');
