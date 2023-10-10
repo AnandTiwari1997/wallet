@@ -1,11 +1,11 @@
-import { ProvidentFundSyncProvider } from '../workflows/provident-fund-sync-provider.js';
-import { MutualFundSyncProvider } from '../workflows/mutual-fund-sync-provider.js';
-import { MUTUAL_FUND } from '../constant.js';
+import { ProvidentFundSyncProvider } from './provident-fund-sync-provider.js';
+import { MutualFundSyncProvider } from './mutual-fund-sync-provider.js';
+import { MUTUAL_FUND } from '../../constant.js';
 import { spawn } from 'child_process';
 import path from 'path';
-import { rootDirectoryPath } from '../server.js';
+import { rootDirectoryPath } from '../../server.js';
 import fs from 'fs';
-import { Logger } from '../logger/logger.js';
+import { Logger } from '../../core/logger.js';
 
 const logger: Logger = new Logger('SyncProvider');
 

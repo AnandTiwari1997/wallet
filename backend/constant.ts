@@ -1,17 +1,14 @@
 export const API_PATH = {
-    GET_BANKS: '/wallet/banks',
+    BANKS: '/wallet/banks',
     // Account Endpoints
     ACCOUNTS: '/wallet/accounts',
     SYNC_ACCOUNTS: '/wallet/account/sync',
 
     // Transaction Endpoints
-    GET_ALL_ACCOUNTS_TRANSACTIONS: '/wallet/transactions',
-    GET_ACCOUNT_TRANSACTIONS: '/wallet/:account/transactions',
+    TRANSACTIONS: '/wallet/transactions',
 
     // Investment Endpoints
-    GET_INVESTMENT_TRANSACTIONS: '/wallet/investment/:investmentType/transactions',
-    SYNC_INVESTMENT: '/wallet/investment/:investmentType/sync',
-    POST_INVESTMENT_SYNC_CAPTCHA: '/wallet/investment/:investmentType/sync/captcha'
+    INVESTMENTS: '/wallet/investment'
 };
 
 export const MUTUAL_FUND = 'mutual_fund';

@@ -1,5 +1,4 @@
 import { PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../data/transaction-data';
-import { parse } from 'date-fns';
 import { Account } from '../../data/account-data';
 import axios from 'axios';
 
@@ -28,39 +27,35 @@ export const getBanks = async (): Promise<any> => {
 
 export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transaction>, dispatch: any): Promise<ApiResponse<Transaction>> => {
     dispatch(true);
-    const response = await axios.post('http://localhost:8000/wallet/transactions', apiRequestBody, {
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
+    const response = await axios.post('http://localhost:8000/wallet/transactions', apiRequestBody);
     const results = response.data.results.map(
         (value: {
-            transactionId: string;
+            transaction_id: string;
             account: number;
-            transactionDate: string;
+            transaction_date: string;
             amount: number;
             category: string;
             labels: string[];
             note: string;
             currency: string;
-            paymentMode: PaymentMode;
-            transactionType: TransactionType;
-            transactionState: TransactionStatus;
+            payment_mode: PaymentMode;
+            transaction_type: TransactionType;
+            transaction_state: TransactionStatus;
+            dated: string;
         }) => {
             return new Transaction(
-                value.transactionId,
+                value.transaction_id,
                 value.account,
-                parse(value.transactionDate, "yyyy-MM-dd'T'HH:mm:ss.SSSX", new Date(), {
-                    weekStartsOn: 0
-                }),
+                new Date(value.transaction_date),
                 value.amount,
                 value.category,
                 value.labels,
                 value.note,
                 value.currency,
-                value.paymentMode,
-                value.transactionType,
-                value.transactionState
+                value.payment_mode,
+                value.transaction_type,
+                value.transaction_state,
+                new Date(value.dated)
             );
         }
     );
@@ -121,7 +116,7 @@ export const syncInvestmentAccount = (type: string): EventSource => {
     return new EventSource(`http://localhost:8000/wallet/investment/${type}/sync`);
 };
 
-export const syncInvestmentAccountCaptcha = async (type: string, captcha: { [key: string]: string }): Promise<any> => {
+export const syncInvestmentAccountCaptcha = async (type: string, captcha: ApiRequestBody<{ [key: string]: string }>): Promise<any> => {
     return await axios.post(`http://localhost:8000/wallet/investment/${type}/sync/captcha`, captcha, {
         headers: {
             'Content-Type': 'application/json'

@@ -174,7 +174,7 @@ const MutualFund = () => {
                 return (
                     <span
                         style={{
-                            color: row.units * row.latestNav > 0 ? `${darkGreen}` : `${darkRed}`
+                            color: row.units * row.latestNav > row.amount ? `${darkGreen}` : `${darkRed}`
                         }}
                     >
                         <i className="icon">

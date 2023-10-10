@@ -1,12 +1,12 @@
-import { Database } from '../database/database.js';
+import { Repository } from './repository.js';
 import { Transaction } from '../models/account-transaction.js';
 import { addGroupByClause, addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
-import { sqlDatabaseProvider } from '../database/initialize-database.js';
-import { Logger } from '../logger/logger.js';
+import { sqlDatabaseProvider } from '../initialize-database.js';
+import { Logger } from '../../core/logger.js';
 
-const logger: Logger = new Logger('AccountTransactionStorage');
+const logger: Logger = new Logger('AccountTransactionRepository');
 
-class AccountTransactionStorage implements Database<Transaction, string> {
+class AccountTransactionRepository implements Repository<Transaction, string> {
     async add(item: Transaction): Promise<Transaction | undefined> {
         const id = this.generateId(item);
         let accountTransactionPromise = this.find(id);
@@ -98,19 +98,26 @@ class AccountTransactionStorage implements Database<Transaction, string> {
             return queryResults.rows;
         } catch (error) {
             logger.error(`[FindAllUsingGroupBy] - Error On FindAllUsingGroupBy ${error}`);
-            return;
+            return [];
         }
     }
 
     async count(criteria: Criteria) {
-        let innerSql = `SELECT DISTINCT SUM(1) OVER () as num_found
-                        FROM account_transaction`;
-        let where = addWhereClause(innerSql, criteria);
-        innerSql = where.sql;
-        innerSql = addGroupByClause(innerSql, criteria);
-        let queryResult = await sqlDatabaseProvider.execute<{ num_found: number }>(innerSql, where.whereClauses, false);
-        return queryResult.rows[0].num_found;
+        try {
+            let innerSql = `SELECT DISTINCT SUM(1) OVER () as num_found
+                            FROM account_transaction`;
+            let where = addWhereClause(innerSql, criteria);
+            innerSql = where.sql;
+            innerSql = addGroupByClause(innerSql, criteria);
+            let queryResult = await sqlDatabaseProvider.execute<{
+                num_found: number;
+            }>(innerSql, where.whereClauses, false);
+            return queryResult.rows[0].num_found;
+        } catch (error) {
+            logger.error(`[Count] - Error On Count ${error}`);
+            return 0;
+        }
     }
 }
 
-export const accountTransactionStorage = new AccountTransactionStorage();
+export const accountTransactionRepository = new AccountTransactionRepository();

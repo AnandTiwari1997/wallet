@@ -1,9 +1,10 @@
 import Sqlite3 from 'sqlite3';
 import { migrations } from './migration.js';
-import { Logger } from '../logger/logger.js';
+import { Logger } from '../core/logger.js';
 import pkg, { PoolClient } from 'pg';
-import { bankStorage } from '../storage/bank-storage.js';
-import { accountStorage } from '../storage/account-storage.js';
+import { bankRepository } from './repository/bank-repository.js';
+import { accountRepository } from './repository/account-repository.js';
+import { dbParam } from '../config.js';
 
 const { Pool } = pkg;
 const logger: Logger = new Logger('DatabaseProvider');
@@ -14,13 +15,14 @@ class DatabaseProvider {
 
     constructor() {
         this.pool = new Pool({
-            host: 'localhost',
-            database: 'wallet',
-            user: 'postgres',
-            password: 'postgres',
-            max: 20,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: 2000
+            host: dbParam.host,
+            database: dbParam.name,
+            user: dbParam.user,
+            password: dbParam.password,
+            max: dbParam.poolSize,
+            idleTimeoutMillis: dbParam.idleTimeoutMillis,
+            connectionTimeoutMillis: dbParam.connectionTimeoutMillis,
+            port: dbParam.port
         });
         logger.info('Database Connected');
         this.pool.on('release', (err: Error, client: PoolClient) => logger.debug(`Connection Released`));
@@ -37,10 +39,10 @@ class DatabaseProvider {
             logger.debug('Migrations Successfully Applied');
             let countQueryResult = await client.query<{ count: number }>(`SELECT COUNT(*) as count
                                                                           FROM bank`);
-            bankStorage.setCurrentRowIndex(countQueryResult.rows[0].count);
+            bankRepository.setCurrentRowIndex(countQueryResult.rows[0].count);
             countQueryResult = await client.query<{ count: number }>(`SELECT COUNT(*) as count
                                                                       FROM account`);
-            accountStorage.setCurrentRowIndex(countQueryResult.rows[0].count);
+            accountRepository.setCurrentRowIndex(countQueryResult.rows[0].count);
             this.releaseClient(client);
         });
     }

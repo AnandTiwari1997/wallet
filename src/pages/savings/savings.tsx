@@ -133,8 +133,10 @@ const SavingsPage = () => {
         console.log(inputRef.current?.value);
         if (inputRef.current?.value && captchaId) {
             syncInvestmentAccountCaptcha(selectedTab, {
-                id: captchaId,
-                captcha: inputRef.current?.value
+                data: {
+                    id: captchaId,
+                    captcha: inputRef.current?.value
+                }
             }).then((r) => console.log(r));
         }
     };

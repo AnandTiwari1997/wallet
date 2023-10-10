@@ -1,15 +1,15 @@
-import { fileProcessor, SyncProvider } from '../models/sync-provider.js';
+import { fileProcessor, SyncProvider } from './sync-provider.js';
 import path from 'path';
-import { rootDirectoryPath } from '../server.js';
+import { rootDirectoryPath } from '../../server.js';
 import fs from 'fs';
 import { By, until } from 'selenium-webdriver';
-import { getFirefoxWebDriver } from './web-driver-util.js';
+import { getFirefoxWebDriver } from '../web-driver-util.js';
 import { format, isAfter, startOfMonth } from 'date-fns';
-import { connection, eventEmitter } from './mail-service.js';
+import { connection, eventEmitter } from '../mail-service.js';
 import { simpleParser } from 'mailparser';
-import { syncTrackerStorage } from '../storage/sync-tracker-storage.js';
-import { mutualFundStorage } from '../storage/mutual-fund-storage.js';
-import { MutualFundTransactionBuilder } from '../models/mutual-fund-transaction.js';
+import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
+import { mutualFundRepository } from '../../database/repository/mutual-fund-repository.js';
+import { MutualFundTransactionBuilder } from '../../database/models/mutual-fund-transaction.js';
 
 export class MutualFundSyncProvider implements SyncProvider {
     sync(): void {
@@ -129,7 +129,7 @@ export class MutualFundSyncProvider implements SyncProvider {
                                                             'mutual_fund',
                                                             `${fileName}.pdf`,
                                                             `${fileName}.json`,
-                                                            (data: any) => {
+                                                            async (data: any) => {
                                                                 eventEmitter.removeListener('mail', getMFMail);
                                                                 let newData = data.replaceAll("'", '"');
                                                                 const parsedData: {
@@ -137,7 +137,15 @@ export class MutualFundSyncProvider implements SyncProvider {
                                                                 }[] = JSON.parse(newData);
                                                                 console.log(parsedData.length);
                                                                 for (let parseData of parsedData) {
-                                                                    mutualFundStorage.add(MutualFundTransactionBuilder.build(parseData));
+                                                                    let mutualFund = MutualFundTransactionBuilder.build(parseData);
+                                                                    let mfTransaction = await mutualFundRepository.find(mutualFundRepository.generateId(mutualFund));
+                                                                    if (mfTransaction) {
+                                                                        mfTransaction.units = mfTransaction.units + mutualFund.units;
+                                                                        mfTransaction.amount = mfTransaction.amount + mutualFund.amount;
+                                                                        await mutualFundRepository.update(mfTransaction);
+                                                                    } else {
+                                                                        await mutualFundRepository.add(mutualFund);
+                                                                    }
                                                                 }
                                                                 const syncTracker = syncTrackerStorage.get('mutual_fund');
                                                                 if (!syncTracker) return;

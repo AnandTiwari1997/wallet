@@ -1,12 +1,21 @@
-import { bankStorage } from '../storage/bank-storage.js';
+import { bankRepository } from '../database/repository/bank-repository.js';
+import express, { Request, Response } from 'express';
+import AsyncHandler from '../core/async-handler.js';
+import { ApiResponseBody } from '../types/api-response-body.js';
+import { SuccessResponse } from '../core/api-response.js';
+import { Bank } from '../database/models/bank.js';
+import { ApiRequestBody } from '../types/api-request-body.js';
 
-export const _getBanks = (req: any, res: any) => {
-    bankStorage
-        .findAll(req.body.criteria || {})
-        .then((banks) => {
-            res.send({ results: banks, num_found: banks.length });
-        })
-        .catch((reason) => {
-            res.send({ results: [], num_found: 0 });
-        });
-};
+const router = express.Router();
+router.get(
+    '/',
+    AsyncHandler(async (req: Request<any, ApiResponseBody<Bank>, ApiRequestBody<Bank>>, res: Response<ApiResponseBody<Bank>>) => {
+        let banks = await bankRepository.findAll(req.body.criteria || {});
+        let apiResponse: ApiResponseBody<Bank> = {
+            num_found: banks.length,
+            results: banks
+        };
+        return new SuccessResponse<ApiResponseBody<Bank>>(apiResponse).send(res);
+    })
+);
+export default router;

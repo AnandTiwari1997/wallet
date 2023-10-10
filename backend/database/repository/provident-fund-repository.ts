@@ -1,12 +1,12 @@
 import { addGroupByClause, addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
 import { IProvidentFundTransaction, ProvidentFundTransaction, ProvidentFundTransactionBuilder } from '../models/provident-fund-transaction.js';
-import { sqlDatabaseProvider } from '../database/initialize-database.js';
-import { Database } from '../database/database.js';
-import { Logger } from '../logger/logger.js';
+import { sqlDatabaseProvider } from '../initialize-database.js';
+import { Repository } from './repository.js';
+import { Logger } from '../../core/logger.js';
 
-const logger: Logger = new Logger('ProvidentFundStorage');
+const logger: Logger = new Logger('ProvidentFundRepository');
 
-class ProvidentFundStorage implements Database<ProvidentFundTransaction, string> {
+class ProvidentFundRepository implements Repository<ProvidentFundTransaction, string> {
     async find(id: string): Promise<ProvidentFundTransaction | undefined> {
         try {
             let queryResult = await sqlDatabaseProvider.execute<IProvidentFundTransaction>('SELECT * FROM provident_fund WHERE transaction_id = $1;', [id], false);
@@ -24,6 +24,7 @@ class ProvidentFundStorage implements Database<ProvidentFundTransaction, string>
         const mutualFundT = await mutualFundPromise;
         if (mutualFundT) return mutualFundT;
         try {
+            item.transactionId = id;
             let queryResult = await sqlDatabaseProvider.execute<IProvidentFundTransaction>(
                 'INSERT INTO provident_fund(transaction_id, wage_month, financial_year, transaction_date, description, transaction_type, epf_amount, eps_amount, employee_contribution, employer_contribution, pension_amount) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;',
                 [
@@ -164,4 +165,4 @@ class ProvidentFundStorage implements Database<ProvidentFundTransaction, string>
     }
 }
 
-export const providentFundStorage = new ProvidentFundStorage();
+export const providentFundRepository = new ProvidentFundRepository();

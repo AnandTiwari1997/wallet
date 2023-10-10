@@ -1,6 +1,6 @@
-import { Category, PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../models/account-transaction.js';
+import { Category, PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../database/models/account-transaction.js';
 import { ParsedMail } from 'mailparser';
-import { Logger } from '../../logger/logger.js';
+import { Logger } from '../../core/logger.js';
 import { BankProcessor } from './bank-processor.js';
 import { convert, HtmlToTextOptions } from 'html-to-text';
 

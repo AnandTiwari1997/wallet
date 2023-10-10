@@ -1,23 +1,23 @@
-import { Database } from '../database/database.js';
+import { Repository } from './repository.js';
 import { Bank, IBank } from '../models/bank.js';
 import { addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
-import { sqlDatabaseProvider } from '../database/initialize-database.js';
-import { Logger } from '../logger/logger.js';
+import { sqlDatabaseProvider } from '../initialize-database.js';
+import { Logger } from '../../core/logger.js';
 
-const logger: Logger = new Logger('BankStorage');
+const logger: Logger = new Logger('BankRepository');
 
-class BankStorage implements Database<Bank, number> {
+class BankRepository implements Repository<Bank, number> {
     static rowCount: number = 1;
 
     setCurrentRowIndex(index: number) {
-        BankStorage.rowCount = index;
+        BankRepository.rowCount = index;
     }
 
     async add(item: Bank): Promise<Bank | undefined> {
         try {
             const bank = await this.find(item.bank_id);
             if (bank) return bank;
-            item.bank_id = BankStorage.rowCount++;
+            item.bank_id = BankRepository.rowCount++;
             let queryResult = await sqlDatabaseProvider.execute<IBank>(
                 `INSERT INTO bank(bank_id, name, icon, alert_email_id, primary_color)
                  VALUES ($1, $2, $3, $4, $5)
@@ -98,4 +98,4 @@ class BankStorage implements Database<Bank, number> {
     }
 }
 
-export const bankStorage = new BankStorage();
+export const bankRepository = new BankRepository();

@@ -1,12 +1,12 @@
 import { addGroupByClause, addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
 import { IMutualFundTransaction, MutualFundTransaction, MutualFundTransactionBuilder } from '../models/mutual-fund-transaction.js';
-import { Database } from '../database/database.js';
-import { sqlDatabaseProvider } from '../database/initialize-database.js';
-import { Logger } from '../logger/logger.js';
+import { Repository } from './repository.js';
+import { sqlDatabaseProvider } from '../initialize-database.js';
+import { Logger } from '../../core/logger.js';
 
-const logger: Logger = new Logger('MutualFundStorage');
+const logger: Logger = new Logger('MutualFundRepository');
 
-class MutualFundStorage implements Database<MutualFundTransaction, string> {
+class MutualFundRepository implements Repository<MutualFundTransaction, string> {
     async find(id: string): Promise<MutualFundTransaction | undefined> {
         try {
             let queryResult = await sqlDatabaseProvider.execute<IMutualFundTransaction>('SELECT * FROM mutual_fund WHERE transaction_id = $1;', [id], false);
@@ -24,6 +24,7 @@ class MutualFundStorage implements Database<MutualFundTransaction, string> {
         const mutualFundT = await mutualFundPromise;
         if (mutualFundT) return mutualFundT;
         try {
+            item.transactionId = id;
             let queryResult = await sqlDatabaseProvider.execute<IMutualFundTransaction>(
                 'INSERT INTO mutual_fund(transaction_id, fund_name, portfolio_number, transaction_date, description, amount, is_credit, nav, units, latest_nav) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;',
                 [item.transactionId, item.fundName, item.portfolioNumber, item.transactionDate.toISOString(), item.description, item.amount, item.isCredit, item.nav, item.units, item.latestNav],
@@ -32,6 +33,7 @@ class MutualFundStorage implements Database<MutualFundTransaction, string> {
             return MutualFundTransactionBuilder.buildFromEntity(queryResult.rows[0]);
         } catch (error) {
             logger.error(`[Add] - Error On Add ${error}`);
+            logger.error(item);
             return;
         }
     }
@@ -128,4 +130,4 @@ class MutualFundStorage implements Database<MutualFundTransaction, string> {
     }
 }
 
-export const mutualFundStorage = new MutualFundStorage();
+export const mutualFundRepository = new MutualFundRepository();

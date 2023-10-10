@@ -101,16 +101,7 @@ export class MutualFundTransaction {
     units: number;
     latestNav: number;
 
-    constructor(
-        portfolioNumber: string,
-        fundName: string,
-        transactionDate: Date,
-        transactionId: string,
-        amount: number,
-        nav: number,
-        units: number,
-        latestNav: number
-    ) {
+    constructor(portfolioNumber: string, fundName: string, transactionDate: Date, transactionId: string, amount: number, nav: number, units: number, latestNav: number) {
         this.transactionId = transactionId;
         this.fundName = fundName;
         this.portfolioNumber = portfolioNumber;
@@ -146,6 +137,7 @@ export class Transaction {
     paymentMode: PaymentMode;
     transactionType: TransactionType;
     transactionState: TransactionStatus;
+    dated: Date;
 
     constructor(
         transactionId: string,
@@ -158,7 +150,8 @@ export class Transaction {
         currency: string,
         paymentMode: PaymentMode,
         transactionType: TransactionType,
-        transactionState: TransactionStatus
+        transactionState: TransactionStatus,
+        dated: Date
     ) {
         this.transactionId = transactionId;
         this.account = account;
@@ -171,6 +164,7 @@ export class Transaction {
         this.paymentMode = paymentMode;
         this.transactionType = transactionType;
         this.transactionState = transactionState;
+        this.dated = dated;
     }
 
     /**

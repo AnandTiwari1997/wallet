@@ -1,20 +1,20 @@
-import { Database } from '../database/database.js';
+import { Repository } from './repository.js';
 import { Account, AccountBuilder, IAccount } from '../models/account.js';
 import { addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
-import { sqlDatabaseProvider } from '../database/initialize-database.js';
-import { Logger } from '../logger/logger.js';
+import { sqlDatabaseProvider } from '../initialize-database.js';
+import { Logger } from '../../core/logger.js';
 
-const logger: Logger = new Logger('AccountStorage');
+const logger: Logger = new Logger('AccountRepository');
 
-class AccountStorage implements Database<Account, number> {
+class AccountRepository implements Repository<Account, number> {
     static rowCount: number = 1;
 
     setCurrentRowIndex(index: number) {
-        AccountStorage.rowCount = index;
+        AccountRepository.rowCount = index;
     }
 
     async add(item: Account): Promise<Account | undefined> {
-        item.account_id = AccountStorage.rowCount++;
+        item.account_id = AccountRepository.rowCount++;
         let accountPromise = this.find(item.account_id);
         const account = await accountPromise;
         if (account) return account;
@@ -46,7 +46,7 @@ class AccountStorage implements Database<Account, number> {
     async delete(id: number): Promise<boolean> {
         try {
             let queryResult = await sqlDatabaseProvider.execute('DELETE FROM account WHERE account_id = $1;', [id], true);
-            AccountStorage.rowCount--;
+            AccountRepository.rowCount--;
             return queryResult.rows[0] !== undefined;
         } catch (error) {
             logger.error(`[delete] - Error On delete ${error}`);
@@ -57,7 +57,7 @@ class AccountStorage implements Database<Account, number> {
     async deleteAll(): Promise<boolean> {
         try {
             let queryResult = await sqlDatabaseProvider.execute('DELETE FROM account;', [], true);
-            AccountStorage.rowCount = 0;
+            AccountRepository.rowCount = 0;
             return queryResult.rows[0] !== undefined;
         } catch (error) {
             logger.error(`[deleteAll] - Error On DeleteAll ${error}`);
@@ -131,4 +131,4 @@ class AccountStorage implements Database<Account, number> {
     }
 }
 
-export const accountStorage = new AccountStorage();
+export const accountRepository = new AccountRepository();

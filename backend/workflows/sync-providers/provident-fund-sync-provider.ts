@@ -2,13 +2,13 @@ import path from 'path';
 import fs from 'fs';
 import { Builder, By, until } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome.js';
-import { dataChannel } from './data-channel.js';
-import { providentFundStorage } from '../storage/provident-fund-storage.js';
-import { ProvidentFundTransactionBuilder } from '../models/provident-fund-transaction.js';
-import { fileProcessor, SyncProvider } from '../models/sync-provider.js';
-import { captchaStorage } from '../storage/captcha-storage.js';
-import { rootDirectoryPath } from '../server.js';
-import { syncTrackerStorage } from '../storage/sync-tracker-storage.js';
+import { dataChannel } from '../data-channel.js';
+import { providentFundRepository } from '../../database/repository/provident-fund-repository.js';
+import { ProvidentFundTransactionBuilder } from '../../database/models/provident-fund-transaction.js';
+import { fileProcessor, SyncProvider } from './sync-provider.js';
+import { captchaStorage } from '../../database/repository/captcha-storage.js';
+import { rootDirectoryPath } from '../../server.js';
+import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
 
 export class ProvidentFundSyncProvider implements SyncProvider {
     sync(): void {
@@ -22,7 +22,10 @@ export class ProvidentFundSyncProvider implements SyncProvider {
             console.log(`[ProvidentFundSyncProvider]: Removed Reports Folder`);
             let driverBuilder = new Builder().forBrowser('chrome');
             driverBuilder.setChromeOptions(
-                new Options().setUserPreferences({ 'download.default_directory': downloadDirectory }).headless().windowSize({ width: 1200, height: 1100 })
+                new Options().setUserPreferences({ 'download.default_directory': downloadDirectory }).headless().windowSize({
+                    width: 1200,
+                    height: 1100
+                })
             );
             let driver = await driverBuilder.build();
             let years: string[] = [];
@@ -120,7 +123,7 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                             let newData = data.replaceAll("'", '"');
                             const parsedData: { [key: string]: string }[] = JSON.parse(newData);
                             for (let parseData of parsedData) {
-                                providentFundStorage.add(ProvidentFundTransactionBuilder.build(parseData));
+                                providentFundRepository.add(ProvidentFundTransactionBuilder.build(parseData));
                             }
                             const syncTracker = syncTrackerStorage.get('provident_fund');
                             if (!syncTracker) return;

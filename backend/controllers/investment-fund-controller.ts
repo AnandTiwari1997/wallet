@@ -1,39 +1,34 @@
 import { MUTUAL_FUND, PROVIDENT_FUND } from '../constant.js';
-import { mutualFundStorage } from '../storage/mutual-fund-storage.js';
-import { providentFundStorage } from '../storage/provident-fund-storage.js';
-import { syncTrackerStorage } from '../storage/sync-tracker-storage.js';
+import { mutualFundRepository } from '../database/repository/mutual-fund-repository.js';
+import { providentFundRepository } from '../database/repository/provident-fund-repository.js';
+import { syncTrackerStorage } from '../database/repository/sync-tracker-storage.js';
 import { dataChannel } from '../workflows/data-channel.js';
-import { syncProviderHelper } from '../models/sync-provider.js';
-import { captchaStorage } from '../storage/captcha-storage.js';
+import { syncProviderHelper } from '../workflows/sync-providers/sync-provider.js';
+import { captchaStorage } from '../database/repository/captcha-storage.js';
+import express, { Request, Response } from 'express';
+import AsyncHandler from '../core/async-handler.js';
+import { ApiResponseBody } from '../types/api-response-body.js';
+import { ApiRequestBody } from '../types/api-request-body.js';
+import { MutualFundTransaction } from '../database/models/mutual-fund-transaction.js';
+import { ProvidentFundTransaction } from '../database/models/provident-fund-transaction.js';
+import { ApiRequestPathParam } from '../types/api-request-path-param.js';
+import { SuccessResponse } from '../core/api-response.js';
+
+const router = express.Router();
+
+interface Captcha {
+    id: string;
+    captcha: string;
+}
 
 const getFundStorage = (type: string) => {
     switch (type) {
         case MUTUAL_FUND:
-            return mutualFundStorage;
+            return mutualFundRepository;
         case PROVIDENT_FUND:
-            return providentFundStorage;
+            return providentFundRepository;
     }
 };
-
-export const _getInvestmentTransactions = (req: any, res: any) => {
-    let fundStorage: any = getFundStorage(req.params.investmentType);
-    let result = fundStorage.findAllUsingGroupBy(req.body.criteria);
-    result
-        .then((value: any) => {
-            fundStorage
-                .count(req.body.criteria)
-                .then((numFound: number) => {
-                    res.send({ results: value, num_found: numFound });
-                })
-                .catch((reason: any) => {
-                    res.send({ results: [], num_found: 0 });
-                });
-        })
-        .catch((reason: any) => {
-            res.send({ results: [], num_found: 0 });
-        });
-};
-
 export const _syncInvestment = (req: any, res: any) => {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream',
@@ -65,8 +60,38 @@ export const _syncInvestment = (req: any, res: any) => {
         });
     }
 };
-
-export const _investmentSyncCaptcha = (req: any, res: any) => {
-    captchaStorage.add({ captchaId: req.body.id, captchaText: req.body.captcha });
-    res.sendStatus(200);
-};
+router.get('/:investmentType/sync', _syncInvestment);
+router.post(
+    '/:investmentType/transactions',
+    AsyncHandler(
+        async (
+            req: Request<ApiRequestPathParam, ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>, ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction>>,
+            res: Response<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>>
+        ) => {
+            console.log(req.params);
+            let fundStorage: any = getFundStorage(req.params.investmentType);
+            let result = await fundStorage.findAllUsingGroupBy(req.body.criteria || {});
+            let count = await fundStorage.count(req.body.criteria || {});
+            let apiResponse: ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction> = {
+                num_found: count,
+                results: result
+            };
+            return new SuccessResponse<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>>(apiResponse).send(res);
+        }
+    )
+);
+router.post(
+    '/:investmentType/sync/captcha',
+    AsyncHandler(
+        async (
+            req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<Captcha>>,
+            res: Response<{
+                message: string;
+            }>
+        ) => {
+            captchaStorage.add({ captchaId: req.body.data?.id || '', captchaText: req.body.data?.captcha });
+            return new SuccessResponse<{ message: string }>({ message: 'Captcha Inserted' }).send(res);
+        }
+    )
+);
+export default router;
