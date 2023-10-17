@@ -8,7 +8,6 @@ const Overlay = ({ open, close, children, onBackdrop, triggerBy }: { [key: strin
         if (!open) return;
         const popover = document.getElementById('overlay-container')!;
         const invoker = document.querySelector('[id=' + triggerBy + ']')!;
-        console.log(invoker);
         computePosition(invoker, popover, {
             placement: 'bottom-start',
             strategy: 'absolute'

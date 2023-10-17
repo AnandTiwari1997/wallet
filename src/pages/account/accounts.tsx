@@ -1,7 +1,7 @@
 import CSS from 'csstype';
 import './accounts.css';
 import Table, { TableColumn } from '../../modules/table/table';
-import { Account } from '../../data/account-data';
+import { Account } from '../../data/models';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee, menu } from '../../icons/icons';
 import { useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import Dialog from '../../modules/dialog/dialog';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
 import AddAccount from './add-account';
+import { ArrayUtil } from '../../data/transaction-data';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -35,14 +36,14 @@ const AccountPage = () => {
 
     const columns: TableColumn[] = [
         {
-            key: 'accountType',
+            key: 'account_type',
             label: 'Account Type',
             groupByKey: (row: Account) => {
                 return row.account_type;
             }
         },
         {
-            key: 'accountName',
+            key: 'account_name',
             label: 'Account Name',
             groupByRender: (rows: Account[]) => {
                 return (
@@ -54,42 +55,45 @@ const AccountPage = () => {
             },
             customRender: (row: Account) => {
                 return (
-                    <div style={{ display: 'flex', flexDirection: 'row' }}>
-                        {row.bank && <i className="icon" dangerouslySetInnerHTML={{ __html: row.bank.icon }}></i>}
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                        {row.bank && <i className="icon" style={{ width: 'fit-content' }} dangerouslySetInnerHTML={{ __html: row.bank.icon }}></i>}
                         <div>{row.account_name}</div>
                     </div>
                 );
             }
         },
         {
-            key: 'initialBalance',
-            label: 'Initial Balance',
-            groupByRender: (rows: Account[]) => {
-                return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Account Initial Balance:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
-                            </i>
-                            {rows[0].initial_balance}
-                        </div>
-                    </div>
-                );
-            },
+            key: 'account_number',
+            label: 'Account Number',
             customRender: (row: Account) => {
                 return (
-                    <div>
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
-                        </i>
-                        {row.initial_balance}
-                    </div>
+                    <>
+                        <div style={{}}>{row.account_number ? row.account_number : '--'}</div>
+                    </>
                 );
             }
         },
         {
-            key: 'accountBalance',
+            key: 'start_date',
+            label: 'Start Date',
+            customRender: (row: Account) => {
+                return (
+                    <>
+                        <div
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'end'
+                            }}
+                        >
+                            {new Date(row.start_date).toLocaleDateString()}
+                        </div>
+                    </>
+                );
+            }
+        },
+        {
+            key: 'account_balance',
             label: 'Account Balance',
             groupByRender: (rows: Account[]) => {
                 return (
@@ -99,7 +103,7 @@ const AccountPage = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {rows[0].account_balance}
+                            {ArrayUtil.sum(rows, (row: Account) => row.account_balance).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -110,7 +114,7 @@ const AccountPage = () => {
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.account_balance}
+                        {row.account_balance.toFixed(2)}
                     </div>
                 );
             }
@@ -127,6 +131,7 @@ const AccountPage = () => {
                             onClick={() => {
                                 setAccountMenuOptionFor(row.account_id);
                                 setShowAccountMenu(true);
+                                setSelectedAccount(row);
                             }}
                         >
                             <i className="icon">
@@ -144,7 +149,6 @@ const AccountPage = () => {
                             <MenuOption
                                 label={'Edit'}
                                 onMenuOptionClick={(event) => {
-                                    setSelectedAccount(row);
                                     setShowAddAccount(true);
                                 }}
                             />

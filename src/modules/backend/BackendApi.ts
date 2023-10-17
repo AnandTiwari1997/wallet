@@ -1,5 +1,4 @@
-import { PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../data/transaction-data';
-import { Account } from '../../data/account-data';
+import { Account, Bill, Transaction } from '../../data/models';
 import axios from 'axios';
 
 export interface ApiResponse<T> {
@@ -27,39 +26,8 @@ export const getBanks = async (): Promise<any> => {
 
 export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transaction>, dispatch: any): Promise<ApiResponse<Transaction>> => {
     dispatch(true);
-    const response = await axios.post('http://localhost:8000/wallet/transactions', apiRequestBody);
-    const results = response.data.results.map(
-        (value: {
-            transaction_id: string;
-            account: number;
-            transaction_date: string;
-            amount: number;
-            category: string;
-            labels: string[];
-            note: string;
-            currency: string;
-            payment_mode: PaymentMode;
-            transaction_type: TransactionType;
-            transaction_state: TransactionStatus;
-            dated: string;
-        }) => {
-            return new Transaction(
-                value.transaction_id,
-                value.account,
-                new Date(value.transaction_date),
-                value.amount,
-                value.category,
-                value.labels,
-                value.note,
-                value.currency,
-                value.payment_mode,
-                value.transaction_type,
-                value.transaction_state,
-                new Date(value.dated)
-            );
-        }
-    );
-    return { results: results, num_found: response.data.num_found };
+    const response = await axios.post<ApiResponse<Transaction>>('http://localhost:8000/wallet/transactions', apiRequestBody);
+    return { results: response.data.results, num_found: response.data.num_found };
 };
 
 export const getAccounts = async (dispatch: any): Promise<ApiResponse<Account>> => {
@@ -71,7 +39,6 @@ export const getAccounts = async (dispatch: any): Promise<ApiResponse<Account>> 
             return { results: value.results, num_found: value.num_found };
         })
         .catch((reason) => {
-            console.log(reason);
             return { results: [], num_found: 0 };
         });
 };
@@ -101,7 +68,7 @@ export const updateAccount = async (account: Account): Promise<ApiResponse<Accou
 };
 
 export const syncAccount = async (apiRequest: ApiRequestBody<Account>): Promise<{ message: string }> => {
-    return await axios.post<any, { message: string }, any>(`http://localhost:8000/wallet/account/sync`, apiRequest, {
+    return await axios.post<any, { message: string }, any>(`http://localhost:8000/wallet/accounts/sync`, apiRequest, {
         headers: {
             'Content-Type': 'application/json'
         }
@@ -109,14 +76,19 @@ export const syncAccount = async (apiRequest: ApiRequestBody<Account>): Promise<
 };
 
 export const syncAccounts = async (): Promise<{ message: string }> => {
-    return await axios.get<any, { message: string }, any>(`http://localhost:8000/wallet/account/sync`);
+    return await axios.get<any, { message: string }, any>(`http://localhost:8000/wallet/accounts/sync`);
 };
 
 export const syncInvestmentAccount = (type: string): EventSource => {
     return new EventSource(`http://localhost:8000/wallet/investment/${type}/sync`);
 };
 
-export const syncInvestmentAccountCaptcha = async (type: string, captcha: ApiRequestBody<{ [key: string]: string }>): Promise<any> => {
+export const syncInvestmentAccountCaptcha = async (
+    type: string,
+    captcha: ApiRequestBody<{
+        [key: string]: string;
+    }>
+): Promise<any> => {
     return await axios.post(`http://localhost:8000/wallet/investment/${type}/sync/captcha`, captcha, {
         headers: {
             'Content-Type': 'application/json'
@@ -128,6 +100,37 @@ export const getInvestmentsTransaction = async (type: string, requestBody: ApiRe
     dispatch(true);
     return await axios
         .post(`http://localhost:8000/wallet/investment/${type}/transactions`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const getBills = async (requestBody: ApiRequestBody<any> = {}, dispatch: any): Promise<ApiResponse<Bill>> => {
+    dispatch(true);
+    return await axios
+        .post(`http://localhost:8000/wallet/bills`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const addBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<ApiResponse<Bill>> => {
+    return await axios
+        .post(`http://localhost:8000/wallet/bills/add`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const updateBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<ApiResponse<Bill>> => {
+    return await axios
+        .put(`http://localhost:8000/wallet/bills/update`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }

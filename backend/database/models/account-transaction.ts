@@ -1,3 +1,5 @@
+import { Account } from './account.js';
+
 export class TransactionType {
     static INCOME = 'Income';
     static EXPENSE = 'Expense';
@@ -26,119 +28,46 @@ export class Category {
     static OTHER = 'Other';
 }
 
-export class Transaction {
+export interface Transaction {
     transaction_id: string;
-    account: number;
+    account: Account;
     transaction_date: Date;
     amount: number;
     category: Category;
-    labels?: string[] = [];
-    note?: string = '';
-    currency?: string = 'INR';
-    payment_mode?: PaymentMode = PaymentMode.CASH;
+    labels: string[];
+    note: string;
+    currency: string;
+    payment_mode: PaymentMode;
     transaction_type: TransactionType;
-    transaction_state?: TransactionStatus = TransactionStatus.COMPLETED;
-
-    constructor(transaction_id: string, account: number, transaction_date: Date, amount: number, category: string, transaction_type: string) {
-        this.transaction_id = transaction_id;
-        this.account = account;
-        this.transaction_date = transaction_date;
-        this.amount = amount;
-        this.category = category;
-        this.transaction_type = transaction_type;
-    }
-
-    /**
-     * name
-     */
-    public isExpense() {
-        return this.transaction_type === TransactionType.EXPENSE;
-    }
-
-    [Symbol.iterator]() {
-        let array = [this.transaction_id, this.transaction_date.toISOString(), this.amount, this.account, this.transaction_type, this.currency, this.category, this.payment_mode, this.labels];
-        let i = 0;
-        return {
-            next: function () {
-                return { value: array[i++], done: i == array.length };
-            }
-        };
-    }
-}
-
-export class TransactionDto {
-    transactionId: string;
-    account: number;
-    transactionDate: Date;
-    amount: number;
-    category: Category;
-    labels: string[] = [];
-    note: string = '';
-    currency: string = 'INR';
-    paymentMode: PaymentMode = PaymentMode.CASH;
-    transactionType: TransactionType;
-    transactionState: TransactionStatus = TransactionStatus.COMPLETED;
-
-    constructor(
-        transactionId: string,
-        account: number,
-        transactionDate: Date,
-        amount: number,
-        category: Category,
-        labels: string[],
-        note: string,
-        currency: string,
-        paymentMode: PaymentMode,
-        transactionType: TransactionType,
-        transactionState: TransactionStatus
-    ) {
-        this.transactionId = transactionId;
-        this.account = account;
-        this.transactionDate = transactionDate;
-        this.amount = amount;
-        this.category = category;
-        this.labels = labels;
-        this.note = note;
-        this.currency = currency;
-        this.paymentMode = paymentMode;
-        this.transactionType = transactionType;
-        this.transactionState = transactionState;
-    }
-
-    /**
-     * name
-     */
-    public isExpense() {
-        return this.transactionType === TransactionType.EXPENSE;
-    }
+    transaction_state: TransactionStatus;
+    dated: Date;
 }
 
 export class TransactionBuilder {
-    static build = (item: { [key: string]: any }) => {
-        let transaction = new Transaction(item.transactionId, item.account, item.transactionDate, item.amount, item.category, item.transactionType);
-        transaction.labels = item.labels;
-        transaction.note = item.note;
-        transaction.currency = item.currency;
-        transaction.payment_mode = item.paymentMode;
-        transaction.transaction_state = item.transactionState;
-        return transaction;
-    };
-}
-
-export class TransactionDtoBuilder {
-    static build(transaction: Transaction) {
-        return new TransactionDto(
-            transaction.transaction_id,
-            transaction.account,
-            transaction.transaction_date,
-            transaction.amount,
-            transaction.category,
-            transaction.labels || [],
-            transaction.note || '',
-            transaction.currency || 'INR',
-            transaction.payment_mode || PaymentMode.CASH,
-            transaction.transaction_type,
-            transaction.transaction_state || TransactionStatus.COMPLETED
-        );
+    static buildFromEntity(transaction: Transaction & Account): Transaction {
+        let account: Account = {
+            account_id: transaction.account_id,
+            account_name: transaction.account_name,
+            account_type: transaction.account_type,
+            account_balance: transaction.account_balance,
+            bank: transaction.bank,
+            last_synced_on: transaction.last_synced_on,
+            start_date: transaction.start_date,
+            account_number: transaction.account_number
+        };
+        return {
+            transaction_id: transaction.transaction_id,
+            account: account,
+            transaction_date: new Date(transaction.transaction_date),
+            amount: transaction.amount,
+            category: transaction.category,
+            labels: transaction.labels || [],
+            note: transaction.note || '',
+            currency: transaction.currency || 'INR',
+            payment_mode: transaction.payment_mode || PaymentMode.CASH,
+            transaction_type: transaction.transaction_type,
+            transaction_state: transaction.transaction_state || TransactionStatus.COMPLETED,
+            dated: new Date(transaction.dated)
+        };
     }
 }

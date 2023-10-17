@@ -11,6 +11,7 @@ import { syncTrackerStorage } from '../../database/repository/sync-tracker-stora
 import { mutualFundRepository } from '../../database/repository/mutual-fund-repository.js';
 import { MutualFundTransactionBuilder } from '../../database/models/mutual-fund-transaction.js';
 import { mfParam } from '../../config.js';
+import { Account } from '../../database/models/account.js';
 
 export class MutualFundSyncProvider implements SyncProvider {
     sync(): void {
@@ -185,4 +186,6 @@ export class MutualFundSyncProvider implements SyncProvider {
                 syncTrackerStorage.update(syncTracker);
             });
     }
+
+    manualSync(accounts: Account[], deltaSync: boolean) {}
 }

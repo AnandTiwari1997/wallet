@@ -1,7 +1,7 @@
 import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import CSS from 'csstype';
 import './transaction.css';
-import { ArrayUtil, Transaction, TransactionType } from '../../data/transaction-data';
+import { ArrayUtil, TransactionType } from '../../data/transaction-data';
 import { useEffect, useState } from 'react';
 import { indianRupee, view } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { darkGreen, darkRed } from '../../App';
 import Dialog from '../../modules/dialog/dialog';
 import { useGlobalLoadingState } from '../../index';
+import { Transaction } from '../../data/models';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -63,7 +64,7 @@ const TransactionPage = () => {
             dispatch
         ).then((response) => {
             setCount(response.num_found);
-            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transactionDate);
+            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
             setInitialData([...sortedTransactions]);
         });
     }, []);
@@ -73,12 +74,12 @@ const TransactionPage = () => {
             key: 'transactionDate',
             label: 'Transaction Date',
             groupByKey: (row: Transaction) => {
-                return row.transactionDate.toLocaleDateString('en-US', {
+                return new Date(row.transaction_date).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric'
                 });
             },
-            customRender: (row: Transaction) => format(row.transactionDate, 'dd MMMM yyy')
+            customRender: (row: Transaction) => format(new Date(row.transaction_date), 'dd MMMM yyy')
         },
         {
             key: 'account',
@@ -87,12 +88,20 @@ const TransactionPage = () => {
                 return (
                     <div style={{ display: 'block' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Account Used:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{row[0].account}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700'
+                            }}
+                        >
+                            {row[0].account.account_name}
+                        </div>
                     </div>
                 );
             },
             customRender: (row: Transaction) => {
-                return row.account;
+                return row.account.account_name;
             }
         },
         {
@@ -102,7 +111,15 @@ const TransactionPage = () => {
                 return (
                     <div style={{ display: 'block' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Category Used:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{row[0].category}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700'
+                            }}
+                        >
+                            {row[0].category.toString()}
+                        </div>
                     </div>
                 );
             }
@@ -159,7 +176,7 @@ const TransactionPage = () => {
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
                             {ArrayUtil.sum(row, (item: Transaction) => {
-                                if (item.transactionType === TransactionType.EXPENSE) return item.amount;
+                                if (item.transaction_type === TransactionType.EXPENSE) return item.amount;
                                 return 0;
                             }).toFixed(2)}
                         </div>
@@ -170,13 +187,13 @@ const TransactionPage = () => {
                 return (
                     <span
                         style={{
-                            color: row.transactionType === TransactionType.INCOME ? `${darkGreen}` : `${darkRed}`
+                            color: row.transaction_type === TransactionType.INCOME ? `${darkGreen}` : `${darkRed}`
                         }}
                     >
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.amount}
+                        {row.amount.toFixed(2)}
                     </span>
                 );
             }
@@ -196,7 +213,7 @@ const TransactionPage = () => {
                             dispatch
                         ).then((response) => {
                             setCount(response.num_found);
-                            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transactionDate);
+                            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
                             setInitialData([...sortedTransactions]);
                         });
                     }}
@@ -218,21 +235,44 @@ const TransactionPage = () => {
                             dispatch
                         ).then((response) => {
                             setCount(response.num_found);
-                            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transactionDate);
+                            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
                             setInitialData([...sortedTransactions]);
                         });
                     }}
                 />
                 <Dialog
                     open={openDetailedView}
-                    header={detailedRow?.transactionType === TransactionType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME}
+                    header={detailedRow?.transaction_type === TransactionType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME}
                     onClose={() => {
                         setOpenDetailedView(false);
                         setDetailedRow(undefined);
                     }}
                 >
                     <div>
-                        <p>{detailedRow && detailedRow.note}</p>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td style={{ padding: '10px' }}>Amount</td>
+                                    <td>:</td>
+                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionAmount']}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ padding: '10px' }}>Account</td>
+                                    <td>:</td>
+                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionAccount']}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ padding: '10px' }}>Information</td>
+                                    <td>:</td>
+                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionInfo']}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ padding: '10px' }}>Date</td>
+                                    <td>:</td>
+                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionDate']}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </Dialog>
             </div>

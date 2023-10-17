@@ -2,16 +2,15 @@ import { SyncProvider } from './sync-provider.js';
 import { connection, eventEmitter } from '../mail-service.js';
 import { simpleParser } from 'mailparser';
 import { accountRepository } from '../../database/repository/account-repository.js';
-import { bankRepository } from '../../database/repository/bank-repository.js';
-import { Logger } from '../../core/logger.js';
 import { accountTransactionRepository } from '../../database/repository/account-transaction-repository.js';
-import { startOfYear, subYears } from 'date-fns';
+import { Logger } from '../../core/logger.js';
 import { BankProcessor, BankProcessorFactory } from '../processor/bank-processor.js';
 import { Account } from '../../database/models/account.js';
+import { bankRepository } from '../../database/repository/bank-repository.js';
 
-const logger: Logger = new Logger('BankAccountTransactionSyncProvider');
+const logger = new Logger('LoanAccountTransactionSyncProvider');
 
-export class BankAccountTransactionSyncProvider implements SyncProvider {
+export class LoanAccountTransactionSyncProvider implements SyncProvider {
     sync(): void {
         eventEmitter.on('mail', (args) => {
             console.log(args);
@@ -23,46 +22,32 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
                 msg.once('body', function (stream, info) {
                     simpleParser(stream, async (error, parsedMail) => {
                         if (error) {
-                            logger.error(error.message);
                             return;
                         }
                         if (!parsedMail.text) return;
                         if (!parsedMail.from?.value[0].address) return;
-                        bankRepository
+                        accountRepository
                             .findAll({
-                                filters: [
-                                    {
-                                        key: 'alert_email_id',
-                                        value: parsedMail.from?.value[0].address
-                                    }
-                                ]
+                                filters: [{ key: 'accountType', value: `LOAN` }]
                             })
-                            .then((banks) => {
-                                if (!banks) return;
-                                if (banks.length === 0) return;
-                                let bank = banks[0];
-                                const bankProcessor = BankProcessorFactory.getProcessor(bank.alert_email_id);
-                                if (bankProcessor) {
-                                    accountRepository
-                                        .findAll({
-                                            filters: [{ key: 'bank', value: `${bank.bank_id}` }]
-                                        })
-                                        .then((accounts) => {
-                                            accounts.forEach((account) => {
-                                                const transaction = bankProcessor.process(parsedMail, account);
-                                                if (transaction) {
-                                                    transaction.account = account;
-                                                    accountTransactionRepository.add(transaction).then((updatedTransaction) => {
-                                                        if (updatedTransaction) {
-                                                            account.last_synced_on = new Date();
-                                                            account.account_balance = account.account_balance - updatedTransaction.amount;
-                                                            accountRepository.update(account);
-                                                        }
-                                                    });
-                                                }
-                                            });
+                            .then((accounts) => {
+                                accounts.forEach((account) => {
+                                    let alertEmailId = account.bank?.alert_email_id;
+                                    if (alertEmailId) {
+                                        const bankProcessor: BankProcessor | undefined = BankProcessorFactory.getProcessor(alertEmailId);
+                                        if (!bankProcessor) return;
+                                        const transaction = bankProcessor.process(parsedMail, account);
+                                        if (!transaction) return;
+                                        transaction.account = account;
+                                        accountTransactionRepository.add(transaction).then((updatedTransaction) => {
+                                            if (updatedTransaction) {
+                                                account.last_synced_on = new Date();
+                                                account.account_balance = account.account_balance - updatedTransaction.amount;
+                                                accountRepository.update(account);
+                                            }
                                         });
-                                }
+                                    }
+                                });
                             });
                     });
                 });
@@ -76,18 +61,18 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
         });
     }
 
-    manualSync(accounts: Account[], deltaSync: boolean) {
+    manualSync(accounts: Account[], deltaSync: boolean): void {
         (async () => {
             accounts.forEach((account) => {
-                if (account.account_type !== 'BANK') return;
+                if (account.account_type !== 'LOAN') return;
                 if (!account.bank) return;
                 bankRepository.find(account.bank?.bank_id).then((bank) => {
                     if (!bank) return;
-                    let syncDate = deltaSync ? account.last_synced_on : subYears(startOfYear(new Date()), 3);
+                    let syncDate = account.last_synced_on;
                     connection.search(
                         [
                             ['SINCE', syncDate],
-                            ['HEADER', 'FROM', bank.alert_email_id]
+                            ['BODY', account.account_number]
                         ],
                         (error, uids) => {
                             if (error) {
@@ -107,20 +92,19 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
                                         }
                                         if (!parsedMail.text && !parsedMail.html) return;
                                         if (!parsedMail.from?.value[0].address) return;
+
                                         const bankProcessor: BankProcessor | undefined = BankProcessorFactory.getProcessor(bank.alert_email_id);
-                                        if (bankProcessor) {
-                                            const transaction = bankProcessor.process(parsedMail, account);
-                                            if (transaction) {
-                                                transaction.account = account;
-                                                accountTransactionRepository.add(transaction).then((updatedTransaction) => {
-                                                    if (updatedTransaction) {
-                                                        account.last_synced_on = new Date();
-                                                        if (deltaSync) account.account_balance = account.account_balance - updatedTransaction.amount;
-                                                        accountRepository.update(account);
-                                                    }
-                                                });
+                                        if (!bankProcessor) return;
+                                        const transaction = bankProcessor.process(parsedMail, account);
+                                        if (!transaction) return;
+                                        transaction.account = account;
+                                        accountTransactionRepository.add(transaction).then((updatedTransaction) => {
+                                            if (updatedTransaction) {
+                                                account.last_synced_on = new Date();
+                                                if (deltaSync) account.account_balance = account.account_balance - updatedTransaction.amount;
+                                                accountRepository.update(account);
                                             }
-                                        }
+                                        });
                                     });
                                 });
                             });
@@ -138,4 +122,4 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
     }
 }
 
-export const bankAccountTransactionSyncProvider = new BankAccountTransactionSyncProvider();
+export const loanAccountTransactionSyncProvider = new LoanAccountTransactionSyncProvider();

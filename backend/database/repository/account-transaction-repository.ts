@@ -1,24 +1,21 @@
 import { Repository } from './repository.js';
-import { Transaction } from '../models/account-transaction.js';
+import { Transaction, TransactionBuilder } from '../models/account-transaction.js';
 import { addGroupByClause, addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
 import { sqlDatabaseProvider } from '../initialize-database.js';
 import { Logger } from '../../core/logger.js';
+import { Account } from '../models/account.js';
 
 const logger: Logger = new Logger('AccountTransactionRepository');
 
 class AccountTransactionRepository implements Repository<Transaction, string> {
     async add(item: Transaction): Promise<Transaction | undefined> {
-        const id = this.generateId(item);
-        let accountTransactionPromise = this.find(id);
-        const accountTransaction = await accountTransactionPromise;
-        if (accountTransaction) return accountTransaction;
-        item.transaction_id = id;
+        item.transaction_id = this.generateId(item);
         try {
             let queryResult = await sqlDatabaseProvider.execute<Transaction>(
                 'INSERT INTO account_transaction(transaction_id, account, transaction_date, amount, transaction_type, category, payment_mode, note, labels, currency, transaction_state, dated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *;',
                 [
                     item.transaction_id,
-                    item.account,
+                    item.account.account_id,
                     item.transaction_date,
                     item.amount,
                     item.transaction_type,
@@ -32,7 +29,8 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
                 ],
                 true
             );
-            return queryResult.rows[0];
+
+            return await this.find(queryResult.rows[0].transaction_id);
         } catch (error) {
             logger.error(`[Add] - Error On Add ${error}`);
             return;
@@ -49,8 +47,12 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
 
     async find(id: string): Promise<Transaction | undefined> {
         try {
-            let queryResult = await sqlDatabaseProvider.execute<Transaction>('SELECT * FROM account_transaction WHERE transaction_id = $1;', [id], false);
-            return queryResult.rows[0];
+            let findSQL = 'SELECT * FROM account_transaction WHERE transaction_id = $1';
+            let joinQuery = `SELECT a.*, b.*
+                             FROM (${findSQL}) a
+                                      INNER JOIN account b ON a.account = b.account_id;`;
+            let queryResult = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, [id], false);
+            return TransactionBuilder.buildFromEntity(queryResult.rows[0]);
         } catch (error) {
             logger.error(`[Find] - Error On Find ${error}`);
             return;
@@ -65,8 +67,11 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
             findSQL = where.sql;
             findSQL = addOrderByClause(findSQL, criteria);
             findSQL = addLimitAndOffset(findSQL, criteria);
-            let queryResults = await sqlDatabaseProvider.execute<Transaction>(findSQL, where.whereClauses, false);
-            return queryResults.rows;
+            let joinQuery = `SELECT a.*, b.*
+                             FROM (${findSQL}) a
+                                      INNER JOIN account b ON a.account = b.account_id;`;
+            let queryResults = await sqlDatabaseProvider.execute<Transaction & Account>(findSQL, where.whereClauses, false);
+            return queryResults.rows.map((row) => TransactionBuilder.buildFromEntity(row));
         } catch (error) {
             logger.error(`[FindAll] - Error On FindAll ${error}`);
             return [];
@@ -78,7 +83,7 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
     }
 
     generateId = (item: Transaction): string => {
-        return item.transaction_date.toISOString() + '_' + item.account.toString() + '_' + item.amount;
+        return item.transaction_date.toISOString() + '_' + item.account.account_id.toString() + '_' + item.amount;
     };
 
     async findAllUsingGroupBy(criteria: Criteria) {
@@ -94,8 +99,11 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
                            FROM account_transaction
                            WHERE dated IN (${innerSql})`;
             findSQL = addOrderByClause(findSQL, criteria);
-            let queryResults = await sqlDatabaseProvider.execute<Transaction>(findSQL, where.whereClauses, false);
-            return queryResults.rows;
+            let joinQuery = `SELECT a.*, b.*
+                             FROM (${findSQL}) a
+                                      INNER JOIN account b ON a.account = b.account_id;`;
+            let queryResults = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, where.whereClauses, false);
+            return queryResults.rows.map((row) => TransactionBuilder.buildFromEntity(row));
         } catch (error) {
             logger.error(`[FindAllUsingGroupBy] - Error On FindAllUsingGroupBy ${error}`);
             return [];

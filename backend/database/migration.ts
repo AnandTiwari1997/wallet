@@ -10,17 +10,14 @@ export const migrations: { [key: string]: string } = {
          );`,
     V2: `CREATE TABLE IF NOT EXISTS account
          (
-             account_id               INT8             NOT NULL,
-             account_name             TEXT             NOT NULL,
-             account_balance          DOUBLE PRECISION NOT NULL,
-             initial_balance          DOUBLE PRECISION NOT NULL,
-             bank_account_number      TEXT,
-             account_type             TEXT             NOT NULL,
-             account_icon             TEXT,
-             account_background_color TEXT,
-             bank_account_type        TEXT,
-             bank                     INT8             NOT NULL,
-             last_synced_on           TIMESTAMPTZ,
+             account_id      INT8             NOT NULL,
+             account_name    TEXT             NOT NULL,
+             account_balance DOUBLE PRECISION NOT NULL,
+             account_number  TEXT,
+             account_type    TEXT             NOT NULL,
+             bank            INT8             NOT NULL,
+             start_date      TIMESTAMPTZ      NOT NULL,
+             last_synced_on  TIMESTAMPTZ,
              CONSTRAINT account_id_pk PRIMARY KEY (account_id),
              CONSTRAINT accounts_bank_fk FOREIGN KEY (bank) REFERENCES bank (bank_id)
          );`,
@@ -69,5 +66,20 @@ export const migrations: { [key: string]: string } = {
              dated             DATE             NOT NULL,
              CONSTRAINT account_transaction_transactionId_pk PRIMARY KEY (transaction_id),
              CONSTRAINT account_transaction_account_fk FOREIGN KEY (account) REFERENCES account (account_id)
+         );`,
+    V6: `CREATE TABLE IF NOT EXISTS bill
+         (
+             bill_id            TEXT             NOT NULL,
+             bill_name          TEXT             NOT NULL,
+             vendor_name        TEXT             NOT NULL,
+             bill_status        TEXT             NOT NULL,
+             label              TEXT             NOT NULL,
+             category           TEXT             NOT NULL,
+             previous_bill_date DATE             NOT NULL,
+             next_bill_date     DATE             NOT NULL,
+             transaction_date   TIMESTAMPTZ,
+             auto_sync          BOOLEAN          NOT NULL,
+             bill_amount        DOUBLE PRECISION NOT NULL,
+             CONSTRAINT bill_id_pk PRIMARY KEY (bill_id)
          );`
 };

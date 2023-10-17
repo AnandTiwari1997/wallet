@@ -125,56 +125,6 @@ export class MutualFundTransaction {
     };
 }
 
-export class Transaction {
-    transactionId: string;
-    account: number;
-    transactionDate: Date;
-    amount: number;
-    category: string;
-    labels: string[];
-    note: string;
-    currency: string;
-    paymentMode: PaymentMode;
-    transactionType: TransactionType;
-    transactionState: TransactionStatus;
-    dated: Date;
-
-    constructor(
-        transactionId: string,
-        account: number,
-        transactionDate: Date,
-        amount: number,
-        category: string,
-        labels: string[],
-        note: string,
-        currency: string,
-        paymentMode: PaymentMode,
-        transactionType: TransactionType,
-        transactionState: TransactionStatus,
-        dated: Date
-    ) {
-        this.transactionId = transactionId;
-        this.account = account;
-        this.transactionDate = transactionDate;
-        this.amount = amount;
-        this.category = category;
-        this.labels = labels;
-        this.note = note;
-        this.currency = currency;
-        this.paymentMode = paymentMode;
-        this.transactionType = transactionType;
-        this.transactionState = transactionState;
-        this.dated = dated;
-    }
-
-    /**
-     * name
-     */
-    public isExpense() {
-        return this.transactionType === TransactionType.EXPENSE;
-    }
-}
-
 export class ArrayUtil {
     static groupBy<T>(arr: T[], fn: (item: T) => string): { [key: string]: T[] } {
         return arr.reduce<Record<string, T[]>>((prev, curr) => {

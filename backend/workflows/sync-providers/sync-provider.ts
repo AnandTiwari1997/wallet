@@ -1,22 +1,34 @@
 import { ProvidentFundSyncProvider } from './provident-fund-sync-provider.js';
 import { MutualFundSyncProvider } from './mutual-fund-sync-provider.js';
-import { MUTUAL_FUND } from '../../constant.js';
+import { MUTUAL_FUND, PROVIDENT_FUND } from '../../constant.js';
 import { spawn } from 'child_process';
 import path from 'path';
 import { rootDirectoryPath } from '../../server.js';
 import fs from 'fs';
 import { Logger } from '../../core/logger.js';
+import { bankAccountTransactionSyncProvider } from './bank-account-transaction-sync-provider.js';
+import { loanAccountTransactionSyncProvider } from './loan-account-transaction-sync-provider.js';
+import { Account } from '../../database/models/account.js';
 
 const logger: Logger = new Logger('SyncProvider');
 
 export interface SyncProvider {
     sync: () => void;
+    manualSync: (accounts: Account[], deltaSync: boolean) => void;
 }
 
 export class SyncProviderFactory {
     static getProvider = (name: string): SyncProvider => {
-        if (name === MUTUAL_FUND) return new MutualFundSyncProvider();
-        else return new ProvidentFundSyncProvider();
+        switch (name) {
+            case MUTUAL_FUND:
+                return new MutualFundSyncProvider();
+            case PROVIDENT_FUND:
+                return new ProvidentFundSyncProvider();
+            case 'LOAN':
+                return loanAccountTransactionSyncProvider;
+            default:
+                return bankAccountTransactionSyncProvider;
+        }
     };
 }
 

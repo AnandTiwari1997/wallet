@@ -10,6 +10,7 @@ import { captchaStorage } from '../../database/repository/captcha-storage.js';
 import { rootDirectoryPath } from '../../server.js';
 import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
 import { pfParam } from '../../config.js';
+import { Account } from '../../database/models/account.js';
 
 export class ProvidentFundSyncProvider implements SyncProvider {
     sync(): void {
@@ -148,4 +149,6 @@ export class ProvidentFundSyncProvider implements SyncProvider {
                 syncTrackerStorage.update(syncTracker);
             });
     }
+
+    manualSync(accounts: Account[], deltaSync: boolean) {}
 }

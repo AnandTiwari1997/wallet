@@ -1,5 +1,5 @@
 import CSS from 'csstype';
-import { Button, Dialog, Tab, Tabs } from '@mui/material';
+import { Button, Dialog } from '@mui/material';
 import { Fragment, useRef, useState } from 'react';
 import './savings.css';
 import MutualFund from './mutual-fund';
@@ -7,10 +7,12 @@ import ProvidentFund from './provident-fund';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { refresh } from '../../icons/icons';
 import { syncInvestmentAccount, syncInvestmentAccountCaptcha } from '../../modules/backend/BackendApi';
+import Tabs from '../../modules/tabs/tabs';
+import Tab from '../../modules/tabs/tab';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
-    flexDirection: 'column',
+    // flexDirection: 'column',
     height: '100%'
 };
 
@@ -87,23 +89,23 @@ const SavingsPage = () => {
         }
     ];
 
-    const renderTabs = () => {
-        return tabs.map((tab, index) => {
-            let rootClasses: string = 'savings-tab-root';
-            if (index !== tabs.length - 1) rootClasses += ' tab-root-after';
-            return (
-                <Tab
-                    key={index}
-                    label={tab.label}
-                    value={tab.value}
-                    classes={{
-                        root: rootClasses,
-                        selected: 'tab-selected'
-                    }}
-                />
-            );
-        });
-    };
+    // const renderTabs = () => {
+    //     return tabs.map((tab, index) => {
+    //         let rootClasses: string = 'savings-tab-root';
+    //         if (index !== tabs.length - 1) rootClasses += ' tab-root-after';
+    //         return (
+    //             <Tab
+    //                 key={index}
+    //                 label={tab.label}
+    //                 value={tab.value}
+    //                 classes={{
+    //                     root: rootClasses,
+    //                     selected: 'tab-selected'
+    //                 }}
+    //             />
+    //         );
+    //     });
+    // };
 
     const renderTabContent = () => {
         switch (selectedTab) {
@@ -145,24 +147,34 @@ const SavingsPage = () => {
         <div style={topDiv}>
             <div className="savings-body">
                 <Fragment>
-                    <button className="icon-button tab-refresh-icon" onClick={handleRefresh}>
-                        <i className="icon">
-                            <FontAwesomeIcon icon={refresh} />
-                        </i>
-                    </button>
-                    <Tabs
-                        onChange={switchTabs}
-                        value={selectedTab}
-                        classes={{
-                            scroller: 'tab-scroller',
-                            root: 'savings-tabs-root',
-                            indicator: 'tab-indicator',
-                            flexContainer: 'savings-tabs-flex-container'
-                        }}
-                    >
-                        {renderTabs()}
-                    </Tabs>
-                    <div className="savings-tab-content">{renderTabContent()}</div>
+                    <div style={{ background: 'white', height: '100%' }}>
+                        <button className="icon-button tab-refresh-icon" onClick={handleRefresh}>
+                            <i className="icon">
+                                <FontAwesomeIcon icon={refresh} />
+                            </i>
+                        </button>
+                        <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
+                            <Tab label={SavingsTab.MUTUAL_FUND.label} value={SavingsTab.MUTUAL_FUND.value} classes={'tab--width'}>
+                                <MutualFund />
+                            </Tab>
+                            <Tab label={SavingsTab.PROVIDENT_FUND.label} value={SavingsTab.PROVIDENT_FUND.value} classes={'tab--width'}>
+                                <ProvidentFund />
+                            </Tab>
+                        </Tabs>
+                    </div>
+                    {/*<Tabs*/}
+                    {/*    onChange={switchTabs}*/}
+                    {/*    value={selectedTab}*/}
+                    {/*    classes={{*/}
+                    {/*        scroller: 'tab-scroller',*/}
+                    {/*        root: 'savings-tabs-root',*/}
+                    {/*        indicator: 'tab-indicator',*/}
+                    {/*        flexContainer: 'savings-tabs-flex-container'*/}
+                    {/*    }}*/}
+                    {/*>*/}
+                    {/*    {renderTabs()}*/}
+                    {/*</Tabs>*/}
+                    {/*<div className="savings-tab-content">{renderTabContent()}</div>*/}
                     <Dialog open={openCaptcha} classes={{ paper: 'captcha-dialog' }}>
                         <img src={captchaUrl} alt="" className="captcha-dialog-image" />
                         <input className="captcha-dialog-input" ref={inputRef} />

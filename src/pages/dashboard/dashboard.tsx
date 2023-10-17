@@ -1,8 +1,8 @@
 import CSS from 'csstype';
 import './dashboard.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Account } from '../../data/account-data';
-import { edit, plus } from '../../icons/icons';
+import { Account } from '../../data/models';
+import { edit, indianRupee, plus } from '../../icons/icons';
 import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import { useEffect, useState } from 'react';
 import { getAccounts } from '../../modules/backend/BackendApi';
@@ -77,7 +77,12 @@ const DashboardPage = () => {
                         </span>
                     </div>
                     <div className="account-balance">
-                        <span className="">{account.initial_balance}</span>
+                        <span className="">
+                            <i className="icon custom-font-size">
+                                <FontAwesomeIcon icon={indianRupee} />
+                            </i>
+                            {account.account_balance.toFixed(2)}
+                        </span>
                     </div>
                 </div>
             </div>
