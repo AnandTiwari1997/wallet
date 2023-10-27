@@ -53,7 +53,8 @@ export class TransactionBuilder {
             bank: transaction.bank,
             last_synced_on: transaction.last_synced_on,
             start_date: transaction.start_date,
-            account_number: transaction.account_number
+            account_number: transaction.account_number,
+            search_text: transaction.search_text
         };
         return {
             transaction_id: transaction.transaction_id,

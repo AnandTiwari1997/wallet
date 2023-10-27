@@ -7,12 +7,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { menu } from '../../icons/icons';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
-import { ApiCriteria, getBills } from '../../modules/backend/BackendApi';
+import { ApiCriteria, getBills, updateBill } from '../../modules/backend/BackendApi';
 import CSS from 'csstype';
 import Dialog from '../../modules/dialog/dialog';
 import { useEffect, useState } from 'react';
 import AddBill from './add-bill';
-import { format } from 'date-fns';
+import { addMonths, format } from 'date-fns';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
+import Button from '../../modules/button/button';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -42,7 +44,7 @@ const BillsPage = () => {
         label: 'Bill Status',
         key: 'bill_status',
         customRender: (row: Bill) => {
-            return <>{row.transaction_date ? row.bill_status : 'New'} </>;
+            return <>{row.bill_status} </>;
         }
     };
     const CATEGORY: TableColumn = {
@@ -56,7 +58,7 @@ const BillsPage = () => {
         label: 'Last Paid',
         key: 'last_transaction_date',
         customRender: (row: Bill) => {
-            return <>{row.transaction_date ? format(new Date(row.previous_bill_date), 'dd MMM yyyy') : 'New'} </>;
+            return <>{row.transaction_date ? format(new Date(row.transaction_date), 'dd MMM yyyy') : 'New'} </>;
         }
     };
     const LAST_BILL_DATE: TableColumn = {
@@ -115,21 +117,42 @@ const BillsPage = () => {
                                 setShowAddBill(true);
                             }}
                         />
+                        <MenuOption
+                            label={'Paid'}
+                            onMenuOptionClick={(event) => {
+                                if (!selectedBill) return;
+                                if (selectedBill.bill_status === 'PAID') return;
+                                selectedBill.bill_status = 'PAID';
+                                selectedBill.label = 'NON_ACTIVE';
+                                selectedBill.transaction_date = new Date().toISOString();
+                                selectedBill.previous_bill_date = selectedBill.next_bill_date;
+                                selectedBill.next_bill_date = addMonths(new Date(selectedBill.previous_bill_date), 1).toISOString();
+                                updateBill({ data: selectedBill }).then((apiResponse) => fetchBills());
+                            }}
+                        />
                         <MenuOption label={'Delete'} onMenuOptionClick={(event) => {}} />
                     </Menu>
                 </div>
             );
         }
     };
+    const BILL_CONSUMER_NO: TableColumn = {
+        label: 'Consumer Number',
+        key: 'bill_consumer_no'
+    };
 
     const columnsPerTab: { [key: string]: TableColumn[] } = {
-        ACTIVE: [VENDOR, NAME, CATEGORY, NEXT_BILL_DATE, ACTION],
-        DUE: [VENDOR, NAME, CATEGORY, LAST_BILL_DATE, TRANSACTION_DATE, DUE_BILLS, ACTION],
-        ALL: [VENDOR, NAME, CATEGORY, NEXT_BILL_DATE, TRANSACTION_DATE, STATUS, BILL_AMOUNT, ACTION]
+        ACTIVE: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, NEXT_BILL_DATE, ACTION],
+        DUE: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, LAST_BILL_DATE, TRANSACTION_DATE, DUE_BILLS, ACTION],
+        ALL: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, NEXT_BILL_DATE, TRANSACTION_DATE, STATUS, BILL_AMOUNT, ACTION]
     };
 
     const fetchBills = () => {
-        let body = {};
+        let body: ApiRequestBody<Bill> = {
+            criteria: {
+                sorts: [{ key: 'next_bill_date', ascending: false }]
+            }
+        };
         if (selectedTab !== 'ALL') {
             let criteria = buildCriteria(selectedTab);
             body = { criteria: criteria };
@@ -151,7 +174,8 @@ const BillsPage = () => {
                     key: 'label',
                     value: label
                 }
-            ]
+            ],
+            sorts: [{ key: 'next_bill_date', ascending: false }]
         };
         return criteria;
     };
@@ -181,15 +205,14 @@ const BillsPage = () => {
                     marginRight: '10px'
                 }}
             >
-                <button
-                    className="button"
+                <Button
                     onClick={() => {
                         setShowAddBill(true);
                         setSelectedBill(undefined);
                     }}
                 >
                     Add
-                </button>
+                </Button>
             </div>
             <div style={{ background: 'white', margin: '10px', height: 'calc(100% - 3rem - 20px)' }}>
                 <Tabs selectedTab={'ACTIVE'} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>

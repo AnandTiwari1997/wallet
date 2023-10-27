@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import { connection, reconnectMailServer } from './workflows/mail-service.js';
+import { connection, eventEmitter } from './workflows/mail-service.js';
 import accountRoutes from './controllers/account-controller.js';
 import bankRoutes from './controllers/bank-controller.js';
 import transactionRoutes from './controllers/transactions-controller.js';
@@ -12,10 +12,11 @@ import { Logger, LoggerLevel } from './core/logger.js';
 import { ApiError, ErrorType, InternalError, NotFoundError } from './core/api-error.js';
 import { API_PATH } from './constant.js';
 import { environment, port } from './config.js';
-import { billSyncProvider } from './workflows/sync-providers/bills-sync-provider.js';
-import { bankAccountTransactionSyncProvider } from './workflows/sync-providers/bank-account-transaction-sync-provider.js';
 import { accountRepository } from './database/repository/account-repository.js';
+import { Account } from './database/models/account.js';
+import { bankAccountTransactionSyncProvider } from './workflows/sync-providers/bank-account-transaction-sync-provider.js';
 import { loanAccountTransactionSyncProvider } from './workflows/sync-providers/loan-account-transaction-sync-provider.js';
+import { billSyncProvider } from './workflows/sync-providers/bills-sync-provider.js';
 
 Logger.level = LoggerLevel.INFO;
 
@@ -58,21 +59,13 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
     logger.info(`Backend Server Started listening on ${port}`);
     connection.connect();
-    reconnectMailServer();
-
-    bankAccountTransactionSyncProvider.sync();
-    billSyncProvider.sync();
-
-    // TODO: Remove this and rely on event raised when mail box is opened.
-    setTimeout(() => {
-        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'BANK' }] }).then((accounts) => {
+    eventEmitter.addListener('boxOpened', () => {
+        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'BANK' }] }).then((accounts: Account[]) => {
             bankAccountTransactionSyncProvider.manualSync(accounts, true);
         });
-    }, 1000 * 60);
-
-    setTimeout(() => {
-        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'LOAN' }] }).then((accounts) => {
+        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'LOAN' }] }).then((accounts: Account[]) => {
             loanAccountTransactionSyncProvider.manualSync(accounts, true);
         });
-    }, 1000 * 60);
+        billSyncProvider.sync();
+    });
 });

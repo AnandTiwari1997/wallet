@@ -1,5 +1,5 @@
 import { accountRepository } from '../database/repository/account-repository.js';
-import { BankAccountTransactionSyncProvider } from '../workflows/sync-providers/bank-account-transaction-sync-provider.js';
+import { bankAccountTransactionSyncProvider } from '../workflows/sync-providers/bank-account-transaction-sync-provider.js';
 import { Account, AccountBuilder, AccountDto } from '../database/models/account.js';
 import express, { Request, Response } from 'express';
 import AsyncHandler from '../core/async-handler.js';
@@ -9,10 +9,11 @@ import { ApiRequestBody } from '../types/api-request-body.js';
 import { ApiResponseBody } from '../types/api-response-body.js';
 import { ApiRequestPathParam } from '../types/api-request-path-param.js';
 import { SyncProviderFactory } from '../workflows/sync-providers/sync-provider.js';
+import { loanAccountTransactionSyncProvider } from '../workflows/sync-providers/loan-account-transaction-sync-provider.js';
 
 const router = express.Router();
-router.get(
-    '/',
+router.post(
+    '/_search',
     AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<AccountDto>, ApiRequestBody<AccountDto>>, res: Response<ApiResponseBody<AccountDto>>) => {
         const accounts = await accountRepository.findAll(req.body.criteria || {});
         let apiResponse: ApiResponseBody<AccountDto> = {
@@ -93,9 +94,15 @@ router.post(
                 message: string;
             }>
         ) => {
-            let bankAccountTransactionSyncProvider = new BankAccountTransactionSyncProvider();
             let accounts = await accountRepository.findAll(req.body.criteria || {});
-            bankAccountTransactionSyncProvider.manualSync(accounts, true);
+            let bankAccounts = accounts.filter((account) => account.account_type === 'BANK');
+            let loanAccounts = accounts.filter((account) => account.account_type === 'LOAN');
+            if (bankAccounts.length > 0) {
+                bankAccountTransactionSyncProvider.manualSync(bankAccounts, true);
+            }
+            if (loanAccounts.length > 0) {
+                loanAccountTransactionSyncProvider.manualSync(loanAccounts, true);
+            }
             return new SuccessResponse<{
                 message: string;
             }>({ message: 'Sync request has been submitted.' }).send(res);

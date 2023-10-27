@@ -68,7 +68,6 @@ router.post(
             req: Request<ApiRequestPathParam, ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>, ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction>>,
             res: Response<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>>
         ) => {
-            console.log(req.params);
             let fundStorage: any = getFundStorage(req.params.investmentType);
             let result = await fundStorage.findAllUsingGroupBy(req.body.criteria || {});
             let count = await fundStorage.count(req.body.criteria || {});

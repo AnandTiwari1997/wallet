@@ -7,8 +7,8 @@ import { Bank } from '../database/models/bank.js';
 import { ApiRequestBody } from '../types/api-request-body.js';
 
 const router = express.Router();
-router.get(
-    '/',
+router.post(
+    '/_search',
     AsyncHandler(async (req: Request<any, ApiResponseBody<Bank>, ApiRequestBody<Bank>>, res: Response<ApiResponseBody<Bank>>) => {
         let banks = await bankRepository.findAll(req.body.criteria || {});
         let apiResponse: ApiResponseBody<Bank> = {

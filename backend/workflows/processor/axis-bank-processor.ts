@@ -2,8 +2,8 @@ import { Category, PaymentMode, Transaction, TransactionStatus, TransactionType 
 import { ParsedMail } from 'mailparser';
 import { Logger } from '../../core/logger.js';
 import { BankProcessor } from './bank-processor.js';
-import * as htmlparser2 from 'htmlparser2';
 import { Account } from '../../database/models/account.js';
+import { htmlParser } from '../html-parser.js';
 
 const logger: Logger = new Logger('AxisBankProcessor');
 
@@ -11,12 +11,22 @@ export class AxisBankProcessor implements BankProcessor {
     emailId: string = 'alerts@axisbank.com';
     decimalAmountRegexExpression = new RegExp('(\\d+(\\.\\d+)?)');
     accountNumberRegexExpression = new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)');
-    infoRegexExpression = new RegExp('(Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)');
+    infoRegexExpression = new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)');
     dateRegexExpression = new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?');
 
     process(parsedMail: ParsedMail, account: Account): Transaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
-            let mailText: string = this.getMailText(parsedMail);
+            let mailText: string = this.getMailText(parsedMail, (text: string) => {
+                if (text.trim().includes('Rs') || text.trim().includes('INR')) {
+                    return text.trim();
+                } else if (text.trim().includes('credited') || text.trim().includes('debited')) {
+                    return text.trim();
+                } else if (text.trim().includes('Info')) {
+                    return text.trim();
+                }
+                return;
+            });
+
             let amount: string = '';
             let accountNo: string = '';
             let transactionDateTime: string = '';
@@ -41,19 +51,21 @@ export class AxisBankProcessor implements BankProcessor {
             transactionInfo = this.getDescription(mailText);
             let note = {
                 transactionDate: transactionDateTime,
-                transactionAccount: accountNo,
-                transactionInfo: transactionInfo,
+                transactionAccount: account.account_type === 'LOAN' ? account.account_number : accountNo,
+                transactionInfo: account.account_type === 'LOAN' ? 'Credited to Loan Account' : transactionInfo,
                 transactionAmount: amount
             };
 
-            if (accountNo.includes('XX')) {
-                let startIndex = account.account_number.length - 4;
-                let actualAccountNumber = 'XX' + account.account_number.substring(startIndex);
-                if (actualAccountNumber !== accountNo) return;
-            } else {
-                let startIndex = account.account_number.length - 6;
-                let actualAccountNumber = account.account_number.substring(startIndex);
-                if (actualAccountNumber !== accountNo) return;
+            if (account.account_type !== 'LOAN') {
+                if (accountNo.includes('XX')) {
+                    let startIndex = account.account_number.length - 4;
+                    let actualAccountNumber = 'XX' + account.account_number.substring(startIndex);
+                    if (actualAccountNumber !== accountNo) return;
+                } else {
+                    let startIndex = account.account_number.length - 6;
+                    let actualAccountNumber = account.account_number.substring(startIndex);
+                    if (actualAccountNumber !== accountNo) return;
+                }
             }
 
             let description: string = JSON.stringify(note);
@@ -67,8 +79,8 @@ export class AxisBankProcessor implements BankProcessor {
                     labels: [],
                     note: description,
                     transaction_state: TransactionStatus.COMPLETED,
-                    payment_mode: transactionInfo.includes('UPI') ? PaymentMode.MOBILE_TRANSFER : PaymentMode.BANK_TRANSFER,
-                    transaction_type: isDebit ? TransactionType.EXPENSE : TransactionType.INCOME,
+                    payment_mode: account.account_type === 'LOAN' ? PaymentMode.BANK_TRANSFER : transactionInfo.includes('UPI') ? PaymentMode.MOBILE_TRANSFER : PaymentMode.BANK_TRANSFER,
+                    transaction_type: account.account_type === 'LOAN' ? TransactionType.INCOME : isDebit ? TransactionType.EXPENSE : TransactionType.INCOME,
                     dated: parsedMail.date || new Date(),
                     currency: 'INR'
                 };
@@ -105,29 +117,10 @@ export class AxisBankProcessor implements BankProcessor {
         return transactionDateTime;
     }
 
-    getMailText(parsedMail: ParsedMail): string {
-        let mailText: string;
+    getMailText(parsedMail: ParsedMail, onText: (text: string) => string | undefined): string {
+        let mailText: string = '';
         if (parsedMail.html) {
-            let skipText = false;
-            let texts: string[] = [];
-            let parser = new htmlparser2.Parser({
-                onopentag(name: string, attribs: { [p: string]: string }, isImplied: boolean) {
-                    if (name === 'style') skipText = true;
-                },
-                ontext(text) {
-                    if (!skipText && text.trim().length > 0) {
-                        if (text.trim().includes('Rs') || text.trim().includes('INR')) {
-                            texts.push(text.trim());
-                        }
-                    }
-                },
-                onclosetag(name: string, isImplied: boolean) {
-                    if (name === 'style') skipText = false;
-                }
-            });
-            parser.write(parsedMail.html);
-            parser.end();
-            mailText = texts.join(' ');
+            mailText = htmlParser(parsedMail.html, onText);
         } else {
             mailText = parsedMail.text?.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/gm, ' ') || '';
         }

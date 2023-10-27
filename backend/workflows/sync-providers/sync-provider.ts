@@ -8,17 +8,16 @@ import fs from 'fs';
 import { Logger } from '../../core/logger.js';
 import { bankAccountTransactionSyncProvider } from './bank-account-transaction-sync-provider.js';
 import { loanAccountTransactionSyncProvider } from './loan-account-transaction-sync-provider.js';
-import { Account } from '../../database/models/account.js';
 
 const logger: Logger = new Logger('SyncProvider');
 
-export interface SyncProvider {
+export interface SyncProvider<T> {
     sync: () => void;
-    manualSync: (accounts: Account[], deltaSync: boolean) => void;
+    manualSync: (accounts: T[], deltaSync: boolean) => void;
 }
 
 export class SyncProviderFactory {
-    static getProvider = (name: string): SyncProvider => {
+    static getProvider = (name: string): SyncProvider<any> => {
         switch (name) {
             case MUTUAL_FUND:
                 return new MutualFundSyncProvider();
@@ -33,7 +32,7 @@ export class SyncProviderFactory {
 }
 
 export const syncProviderHelper = (name: string) => {
-    let syncProvider: SyncProvider = SyncProviderFactory.getProvider(name);
+    let syncProvider: SyncProvider<any> = SyncProviderFactory.getProvider(name);
     syncProvider.sync();
 };
 

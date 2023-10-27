@@ -8,6 +8,7 @@ export interface Account {
     account_number: string;
     bank: Bank;
     start_date: Date;
+    search_text: string;
 }
 
 export interface Bank {
@@ -85,4 +86,5 @@ export interface Bill {
     transaction_date: string | undefined;
     auto_sync: boolean;
     bill_amount: number;
+    bill_consumer_no: string;
 }

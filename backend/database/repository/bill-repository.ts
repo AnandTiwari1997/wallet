@@ -12,7 +12,7 @@ class BillRepository implements Repository<Bill, string> {
         try {
             item.bill_id = randomUUID();
             let queryResult = await sqlDatabaseProvider.execute<IBill>(
-                'INSERT INTO bill(bill_id, bill_name, vendor_name, bill_status, label, category, previous_bill_date, next_bill_date, transaction_date, auto_sync, bill_amount) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;',
+                'INSERT INTO bill(bill_id, bill_name, vendor_name, bill_status, label, category, previous_bill_date, next_bill_date, transaction_date, auto_sync, bill_amount, bill_consumer_no) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *;',
                 [
                     item.bill_id,
                     item.bill_name,
@@ -24,7 +24,8 @@ class BillRepository implements Repository<Bill, string> {
                     item.next_bill_date,
                     item.transaction_date,
                     item.auto_sync,
-                    item.bill_amount
+                    item.bill_amount,
+                    item.bill_consumer_no
                 ],
                 true
             );

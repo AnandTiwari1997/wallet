@@ -11,6 +11,7 @@ import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
 import AddAccount from './add-account';
 import { ArrayUtil } from '../../data/transaction-data';
+import Button from '../../modules/button/button';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -188,9 +189,7 @@ const AccountPage = () => {
                         marginRight: '10px'
                     }}
                 >
-                    <button className="button" onClick={() => setShowAddAccount(true)}>
-                        Add
-                    </button>
+                    <Button onClick={() => setShowAddAccount(true)}>Add</Button>
                 </div>
                 <div className="account-table-division">
                     <Table columns={columns} rows={accounts} groupByColumn={columns[0]} count={count} />

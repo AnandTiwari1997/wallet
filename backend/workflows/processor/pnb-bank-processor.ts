@@ -40,13 +40,13 @@ export class PnbBankProcessor implements BankProcessor {
         return '';
     }
 
-    getMailText(parsedMail: ParsedMail): string {
+    getMailText(parsedMail: ParsedMail, onText: (text: string) => string | undefined): string {
         return parsedMail.text?.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/gm, ' ') || '';
     }
 
     process(parsedMail: ParsedMail, account: Account): Transaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
-            let mailText: string = this.getMailText(parsedMail);
+            let mailText: string = this.getMailText(parsedMail, (text: string) => text);
             let amount: string = '';
             let accountNo: string = '';
             let transactionDateTime: string = '';

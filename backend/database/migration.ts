@@ -80,6 +80,7 @@ export const migrations: { [key: string]: string } = {
              transaction_date   TIMESTAMPTZ,
              auto_sync          BOOLEAN          NOT NULL,
              bill_amount        DOUBLE PRECISION NOT NULL,
+             bill_consumer_no   TEXT             NOT NULL,
              CONSTRAINT bill_id_pk PRIMARY KEY (bill_id)
          );`
 };

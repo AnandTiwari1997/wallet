@@ -11,7 +11,7 @@ export interface BankProcessor {
     getAccountNumber: (mailString: string) => string;
     getDescription: (mailString: string) => string;
     getDate: (mailString: string) => string;
-    getMailText: (parsedMail: ParsedMail) => string;
+    getMailText: (parsedMail: ParsedMail, onText: (text: string) => string | undefined) => string;
 }
 
 export class BankProcessorFactory {

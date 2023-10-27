@@ -18,8 +18,18 @@ class AccountRepository implements Repository<Account, number> {
         item.account_id = AccountRepository.rowCount++;
         try {
             let queryResult = await sqlDatabaseProvider.execute<Account>(
-                'INSERT INTO account(account_id, account_name, account_balance, account_number, account_type, bank, start_date, last_synced_on) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;',
-                [item.account_id, item.account_name, item.account_balance, item.account_number, item.account_type, item.bank ? item.bank.bank_id : 0, item.start_date, item.last_synced_on],
+                'INSERT INTO account(account_id, account_name, account_balance, account_number, account_type, bank, start_date, last_synced_on, search_text) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *;',
+                [
+                    item.account_id,
+                    item.account_name,
+                    item.account_balance,
+                    item.account_number,
+                    item.account_type,
+                    item.bank ? item.bank.bank_id : 0,
+                    item.start_date,
+                    item.last_synced_on,
+                    item.search_text
+                ],
                 true
             );
             return await this.find(queryResult.rows[0].account_id);
@@ -86,8 +96,8 @@ class AccountRepository implements Repository<Account, number> {
     async update(item: Account): Promise<Account | undefined> {
         try {
             let queryResult = await sqlDatabaseProvider.execute<Account>(
-                'UPDATE account SET account_name=$1, account_balance=$2, account_number=$3, account_type=$4, bank=$5, last_synced_on=$6 WHERE account_id=$7 RETURNING *',
-                [item.account_name, item.account_balance, item.account_number, item.account_type, item.bank ? item.bank.bank_id : 0, item.last_synced_on, item.account_id],
+                'UPDATE account SET account_name=$1, account_balance=$2, account_number=$3, account_type=$4, bank=$5, last_synced_on=$6, search_text=$7 WHERE account_id=$8 RETURNING *',
+                [item.account_name, item.account_balance, item.account_number, item.account_type, item.bank ? item.bank.bank_id : 0, item.last_synced_on, item.search_text, item.account_id],
                 true
             );
             return await this.find(queryResult.rows[0].account_id);

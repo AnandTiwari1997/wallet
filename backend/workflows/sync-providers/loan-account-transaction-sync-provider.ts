@@ -7,10 +7,11 @@ import { Logger } from '../../core/logger.js';
 import { BankProcessor, BankProcessorFactory } from '../processor/bank-processor.js';
 import { Account } from '../../database/models/account.js';
 import { bankRepository } from '../../database/repository/bank-repository.js';
+import { TransactionType } from '../../database/models/account-transaction.js';
 
 const logger = new Logger('LoanAccountTransactionSyncProvider');
 
-export class LoanAccountTransactionSyncProvider implements SyncProvider {
+export class LoanAccountTransactionSyncProvider implements SyncProvider<Account> {
     sync(): void {
         eventEmitter.on('mail', (args) => {
             console.log(args);
@@ -42,7 +43,8 @@ export class LoanAccountTransactionSyncProvider implements SyncProvider {
                                         accountTransactionRepository.add(transaction).then((updatedTransaction) => {
                                             if (updatedTransaction) {
                                                 account.last_synced_on = new Date();
-                                                account.account_balance = account.account_balance - updatedTransaction.amount;
+                                                account.account_balance =
+                                                    account.account_balance + (updatedTransaction.transaction_type === TransactionType.INCOME ? 1 : -1) * updatedTransaction.amount;
                                                 accountRepository.update(account);
                                             }
                                         });
@@ -68,11 +70,11 @@ export class LoanAccountTransactionSyncProvider implements SyncProvider {
                 if (!account.bank) return;
                 bankRepository.find(account.bank?.bank_id).then((bank) => {
                     if (!bank) return;
-                    let syncDate = account.last_synced_on;
+                    let syncDate = deltaSync ? account.last_synced_on : account.start_date;
                     connection.search(
                         [
                             ['SINCE', syncDate],
-                            ['BODY', account.account_number]
+                            ['BODY', account.search_text]
                         ],
                         (error, uids) => {
                             if (error) {
@@ -101,7 +103,10 @@ export class LoanAccountTransactionSyncProvider implements SyncProvider {
                                         accountTransactionRepository.add(transaction).then((updatedTransaction) => {
                                             if (updatedTransaction) {
                                                 account.last_synced_on = new Date();
-                                                if (deltaSync) account.account_balance = account.account_balance - updatedTransaction.amount;
+                                                if (deltaSync) {
+                                                    account.account_balance =
+                                                        account.account_balance + (updatedTransaction.transaction_type === TransactionType.INCOME ? 1 : -1) * updatedTransaction.amount;
+                                                }
                                                 accountRepository.update(account);
                                             }
                                         });

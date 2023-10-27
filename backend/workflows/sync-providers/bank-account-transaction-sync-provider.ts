@@ -8,13 +8,14 @@ import { accountTransactionRepository } from '../../database/repository/account-
 import { startOfYear, subYears } from 'date-fns';
 import { BankProcessor, BankProcessorFactory } from '../processor/bank-processor.js';
 import { Account } from '../../database/models/account.js';
+import { TransactionType } from '../../database/models/account-transaction.js';
 
 const logger: Logger = new Logger('BankAccountTransactionSyncProvider');
 
-export class BankAccountTransactionSyncProvider implements SyncProvider {
+export class BankAccountTransactionSyncProvider implements SyncProvider<Account> {
     sync(): void {
         eventEmitter.on('mail', (args) => {
-            console.log(args);
+            logger.info(args);
             const mails: { numberOfNewMails: number; totalMails: number } = args;
             const iFetch = connection.seq.fetch(`${Math.abs(mails.totalMails - mails.numberOfNewMails)}:${mails.totalMails}`, {
                 bodies: ''
@@ -45,18 +46,30 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
                                 if (bankProcessor) {
                                     accountRepository
                                         .findAll({
-                                            filters: [{ key: 'bank', value: `${bank.bank_id}` }]
+                                            filters: [
+                                                { key: 'bank', value: `${bank.bank_id}` },
+                                                {
+                                                    key: 'account_type',
+                                                    value: 'BANK'
+                                                }
+                                            ]
                                         })
                                         .then((accounts) => {
                                             accounts.forEach((account) => {
                                                 const transaction = bankProcessor.process(parsedMail, account);
                                                 if (transaction) {
                                                     transaction.account = account;
-                                                    accountTransactionRepository.add(transaction).then((updatedTransaction) => {
-                                                        if (updatedTransaction) {
-                                                            account.last_synced_on = new Date();
-                                                            account.account_balance = account.account_balance - updatedTransaction.amount;
-                                                            accountRepository.update(account);
+                                                    let id = accountTransactionRepository.generateId(transaction);
+                                                    accountTransactionRepository.find(id).then((value) => {
+                                                        if (!value) {
+                                                            accountTransactionRepository.add(transaction).then((updatedTransaction) => {
+                                                                if (updatedTransaction) {
+                                                                    account.last_synced_on = new Date();
+                                                                    account.account_balance =
+                                                                        account.account_balance + (updatedTransaction.transaction_type === TransactionType.INCOME ? 1 : -1) * updatedTransaction.amount;
+                                                                    accountRepository.update(account);
+                                                                }
+                                                            });
                                                         }
                                                     });
                                                 }
@@ -112,11 +125,17 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
                                             const transaction = bankProcessor.process(parsedMail, account);
                                             if (transaction) {
                                                 transaction.account = account;
-                                                accountTransactionRepository.add(transaction).then((updatedTransaction) => {
-                                                    if (updatedTransaction) {
-                                                        account.last_synced_on = new Date();
-                                                        if (deltaSync) account.account_balance = account.account_balance - updatedTransaction.amount;
-                                                        accountRepository.update(account);
+                                                let id = accountTransactionRepository.generateId(transaction);
+                                                accountTransactionRepository.find(id).then((value) => {
+                                                    if (!value) {
+                                                        accountTransactionRepository.add(transaction).then((updatedTransaction) => {
+                                                            if (updatedTransaction) {
+                                                                account.last_synced_on = new Date();
+                                                                account.account_balance =
+                                                                    account.account_balance + (updatedTransaction.transaction_type === TransactionType.INCOME ? 1 : -1) * updatedTransaction.amount;
+                                                                accountRepository.update(account);
+                                                            }
+                                                        });
                                                     }
                                                 });
                                             }
@@ -139,3 +158,4 @@ export class BankAccountTransactionSyncProvider implements SyncProvider {
 }
 
 export const bankAccountTransactionSyncProvider = new BankAccountTransactionSyncProvider();
+bankAccountTransactionSyncProvider.sync();

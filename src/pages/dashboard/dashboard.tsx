@@ -7,6 +7,8 @@ import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import { useEffect, useState } from 'react';
 import { getAccounts } from '../../modules/backend/BackendApi';
 import { useGlobalLoadingState } from '../../index';
+import Dialog from '../../modules/dialog/dialog';
+import AddAccount from '../account/add-account';
 
 const accountTopDivStyle: CSS.Properties = {
     display: 'flex',
@@ -49,6 +51,8 @@ const topDiv: CSS.Properties = {
 const DashboardPage = () => {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [state, dispatch] = useGlobalLoadingState();
+    const [showAddAccount, setShowAddAccount] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
 
     useEffect(() => {
         getAccounts(dispatch).then((response) => {
@@ -65,7 +69,14 @@ const DashboardPage = () => {
         };
         return (
             <div key={account.account_id} className="account-card" style={backgroundColor}>
-                <i aria-hidden="true" className="pencil alternate icon" onClick={() => console.log('Edit Clicked')}>
+                <i
+                    aria-hidden="true"
+                    className="pencil alternate icon"
+                    onClick={() => {
+                        setShowAddAccount(true);
+                        setSelectedAccount(account);
+                    }}
+                >
                     <FontAwesomeIcon aria-hidden="true" className="icon pencil" icon={edit} />
                 </i>
 
@@ -93,7 +104,13 @@ const DashboardPage = () => {
         <div style={topDiv}>
             <div style={accountTopDivStyle}>
                 <div style={addAccountCardStyle}>
-                    <button className="add-account-button" onClick={() => console.log('Add Account Clicked')}>
+                    <button
+                        className="add-account-button"
+                        onClick={() => {
+                            setShowAddAccount(true);
+                            setSelectedAccount(undefined);
+                        }}
+                    >
                         <i className="icon">
                             <FontAwesomeIcon icon={plus} />
                         </i>
@@ -107,6 +124,30 @@ const DashboardPage = () => {
             <div className="_1G4RrpLL512uJptsH35-hS">
                 <CalenderPicker onChange={(item) => console.log(item)} />
             </div>
+            <Dialog
+                open={showAddAccount}
+                onClose={() => {
+                    setShowAddAccount(false);
+                    setSelectedAccount(undefined);
+                }}
+                header="Account"
+            >
+                <AddAccount
+                    account={selectedAccount}
+                    onSubmit={(success, data) => {
+                        if (success) {
+                            getAccounts(dispatch).then((response) => {
+                                setAccounts(response.results);
+                            });
+                            console.log(`Account ${data} has been add Successfully.`);
+                        } else {
+                            console.log(`Error occurred while adding Account ${data}.`);
+                        }
+                        setSelectedAccount(undefined);
+                        setShowAddAccount(false);
+                    }}
+                />
+            </Dialog>
         </div>
     );
 };

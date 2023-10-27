@@ -11,9 +11,11 @@ import { syncTrackerStorage } from '../../database/repository/sync-tracker-stora
 import { mutualFundRepository } from '../../database/repository/mutual-fund-repository.js';
 import { MutualFundTransactionBuilder } from '../../database/models/mutual-fund-transaction.js';
 import { mfParam } from '../../config.js';
-import { Account } from '../../database/models/account.js';
+import { Logger } from '../../core/logger.js';
 
-export class MutualFundSyncProvider implements SyncProvider {
+const logger: Logger = new Logger('MutualFundSyncProvider');
+
+export class MutualFundSyncProvider implements SyncProvider<any> {
     sync(): void {
         (async function sync() {
             let downloadDirectory = path.resolve(rootDirectoryPath, 'reports', 'mutual_fund');
@@ -22,26 +24,32 @@ export class MutualFundSyncProvider implements SyncProvider {
                     console.error(err);
                 }
             });
-            console.log(`[MutualFundSyncProvider]: Removed Reports Folder`);
-            let driver = await getFirefoxWebDriver(downloadDirectory);
+            logger.info(`Removed Reports Folder`);
+            let driver = await getFirefoxWebDriver(downloadDirectory, true);
             try {
                 let id = new Date().getTime().toString();
                 await driver.get('https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement');
-                console.log(`[MutualFundSyncProvider]: Opened https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement`);
+                logger.info(`Opened https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement`);
                 await driver.sleep(2000);
                 await driver.findElement(By.xpath('//*[@id="mat-radio-9"]/label/span[2]/b')).click();
-                console.log(`[MutualFundSyncProvider]: Consent Accepted`);
+                logger.info(`Consent Accepted`);
                 await driver.findElement(By.xpath('//input[@type="button"]')).click();
-                console.log(`[MutualFundSyncProvider]: Clicked Proceed`);
+                logger.info(`Clicked Proceed`);
                 await driver.sleep(2000);
-                await driver.findElement(By.xpath('//div[@class="close-icon"]/mat-icon')).click();
-                console.log(`[MutualFundSyncProvider]: Closed Dialog`);
+                try {
+                    await driver.findElement(By.xpath('//div[contains(@class, "close-icon")]/mat-icon')).click();
+                    await driver.sleep(2000);
+                    await driver.findElement(By.xpath('//div[contains(@class, "close-icon")]/mat-icon')).click();
+                    logger.info(`Closed Dialog`);
+                } catch (e) {
+                    logger.info(`No Closed Dialog`);
+                }
                 await driver.sleep(2000);
                 await driver.findElement(By.id('mat-radio-3')).click();
-                console.log(`[MutualFundSyncProvider]: Selected Detailed`);
+                logger.info(`Selected Detailed`);
                 await driver.sleep(2000);
                 await driver.findElement(By.id('mat-radio-14')).click();
-                console.log(`[MutualFundSyncProvider]: Selected Specific Period`);
+                logger.info(`Selected Specific Period`);
                 await driver.findElement(By.xpath('//*[@data-mat-calendar="mat-datepicker-1"]/button')).click();
                 await driver.sleep(2000);
                 await driver.findElement(By.xpath('//*[@id="mat-datepicker-1"]//button[@aria-label="Choose month and year"]')).click();
@@ -51,7 +59,7 @@ export class MutualFundSyncProvider implements SyncProvider {
                 await driver.sleep(2000);
                 await driver.findElement(By.xpath('//*[@id="mat-datepicker-1"]//td[@aria-label="01-Jan-2020"]')).click();
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Selected From Date`);
+                logger.info(`Selected From Date`);
                 await driver.findElement(By.xpath('//*[@data-mat-calendar="mat-datepicker-2"]/button')).click();
                 await driver.sleep(2000);
                 await driver.findElement(By.xpath('//*[@id="mat-datepicker-2"]//button[@aria-label="Choose month and year"]')).click();
@@ -62,32 +70,31 @@ export class MutualFundSyncProvider implements SyncProvider {
                 await driver.sleep(2000);
                 await driver.findElement(By.xpath(`//*[@id="mat-datepicker-2"]//td[@aria-label="${format(new Date(), 'dd-MMM-yyyy')}"]`)).click();
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Selected To Date`);
+                logger.info(`Selected To Date`);
                 await driver.findElement(By.id('mat-radio-5')).click();
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Selected Non Zero Folio`);
+                logger.info(`Selected Non Zero Folio`);
                 await driver.findElement(By.id('mat-input-0')).sendKeys(mfParam.email);
                 await driver.sleep(2000);
-
-                console.log(`[MutualFundSyncProvider]: Entered Email`);
+                logger.info(`Entered Email`);
                 await driver.findElement(By.id('mat-input-1')).sendKeys(mfParam.panNo);
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Enter PAN`);
+                logger.info(`Enter PAN`);
                 await driver.findElement(By.id('mat-input-2')).sendKeys(mfParam.password);
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Entered Password`);
+                logger.info(`Entered Password`);
                 await driver.findElement(By.id('mat-input-3')).sendKeys(mfParam.password);
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Entered Password Again`);
+                logger.info(`Entered Password Again`);
                 await driver.wait(until.elementLocated(By.xpath(`//button[@type='submit' and @class='check-now-btn']`)), 10000);
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Located //button[@type='submit' and @class='check-now-btn']`);
+                logger.info(`Located //button[@type='submit' and @class='check-now-btn']`);
                 await driver.wait(until.elementIsVisible(driver.findElement(By.xpath(`//button[@type='submit' and @class='check-now-btn']`))), 10000);
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Visible //button[@type='submit' and @class='check-now-btn']`);
+                logger.info(`Visible //button[@type='submit' and @class='check-now-btn']`);
                 await driver.findElement(By.xpath(`//button[@type='submit' and @class='check-now-btn']`)).click();
                 await driver.sleep(2000);
-                console.log(`[MutualFundSyncProvider]: Clicked Submit`);
+                logger.info(`Clicked Submit`);
                 return await driver
                     .findElement(By.xpath("//div[@class='success']"))
                     .getText()
@@ -187,5 +194,5 @@ export class MutualFundSyncProvider implements SyncProvider {
             });
     }
 
-    manualSync(accounts: Account[], deltaSync: boolean) {}
+    manualSync(accounts: any[], deltaSync: boolean) {}
 }

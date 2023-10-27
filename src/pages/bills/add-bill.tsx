@@ -15,6 +15,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
     const [billCategory, setBillCategory] = useState('INTERNET_BILL');
     const [billingDate, setBillingDate] = useState('1');
     const [billAmount, setBillAmount] = useState<number>(0);
+    const [billConsumerNo, setBillConsumerNo] = useState<string>('');
     const [billId, setBillId] = useState<string>('0');
 
     useEffect(() => {
@@ -27,6 +28,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
             setBillCategory(bill.category);
             setBillingDate(new Date(bill.next_bill_date).getDate().toString());
             setBillAmount(bill.bill_amount);
+            setBillConsumerNo(bill.bill_consumer_no);
         }
     }, [bill]);
 
@@ -48,6 +50,9 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
 
                     <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
                     <TextBox setValue={setVendorName} value={vendorName} placeholder={'Enter Vendor Name'} />
+
+                    <p style={{ margin: '0.5em 0' }}>Consumer Number</p>
+                    <TextBox setValue={setBillConsumerNo} value={billConsumerNo} placeholder={'Enter Bill Consumer Number'} />
 
                     <p style={{ margin: '0.5em 0' }}>Bill Name</p>
                     <TextBox setValue={setBillName} value={billName} placeholder={'Enter Bill Name'} />
@@ -85,7 +90,8 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                                     bill_status: 'PAID',
                                     label: label,
                                     auto_sync: false,
-                                    bill_amount: billAmount
+                                    bill_amount: billAmount,
+                                    bill_consumer_no: billConsumerNo
                                 };
                                 let promise;
                                 if (edit) promise = updateBill({ data: newBill });

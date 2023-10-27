@@ -24,15 +24,19 @@ export const connection: Connection = new Connection(imapConfig);
 export const eventEmitter: EventEmitter = new EventEmitter();
 let openedBox: Box | undefined = undefined;
 connection.once('ready', () => {
+    reconnectMailServer();
     logger.info(`Connection Established`);
-    setInterval((args) => {
-        try {
-            connection.openBox('INBOX', true, (err, box) => {
-                if (err) return;
-                openedBox = box;
+    try {
+        connection.openBox('INBOX', true, (err, box) => {
+            if (err) return;
+            if (!openedBox) eventEmitter.emit('boxOpened');
+            openedBox = box;
+            connection.subscribeBox('INBOX', (error) => {
+                if (error) logger.error(error);
+                logger.info('`INBOX` Subscribed');
             });
-        } catch (error) {}
-    }, 10000);
+        });
+    } catch (error) {}
 });
 
 function onNewEmail(numberOfMails: number) {
@@ -62,9 +66,11 @@ connection.on('end', () => {
 
 export const reconnectMailServer = () => {
     setInterval(() => {
-        if (connection.state === 'disconnected') {
-            logger.debug(`Email Connection Not Active [${connection.state}]. Reconnecting...`);
-            connection.connect();
-        }
+        try {
+            if (connection.state === 'disconnected') {
+                logger.debug(`Email Connection Not Active [${connection.state}]. Reconnecting...`);
+                connection.connect();
+            }
+        } catch (error) {}
     }, 60000);
 };

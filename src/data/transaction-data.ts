@@ -1,30 +1,47 @@
 import { parse } from 'date-fns';
 
 export class TransactionType {
-    static INCOME = 'Income';
-    static EXPENSE = 'Expense';
+    static INCOME = { label: 'Income', value: 'INCOME' };
+    static EXPENSE = { label: 'Expense', value: 'EXPENSE' };
+
+    static get() {
+        return [TransactionType.INCOME, TransactionType.EXPENSE];
+    }
 }
 
 export class PaymentMode {
-    static CASH = 'Cash';
-    static BANK_TRANSFER = 'Bank Transfer';
-    static MOBILE_TRANSFER = 'Mobile Transfer';
-    static CHEQUE = 'Cheque';
+    static CASH = { label: 'Cash', value: 'CASH' };
+    static BANK_TRANSFER = { label: 'Bank Transfer', value: 'BANK_TRANSFER' };
+    static MOBILE_TRANSFER = { label: 'Mobile Transfer', value: 'MOBILE_TRANSFER' };
+    static CHEQUE = { label: 'Cheque', value: 'CHEQUE' };
+
+    static get() {
+        return [PaymentMode.CASH, PaymentMode.BANK_TRANSFER, PaymentMode.MOBILE_TRANSFER, PaymentMode.CHEQUE];
+    }
 }
 
 export class TransactionStatus {
-    static COMPLETED = 'Completed';
-    static PENDING = 'Pending';
+    static COMPLETED = { label: 'Completed', value: 'COMPLETED' };
+    static PENDING = { label: 'Pending', value: 'PENDING' };
+
+    static get() {
+        return [TransactionStatus.COMPLETED, TransactionStatus.PENDING];
+    }
 }
 
 export class Category {
-    static SALARY = 'Salary';
-    static FOOD = 'Food';
-    static FUEL = 'Fuel';
-    static PHONE_RECHARGE = 'Phone Recharge';
-    static BROADBAND_RECHARGE = 'BroadBand Recharge';
-    static DIVIDEND = 'Dividend';
-    static INTEREST_RECEIVED = 'Interest Received';
+    static SALARY = { label: 'Salary', value: 'SALARY' };
+    static FOOD = { label: 'Food', value: 'FOOD' };
+    static FUEL = { label: 'Fuel', value: 'FUEL' };
+    static PHONE_RECHARGE = { label: 'Phone Recharge', value: 'PHONE_RECHARGE' };
+    static BROADBAND_RECHARGE = { label: 'Broadband Recharge', value: 'BROADBAND_RECHARGE' };
+    static DIVIDEND = { label: 'Dividend', value: 'DIVIDEND' };
+    static INTEREST_RECEIVED = { label: 'Interest Received', value: 'INTEREST_RECEIVED' };
+    static OTHERS = { label: 'Others', value: 'OTHERS' };
+
+    static get() {
+        return [Category.SALARY, Category.INTEREST_RECEIVED, Category.DIVIDEND, Category.FUEL, Category.FOOD, Category.BROADBAND_RECHARGE, Category.PHONE_RECHARGE, Category.OTHERS];
+    }
 }
 
 export class ProvidentFundTransaction {

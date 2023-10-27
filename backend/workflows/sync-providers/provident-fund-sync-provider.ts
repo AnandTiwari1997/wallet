@@ -10,9 +10,8 @@ import { captchaStorage } from '../../database/repository/captcha-storage.js';
 import { rootDirectoryPath } from '../../server.js';
 import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
 import { pfParam } from '../../config.js';
-import { Account } from '../../database/models/account.js';
 
-export class ProvidentFundSyncProvider implements SyncProvider {
+export class ProvidentFundSyncProvider implements SyncProvider<any> {
     sync(): void {
         (async function sync() {
             let downloadDirectory = path.resolve(rootDirectoryPath, 'reports', 'provident_fund');
@@ -150,5 +149,5 @@ export class ProvidentFundSyncProvider implements SyncProvider {
             });
     }
 
-    manualSync(accounts: Account[], deltaSync: boolean) {}
+    manualSync(accounts: any[], deltaSync: boolean) {}
 }

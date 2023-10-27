@@ -1,49 +1,105 @@
 import { SyncProvider } from './sync-provider.js';
 import { billRepository } from '../../database/repository/bill-repository.js';
-import { addMonths, differenceInDays, isAfter, isBefore, isSameDay } from 'date-fns';
+import { addMonths, differenceInDays, isAfter, isBefore, isSameDay, subMonths } from 'date-fns';
 import { Logger } from '../../core/logger.js';
-import { Account } from '../../database/models/account.js';
+import { connection } from '../mail-service.js';
+import { Bill } from '../../database/models/bill.js';
+import { simpleParser } from 'mailparser';
+import { BillProcessorFactory } from '../processor/bill-processor.js';
 
 const logger = new Logger('BillsSyncProvider');
 
-class BillsSyncProvider implements SyncProvider {
-    syncer() {
-        billRepository.findAll({}).then((bills) => {
-            bills.forEach((bill) => {
-                let currentDate = new Date();
-                let nextBillDate = bill.next_bill_date;
-                let diffDays = differenceInDays(nextBillDate, currentDate) < 7;
-                if (isBefore(currentDate, nextBillDate) && diffDays) {
-                    bill.label = 'ACTIVE';
-                    bill.bill_status = 'UNPAID';
-                    billRepository.update(bill);
-                    return;
-                }
-                if (isSameDay(currentDate, nextBillDate)) {
-                    bill.label = 'ACTIVE';
-                    bill.previous_bill_date = nextBillDate;
-                    bill.next_bill_date = addMonths(nextBillDate, 1);
-                    billRepository.update(bill);
-                    return;
-                }
-                let status = bill.bill_status;
-                if (status === 'UNPAID' && isAfter(currentDate, bill.previous_bill_date)) {
-                    bill.label = 'DUE';
-                    billRepository.update(bill);
-                    return;
-                }
-                logger.debug('No New Bills.');
-            });
+class BillsSyncProvider implements SyncProvider<Bill> {
+    syncer(bills: Bill[]) {
+        bills.forEach((bill) => {
+            if (bill.auto_sync) return;
+            let currentDate = new Date();
+            let nextBillDate = bill.next_bill_date;
+            let diffDays = differenceInDays(nextBillDate, currentDate) < 7;
+            if (isBefore(currentDate, nextBillDate) && diffDays) {
+                bill.label = 'ACTIVE';
+                bill.bill_status = 'UNPAID';
+                billRepository.update(bill);
+                return;
+            }
+            if (isSameDay(currentDate, nextBillDate)) {
+                bill.label = 'ACTIVE';
+                bill.previous_bill_date = nextBillDate;
+                bill.next_bill_date = addMonths(nextBillDate, 1);
+                billRepository.update(bill);
+                return;
+            }
+            let status = bill.bill_status;
+            if (status === 'UNPAID' && isAfter(currentDate, bill.previous_bill_date)) {
+                bill.label = 'DUE';
+                billRepository.update(bill);
+                return;
+            }
+            logger.debug('No New Bills.');
         });
     }
 
     sync(): void {
-        this.syncer();
-        setInterval(this.syncer.bind(this), 1000 * 60 * 60 * 24);
+        logger.info('sync');
+        billRepository.findAll({}).then((bills: Bill[]) => {
+            this.manualSync(bills, false);
+        });
+        setInterval(this.sync.bind(this), 1000 * 60 * 60 * 24);
     }
 
-    manualSync(accounts: Account[], deltaSync: boolean) {
-        this.syncer();
+    manualSync(bills: Bill[], deltaSync: boolean) {
+        this.syncer(bills);
+        (async () => {
+            bills.forEach((bill) => {
+                if (!bill.auto_sync) return;
+                let syncDate: Date = subMonths(new Date(), 1);
+                connection.search(
+                    [
+                        ['SINCE', syncDate],
+                        ['BODY', bill.bill_consumer_no]
+                    ],
+                    (error, uids) => {
+                        if (error) {
+                            logger.error(error.message);
+                            return;
+                        }
+                        logger.info(uids);
+                        if (uids.length === 0) return;
+                        const iFetch = connection.fetch(uids, {
+                            bodies: ''
+                        });
+                        iFetch.on('message', function (msg, sequenceNumber) {
+                            msg.once('body', function (stream, info) {
+                                simpleParser(stream, async (error, parsedMail) => {
+                                    if (error) {
+                                        logger.error(error.message);
+                                        return;
+                                    }
+                                    if (!parsedMail.from?.text) return;
+                                    if (isAfter(bill.next_bill_date, new Date())) return;
+                                    if (isSameDay(bill.next_bill_date, new Date()) || isAfter(new Date(), bill.next_bill_date)) {
+                                        bill.label = 'DUE';
+                                        billRepository.update(bill).then();
+                                        return;
+                                    }
+                                    let billProcessor = BillProcessorFactory.getProcessor(parsedMail.from?.text);
+                                    if (billProcessor) {
+                                        let updatedBill = billProcessor.process(parsedMail, bill);
+                                        if (updatedBill) billRepository.update(bill).then();
+                                    }
+                                });
+                            });
+                        });
+                        iFetch.on('error', (error) => {
+                            logger.error(`Error On Processing Mail ${error.message}`);
+                        });
+                        iFetch.on('end', () => {
+                            logger.info(`Message has been processed`);
+                        });
+                    }
+                );
+            });
+        })();
     }
 }
 

@@ -99,6 +99,10 @@ const Table = ({
     const [state, dispatch] = useGlobalLoadingState();
 
     useEffect(() => {
+        setCurrentPageNumber(0);
+    }, [count]);
+
+    useEffect(() => {
         setInitialData(rows);
         if (groupByColumn) {
             if (!groupByColumn.groupByKey) return;

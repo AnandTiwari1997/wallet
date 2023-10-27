@@ -9,6 +9,7 @@ export interface Account {
     bank: Bank;
     start_date: Date;
     last_synced_on: Date;
+    search_text: string;
 }
 
 export interface AccountDto {
@@ -19,6 +20,7 @@ export interface AccountDto {
     account_type: string;
     bank: Bank;
     start_date: Date;
+    search_text: string;
 }
 
 export class AccountBuilder {
@@ -32,7 +34,8 @@ export class AccountBuilder {
             account_type: item.account_type,
             bank: bank,
             start_date: new Date(item.start_date),
-            last_synced_on: item.last_synced_on ? new Date(item.last_synced_on) : new Date()
+            last_synced_on: item.last_synced_on ? new Date(item.last_synced_on) : new Date(),
+            search_text: item.search_text
         };
     }
 
@@ -44,7 +47,8 @@ export class AccountBuilder {
             account_number: item.account_number,
             account_type: item.account_type,
             bank: item.bank as Bank,
-            start_date: new Date(item.start_date)
+            start_date: new Date(item.start_date),
+            search_text: item.search_text
         };
     }
 
@@ -57,7 +61,8 @@ export class AccountBuilder {
             account_type: item.account_type,
             bank: item.bank as Bank,
             start_date: new Date(item.start_date),
-            last_synced_on: new Date()
+            last_synced_on: new Date(),
+            search_text: item.search_text
         };
     }
 }

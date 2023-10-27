@@ -32,7 +32,7 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
 
             return await this.find(queryResult.rows[0].transaction_id);
         } catch (error) {
-            logger.error(`[Add] - Error On Add ${error}`);
+            logger.error(`[Add] - Error On Add ${error} Id ${item.transaction_id}`);
             return;
         }
     }
@@ -52,6 +52,7 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
                              FROM (${findSQL}) a
                                       INNER JOIN account b ON a.account = b.account_id;`;
             let queryResult = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, [id], false);
+            if (queryResult.rowCount === 0) return;
             return TransactionBuilder.buildFromEntity(queryResult.rows[0]);
         } catch (error) {
             logger.error(`[Find] - Error On Find ${error}`);
@@ -96,13 +97,15 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
             innerSql = addOrderByClause(innerSql, criteria);
             innerSql = addLimitAndOffset(innerSql, criteria);
             let findSQL = `SELECT *
-                           FROM account_transaction
-                           WHERE dated IN (${innerSql})`;
+                           FROM account_transaction`;
+            let outerWhere = addWhereClause(findSQL, criteria);
+            findSQL = outerWhere.sql;
+            findSQL = `${findSQL} AND dated IN (${innerSql})`;
             findSQL = addOrderByClause(findSQL, criteria);
             let joinQuery = `SELECT a.*, b.*
                              FROM (${findSQL}) a
                                       INNER JOIN account b ON a.account = b.account_id;`;
-            let queryResults = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, where.whereClauses, false);
+            let queryResults = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, outerWhere.whereClauses, false);
             return queryResults.rows.map((row) => TransactionBuilder.buildFromEntity(row));
         } catch (error) {
             logger.error(`[FindAllUsingGroupBy] - Error On FindAllUsingGroupBy ${error}`);

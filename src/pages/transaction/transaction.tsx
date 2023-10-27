@@ -5,14 +5,17 @@ import { ArrayUtil, TransactionType } from '../../data/transaction-data';
 import { useEffect, useState } from 'react';
 import { indianRupee, view } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { getAllTransactions } from '../../modules/backend/BackendApi';
+import { ApiCriteria, getAccounts, getAllTransactions } from '../../modules/backend/BackendApi';
 import Table, { TableColumn, TablePagination } from '../../modules/table/table';
 import { startOfYear } from 'date-fns/esm';
 import { format } from 'date-fns';
 import { darkGreen, darkRed } from '../../App';
 import Dialog from '../../modules/dialog/dialog';
 import { useGlobalLoadingState } from '../../index';
-import { Transaction } from '../../data/models';
+import { Account, Transaction } from '../../data/models';
+import Select, { SelectOption } from '../../modules/select/select';
+import Button from '../../modules/button/button';
+import AddTransaction from './add-transaction';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -22,8 +25,7 @@ const topDiv: CSS.Properties = {
 
 const bodyStyle: CSS.Properties = {
     height: 'calc(100% - 6rem)',
-    margin: '1%',
-    background: '#FFFFFF'
+    margin: '1%'
 };
 
 const TransactionPage = () => {
@@ -35,11 +37,20 @@ const TransactionPage = () => {
         from: startOfYear(new Date()),
         to: new Date()
     });
+    const [selectedAccount, setSelectedAccount] = useState<string>('');
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
+    const [tablePagination, setTablePagination] = useState<TablePagination>({
+        pageSize: 25,
+        pageNumber: 0
+    });
+    const [transactionType, setTransactionType] = useState('');
+    const [showAddTransaction, setShowAddTransaction] = useState(false);
 
     const [state, dispatch] = useGlobalLoadingState();
 
     const _getCriteria = (start: Date, end: Date, offset: number, limit: number) => {
-        return {
+        let criteria: ApiCriteria = {
             groupBy: [{ key: 'dated' }],
             sorts: [{ key: 'dated', ascending: false }],
             between: [
@@ -54,12 +65,21 @@ const TransactionPage = () => {
             offset: offset,
             limit: limit
         };
+        let filters = [];
+        if (selectedAccount !== '') {
+            filters.push({ key: 'account', value: selectedAccount });
+        }
+        if (transactionType !== '') {
+            filters.push({ key: 'transaction_type', value: transactionType });
+        }
+        criteria.filters = filters;
+        return criteria;
     };
 
     useEffect(() => {
         getAllTransactions(
             {
-                criteria: _getCriteria(range.from, range.to, 0, 25)
+                criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
             },
             dispatch
         ).then((response) => {
@@ -67,7 +87,17 @@ const TransactionPage = () => {
             const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
             setInitialData([...sortedTransactions]);
         });
-    }, []);
+        getAccounts(dispatch).then((response) => {
+            setAccounts(response.results);
+            let options = response.results.map((account) => {
+                return {
+                    value: account.account_id,
+                    label: account.account_name
+                };
+            });
+            setSelectOptions([{ value: '', label: 'All' }, ...options]);
+        });
+    }, [selectedAccount, tablePagination, range, transactionType]);
 
     const columns: TableColumn[] = [
         {
@@ -176,7 +206,7 @@ const TransactionPage = () => {
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
                             {ArrayUtil.sum(row, (item: Transaction) => {
-                                if (item.transaction_type === TransactionType.EXPENSE) return item.amount;
+                                if (item.transaction_type === TransactionType.EXPENSE.label) return item.amount;
                                 return 0;
                             }).toFixed(2)}
                         </div>
@@ -187,7 +217,7 @@ const TransactionPage = () => {
                 return (
                     <span
                         style={{
-                            color: row.transaction_type === TransactionType.INCOME ? `${darkGreen}` : `${darkRed}`
+                            color: row.transaction_type === TransactionType.INCOME.label ? `${darkGreen}` : `${darkRed}`
                         }}
                     >
                         <i className="icon">
@@ -205,41 +235,89 @@ const TransactionPage = () => {
             <div className="filter-header">
                 <CalenderPicker
                     onChange={(item) => {
+                        setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
                         setRange({ from: item.rangeStart, to: item.rangeEnd });
-                        getAllTransactions(
-                            {
-                                criteria: _getCriteria(item.rangeStart, item.rangeEnd, 0, 25)
-                            },
-                            dispatch
-                        ).then((response) => {
-                            setCount(response.num_found);
-                            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
-                            setInitialData([...sortedTransactions]);
-                        });
                     }}
                     range={{ from: startOfYear(new Date()), to: new Date() }}
                 />
             </div>
             <div style={bodyStyle}>
-                <Table
-                    columns={columns}
-                    rows={initialData}
-                    groupByColumn={columns[0]}
-                    selectable={true}
-                    count={count}
-                    onPagination={(tablePagination: TablePagination) => {
-                        getAllTransactions(
-                            {
-                                criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
-                            },
-                            dispatch
-                        ).then((response) => {
-                            setCount(response.num_found);
-                            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
-                            setInitialData([...sortedTransactions]);
-                        });
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row'
                     }}
-                />
+                >
+                    <div
+                        style={{
+                            margin: '10px 0',
+                            width: '300px'
+                        }}
+                    >
+                        <p style={{ height: '20px', margin: '0' }}>Account: </p>
+                        <Select
+                            selectedOption={selectedAccount}
+                            onChange={(event) => {
+                                setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
+                                setSelectedAccount(event.target.value);
+                            }}
+                            options={selectOptions}
+                        ></Select>
+                    </div>
+                    <div
+                        style={{
+                            margin: '10px 5px',
+                            width: '300px'
+                        }}
+                    >
+                        <p style={{ height: '20px', margin: '0' }}>Transaction Type: </p>
+                        <Select
+                            selectedOption={transactionType}
+                            onChange={(event) => {
+                                setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
+                                setTransactionType(event.target.value);
+                            }}
+                            options={[{ value: '', label: 'All' }, TransactionType.INCOME, TransactionType.EXPENSE]}
+                        ></Select>
+                    </div>
+                    <div
+                        style={{
+                            height: 'calc(3rem - 10px)',
+                            display: 'block',
+                            marginTop: '30px',
+                            marginRight: '1%',
+                            float: 'right',
+                            right: '0',
+                            position: 'absolute'
+                        }}
+                    >
+                        <Button
+                            onClick={() => {
+                                setShowAddTransaction(true);
+                            }}
+                        >
+                            Add
+                        </Button>
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        height: 'calc(100% - 76px)',
+                        background: '#FFFFFF'
+                    }}
+                >
+                    <Table
+                        columns={columns}
+                        rows={initialData}
+                        groupByColumn={columns[0]}
+                        selectable={true}
+                        count={count}
+                        onPagination={(tablePagination: TablePagination) => {
+                            setTablePagination(tablePagination);
+                        }}
+                    />
+                </div>
                 <Dialog
                     open={openDetailedView}
                     header={detailedRow?.transaction_type === TransactionType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME}
@@ -274,6 +352,9 @@ const TransactionPage = () => {
                             </tbody>
                         </table>
                     </div>
+                </Dialog>
+                <Dialog open={showAddTransaction} onClose={() => setShowAddTransaction(false)} header={'Transaction'}>
+                    <AddTransaction accounts={accounts}></AddTransaction>
                 </Dialog>
             </div>
         </div>

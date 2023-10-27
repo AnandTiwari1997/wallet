@@ -21,6 +21,8 @@ export interface Criteria {
     groupBy?: { key: string }[];
 }
 
+export class QueryHelper {}
+
 export const addWhereClause = (sql: string, criteria: Criteria) => {
     let whereClauseValues: any[] = [];
     let whereClause = [];

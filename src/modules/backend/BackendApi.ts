@@ -21,26 +21,19 @@ export interface ApiRequestBody<T> {
 }
 
 export const getBanks = async (): Promise<any> => {
-    return await axios.get('http://localhost:8000/wallet/banks').then((value) => value.data);
+    return await axios.get('http://localhost:8000/wallet/banks/_search').then((value) => value.data);
 };
 
 export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transaction>, dispatch: any): Promise<ApiResponse<Transaction>> => {
     dispatch(true);
-    const response = await axios.post<ApiResponse<Transaction>>('http://localhost:8000/wallet/transactions', apiRequestBody);
+    const response = await axios.post<ApiResponse<Transaction>>('http://localhost:8000/wallet/transactions/_search', apiRequestBody);
     return { results: response.data.results, num_found: response.data.num_found };
 };
 
-export const getAccounts = async (dispatch: any): Promise<ApiResponse<Account>> => {
+export const getAccounts = async (dispatch: any, apiRequestBody: ApiRequestBody<Transaction> = {}): Promise<ApiResponse<Account>> => {
     dispatch(true);
-    const response = await fetch('http://localhost:8000/wallet/accounts');
-    return response
-        .json()
-        .then((value) => {
-            return { results: value.results, num_found: value.num_found };
-        })
-        .catch((reason) => {
-            return { results: [], num_found: 0 };
-        });
+    const response = await axios.post('http://localhost:8000/wallet/accounts/_search', apiRequestBody);
+    return { results: response.data.results, num_found: response.data.num_found };
 };
 
 export const addAccount = async (account: Account): Promise<ApiResponse<Account>> => {

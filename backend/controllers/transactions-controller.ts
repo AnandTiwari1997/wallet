@@ -9,7 +9,7 @@ import { ApiRequestPathParam } from '../types/api-request-path-param.js';
 
 const router = express.Router();
 router.post(
-    '/',
+    '/_search',
     AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<Transaction>, ApiRequestBody<Transaction>>, res: Response<ApiResponseBody<Transaction>>) => {
         let transactions = await accountTransactionRepository.findAllUsingGroupBy(req.body.criteria || {});
         let count = await accountTransactionRepository.count(req.body.criteria || {});
