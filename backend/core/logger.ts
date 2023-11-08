@@ -21,13 +21,13 @@ export class Logger {
 
     info = (...message: any[]) => {
         if (Logger.level === LoggerLevel.DEBUG || Logger.level === LoggerLevel.INFO) {
-            console.info(`\u001b[37m [${new Date().toISOString()} - INFO ] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', '\u001b[37m' + message);
+            console.info(`\u001b[37m [${new Date().toISOString()} - INFO ] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', message);
         }
     };
 
     debug = (...message: any[]) => {
         if (Logger.level === LoggerLevel.DEBUG) {
-            console.debug(`\u001b[33m [${new Date().toISOString()} - DEBUG] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', '\u001b[33m ' + message);
+            console.debug(`\u001b[33m [${new Date().toISOString()} - DEBUG] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', message);
         }
     };
 

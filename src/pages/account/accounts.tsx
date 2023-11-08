@@ -1,7 +1,7 @@
 import CSS from 'csstype';
 import './accounts.css';
 import Table, { TableColumn } from '../../modules/table/table';
-import { Account } from '../../data/models';
+import { Account, AccountType } from '../../data/models';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee, menu } from '../../icons/icons';
 import { useEffect, useState } from 'react';
@@ -40,7 +40,7 @@ const AccountPage = () => {
             key: 'account_type',
             label: 'Account Type',
             groupByKey: (row: Account) => {
-                return row.account_type;
+                return AccountType.getLabel(row.account_type);
             }
         },
         {
@@ -156,11 +156,13 @@ const AccountPage = () => {
                             <MenuOption
                                 label={'Sync'}
                                 onMenuOptionClick={(event) => {
+                                    console.log(row);
+                                    if (!selectedAccount) return;
                                     syncAccount({
                                         criteria: {
                                             filters: [
-                                                { key: 'account_type', value: 'BANK' },
-                                                { key: 'account_id', value: row.account_id.toString() }
+                                                { key: 'account_type', value: selectedAccount.account_type.toString() },
+                                                { key: 'account_id', value: selectedAccount.account_id.toString() }
                                             ]
                                         }
                                     }).then((response) => {

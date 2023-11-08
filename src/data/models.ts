@@ -19,32 +19,6 @@ export interface Bank {
     primary_color: string;
 }
 
-export interface ProvidentFundTransaction {
-    transactionId: string;
-    wageMonth: string;
-    transactionDate: Date;
-    description: string;
-    epfAmount: number;
-    epsAmount: number;
-    employeeContribution: number;
-    employerContribution: number;
-    pensionAmount: number;
-    isCredit: boolean;
-    financialYear: string;
-}
-
-export interface MutualFundTransaction {
-    transactionId: string;
-    fundName: string;
-    portfolioNumber: string;
-    transactionDate: Date;
-    amount: number;
-    isCredit: boolean;
-    nav: number;
-    units: number;
-    latestNav: number;
-}
-
 export interface Transaction {
     transaction_id: string;
     account: Account;
@@ -71,8 +45,31 @@ export const billCategoryMap: { [key: string]: string } = {
     INTERNET_BILL: 'Internet',
     ELECTRICITY_BILL: 'Electricity',
     MUTUAL_FUND_BILL: 'Mutual Fund',
-    MONTHLY_INSTALLMENT_BILL: 'EMI'
+    MONTHLY_INSTALLMENT_BILL: 'EMI',
+    RENT: 'Rent'
 };
+
+export class AccountType {
+    static CASH = { label: 'Cash', value: 'CASH' };
+    static BANK = { label: 'Bank', value: 'BANK' };
+    static LOAN = { label: 'Loan', value: 'LOAN' };
+    static CREDIT_CARD = { label: 'Credit Card', value: 'CREDIT_CARD' };
+
+    static typeMap: { [key: string]: { label: string; value: string } } = {
+        CASH: AccountType.CASH,
+        BANK: AccountType.BANK,
+        LOAN: AccountType.LOAN,
+        CREDIT_CARD: AccountType.CREDIT_CARD
+    };
+
+    static getLabel(value: string) {
+        return AccountType.typeMap[value.toUpperCase()].label;
+    }
+
+    static get() {
+        return [AccountType.CASH, AccountType.BANK, AccountType.LOAN, AccountType.CREDIT_CARD];
+    }
+}
 
 export interface Bill {
     bill_id: string;
@@ -87,4 +84,31 @@ export interface Bill {
     auto_sync: boolean;
     bill_amount: number;
     bill_consumer_no: string;
+}
+
+export interface MutualFundTransaction {
+    transaction_id: string;
+    fund_name: string;
+    portfolio_number: string;
+    transaction_date: Date;
+    description: string;
+    amount: number;
+    is_credit: boolean;
+    nav: number;
+    units: number;
+    latest_nav: number;
+}
+
+export interface ProvidentFundTransaction {
+    transaction_id: string;
+    wage_month: string;
+    transaction_date: Date;
+    description: string;
+    epf_amount: number;
+    eps_amount: number;
+    employee_contribution: number;
+    employer_contribution: number;
+    pension_amount: number;
+    is_credit: boolean;
+    financial_year: string;
 }

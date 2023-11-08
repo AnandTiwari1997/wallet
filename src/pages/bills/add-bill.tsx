@@ -2,9 +2,8 @@ import { Bill } from '../../data/models';
 import Select from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
 import { useEffect, useState } from 'react';
-import { addMonths, differenceInDays } from 'date-fns';
+import { addMonths } from 'date-fns';
 import { addBill, updateBill } from '../../modules/backend/BackendApi';
-import { isBefore } from 'date-fns/esm';
 
 const dates = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
 
@@ -17,10 +16,12 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
     const [billAmount, setBillAmount] = useState<number>(0);
     const [billConsumerNo, setBillConsumerNo] = useState<string>('');
     const [billId, setBillId] = useState<string>('0');
+    const [billStatus, setBillStatus] = useState<string>('PAID');
+    const [billLabel, setBillLabel] = useState<string>('NON_ACTIVE');
+    const [billTransactionDate, setBillTransactionDate] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         setEdit(bill !== undefined);
-        console.log(bill);
         if (bill) {
             setBillId(bill.bill_id);
             setVendorName(bill.vendor_name);
@@ -29,6 +30,9 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
             setBillingDate(new Date(bill.next_bill_date).getDate().toString());
             setBillAmount(bill.bill_amount);
             setBillConsumerNo(bill.bill_consumer_no);
+            setBillStatus(bill.bill_status);
+            setBillLabel(bill.label);
+            setBillTransactionDate(bill.transaction_date);
         }
     }, [bill]);
 
@@ -43,7 +47,8 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                             { value: 'INTERNET_BILL', label: 'Internet' },
                             { value: 'ELECTRICITY_BILL', label: 'Electricity' },
                             { value: 'MUTUAL_FUND_BILL', label: 'Mutual Fund' },
-                            { value: 'MONTHLY_INSTALLMENT_BILL', label: 'EMI' }
+                            { value: 'MONTHLY_INSTALLMENT_BILL', label: 'EMI' },
+                            { value: 'RENT', label: 'Rent' }
                         ]}
                         onChange={(event) => setBillCategory(event.target.value)}
                     />
@@ -78,17 +83,16 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                                 let day = Number.parseInt(billingDate);
                                 let date = new Date(new Date().setDate(day));
                                 if (day < new Date().getDate()) date = addMonths(date, 1);
-                                let label = isBefore(new Date(), date) && differenceInDays(new Date(), date) < 7 ? 'ACTIVE' : 'NON_ACTIVE';
                                 let newBill: Bill = {
                                     bill_id: billId,
                                     bill_name: billName,
                                     vendor_name: vendorName,
                                     category: billCategory,
                                     next_bill_date: date.toISOString(),
-                                    previous_bill_date: date.toISOString(),
-                                    transaction_date: undefined,
-                                    bill_status: 'PAID',
-                                    label: label,
+                                    previous_bill_date: bill?.previous_bill_date || date.toISOString(),
+                                    transaction_date: billTransactionDate,
+                                    bill_status: billStatus,
+                                    label: billLabel,
                                     auto_sync: false,
                                     bill_amount: billAmount,
                                     bill_consumer_no: billConsumerNo
@@ -99,7 +103,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                                 promise.then((value) => onSubmit(true, value.results[0]));
                             }}
                         >
-                            Add
+                            Submit
                         </button>
                     </div>
                 </div>

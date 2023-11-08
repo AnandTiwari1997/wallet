@@ -1,16 +1,16 @@
 export const API_PATH = {
-    BANKS: '/wallet/banks',
+    BANKS: '/wallet/bank',
     // Account Endpoints
-    ACCOUNTS: '/wallet/accounts',
+    ACCOUNTS: '/wallet/account',
 
     // Transaction Endpoints
-    TRANSACTIONS: '/wallet/transactions',
+    TRANSACTIONS: '/wallet/transaction',
 
     // Investment Endpoints
     INVESTMENTS: '/wallet/investment',
 
     // Bills
-    BILLS: '/wallet/bills'
+    BILLS: '/wallet/bill'
 };
 
 export const MUTUAL_FUND = 'mutual_fund';

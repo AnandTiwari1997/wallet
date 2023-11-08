@@ -62,7 +62,7 @@ export const _syncInvestment = (req: any, res: any) => {
 };
 router.get('/:investmentType/sync', _syncInvestment);
 router.post(
-    '/:investmentType/transactions',
+    '/:investmentType/transaction',
     AsyncHandler(
         async (
             req: Request<ApiRequestPathParam, ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>, ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction>>,

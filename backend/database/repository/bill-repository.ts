@@ -85,7 +85,7 @@ class BillRepository implements Repository<Bill, string> {
     async update(item: Bill): Promise<Bill | undefined> {
         try {
             let queryResult = await sqlDatabaseProvider.execute<IBill>(
-                'UPDATE bill SET bill_name=$1, vendor_name=$2, bill_status=$3, label=$4, category=$5, previous_bill_date=$6, next_bill_date=$7, transaction_date=$8, auto_sync=$9, bill_amount=$10 WHERE bill_id=$11 RETURNING *;',
+                'UPDATE bill SET bill_name=$1, vendor_name=$2, bill_status=$3, label=$4, category=$5, previous_bill_date=$6, next_bill_date=$7, transaction_date=$8, auto_sync=$9, bill_amount=$10, bill_consumer_no=$11 WHERE bill_id=$12 RETURNING *;',
                 [
                     item.bill_name,
                     item.vendor_name,
@@ -97,6 +97,7 @@ class BillRepository implements Repository<Bill, string> {
                     item.transaction_date,
                     item.auto_sync,
                     item.bill_amount,
+                    item.bill_consumer_no,
                     item.bill_id
                 ],
                 true

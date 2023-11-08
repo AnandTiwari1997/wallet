@@ -1,12 +1,13 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee } from '../../icons/icons';
-import { ArrayUtil, MutualFundTransaction } from '../../data/transaction-data';
+import { ArrayUtil } from '../../data/transaction-data';
 import { format } from 'date-fns/esm';
 import { useEffect, useState } from 'react';
 import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
 import Table, { TableColumn } from '../../modules/table/table';
 import { darkGreen, darkRed } from '../../App';
 import { useGlobalLoadingState } from '../../index';
+import { MutualFundTransaction } from '../../data/models';
 
 const MutualFund = () => {
     const [initialData, setInitialData] = useState<MutualFundTransaction[]>([]);
@@ -33,8 +34,7 @@ const MutualFund = () => {
         getInvestmentsTransaction('mutual_fund', requestBody, dispatch)
             .then((response: ApiResponse<any>) => {
                 setCount(response.num_found);
-                const formattedTransactions = ArrayUtil.map(response.results, (item: any) => MutualFundTransaction.build(item));
-                const sortedTransactions = ArrayUtil.sort(formattedTransactions, (item: MutualFundTransaction) => item.fundName);
+                const sortedTransactions = ArrayUtil.sort(response.results, (item: MutualFundTransaction) => item.fund_name);
                 setInitialData(sortedTransactions);
             })
             .catch((reason) => {
@@ -50,12 +50,12 @@ const MutualFund = () => {
 
     const columns: TableColumn[] = [
         {
-            key: 'fundName',
+            key: 'fund_name',
             label: 'Fund Name',
-            groupByKey: (row: MutualFundTransaction) => row.fundName
+            groupByKey: (row: MutualFundTransaction) => row.fund_name
         },
         {
-            key: 'transactionDate',
+            key: 'transaction_date',
             label: 'Transaction Date',
             groupByRender: (rows: MutualFundTransaction[]) => {
                 return (
@@ -68,13 +68,13 @@ const MutualFund = () => {
                                 fontWeight: '700'
                             }}
                         >
-                            {format(rows[0].transactionDate, 'dd MMM yyy')}
+                            {format(rows[0].transaction_date, 'dd MMM yyy')}
                         </div>
                     </div>
                 );
             },
             customRender: (row: MutualFundTransaction) => {
-                return format(row.transactionDate, 'dd MMM yyy');
+                return format(row.transaction_date, 'dd MMM yyy');
             },
             sortable: true
         },
@@ -88,7 +88,7 @@ const MutualFund = () => {
                             <i className="table-body-column-icon icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {rows[0].latestNav.toFixed(2)}
+                            {rows[0].latest_nav.toFixed(2)}
                         </div>
                     </div>
                 );
@@ -165,7 +165,7 @@ const MutualFund = () => {
                             <i className="table-body-column-icon icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {(ArrayUtil.sum(rows, (a: MutualFundTransaction) => a.units) * rows[rows.length - 1].latestNav).toFixed(2)}
+                            {(ArrayUtil.sum(rows, (a: MutualFundTransaction) => a.units) * rows[rows.length - 1].latest_nav).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -174,13 +174,13 @@ const MutualFund = () => {
                 return (
                     <span
                         style={{
-                            color: row.units * row.latestNav > row.amount ? `${darkGreen}` : `${darkRed}`
+                            color: row.units * row.latest_nav > row.amount ? `${darkGreen}` : `${darkRed}`
                         }}
                     >
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {(row.units * row.latestNav).toFixed(2)}
+                        {(row.units * row.latest_nav).toFixed(2)}
                     </span>
                 );
             },

@@ -24,21 +24,21 @@ class ProvidentFundRepository implements Repository<ProvidentFundTransaction, st
         const mutualFundT = await mutualFundPromise;
         if (mutualFundT) return mutualFundT;
         try {
-            item.transactionId = id;
+            item.transaction_id = id;
             let queryResult = await sqlDatabaseProvider.execute<IProvidentFundTransaction>(
                 'INSERT INTO provident_fund(transaction_id, wage_month, financial_year, transaction_date, description, transaction_type, epf_amount, eps_amount, employee_contribution, employer_contribution, pension_amount) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;',
                 [
-                    item.transactionId,
-                    item.wageMonth,
-                    item.financialYear,
-                    item.transactionDate.toISOString(),
+                    item.transaction_id,
+                    item.wage_month,
+                    item.financial_year,
+                    item.transaction_date.toISOString(),
                     item.description,
-                    item.transactionType,
-                    item.epfAmount,
-                    item.epsAmount,
-                    item.employeeContribution,
-                    item.employerContribution,
-                    item.pensionAmount
+                    item.transaction_type,
+                    item.epf_amount,
+                    item.eps_amount,
+                    item.employee_contribution,
+                    item.employer_contribution,
+                    item.pension_amount
                 ],
                 true
             );
@@ -101,17 +101,17 @@ class ProvidentFundRepository implements Repository<ProvidentFundTransaction, st
                  WHERE transaction_id = $11
                  RETURNING *`,
                 [
-                    item.wageMonth,
-                    item.financialYear,
-                    item.transactionDate.toISOString(),
+                    item.wage_month,
+                    item.financial_year,
+                    item.transaction_date.toISOString(),
                     item.description,
-                    item.transactionType,
-                    item.epfAmount,
-                    item.epsAmount,
-                    item.employeeContribution,
-                    item.employerContribution,
-                    item.pensionAmount,
-                    item.transactionId
+                    item.transaction_type,
+                    item.epf_amount,
+                    item.eps_amount,
+                    item.employee_contribution,
+                    item.employer_contribution,
+                    item.pension_amount,
+                    item.transaction_id
                 ],
                 true
             );
@@ -123,7 +123,7 @@ class ProvidentFundRepository implements Repository<ProvidentFundTransaction, st
     }
 
     generateId = (item: ProvidentFundTransaction): string => {
-        return item.financialYear + '_' + item.wageMonth + '_' + item.transactionDate;
+        return item.financial_year + '_' + item.wage_month + '_' + item.transaction_date;
     };
 
     async findAllUsingGroupBy(criteria: Criteria) {

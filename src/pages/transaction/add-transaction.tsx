@@ -4,6 +4,7 @@ import Select from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
 import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
 import Button from '../../modules/button/button';
+import { addTransaction } from '../../modules/backend/BackendApi';
 
 const AddTransaction = ({ accounts }: { accounts: Account[] }) => {
     const [account, setAccount] = useState<Account>(accounts[0]);
@@ -67,13 +68,20 @@ const AddTransaction = ({ accounts }: { accounts: Account[] }) => {
                                     transaction_state: status,
                                     payment_mode: paymentMode,
                                     category: category,
-                                    note: note,
+                                    note: JSON.stringify({
+                                        transactionAmount: amount,
+                                        transactionAccount: account.account_number,
+                                        transactionInfo: note,
+                                        transactionDate: new Date()
+                                    }),
                                     labels: [],
                                     dated: new Date(),
                                     currency: 'INR',
                                     transaction_id: ''
                                 };
-                                console.log(transaction);
+                                addTransaction(transaction).then((apiResponse) => {
+                                    console.log('Saved Object', apiResponse.results);
+                                });
                             }}
                         >
                             Add

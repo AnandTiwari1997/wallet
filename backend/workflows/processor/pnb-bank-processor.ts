@@ -13,20 +13,20 @@ export class PnbBankProcessor implements BankProcessor {
     infoRegexExpression = new RegExp('thru (.*) Aval');
     dateRegexExpression = new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?');
 
-    getAccountNumber(mailString: string): string {
-        let matchArray = mailString?.match(this.accountNumberRegexExpression);
+    getAccountNumber(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.accountNumberRegexExpression);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getAmount(mailString: string): string {
-        let matchArray = mailString?.match(this.decimalAmountRegexExpression);
+    getAmount(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.decimalAmountRegexExpression);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getDate(mailString: string): string {
-        let matchArray = mailString?.match(this.dateRegexExpression);
+    getDate(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.dateRegexExpression);
         let transactionDateTime = '';
         if (matchArray) {
             transactionDateTime = matchArray[0];
@@ -34,8 +34,8 @@ export class PnbBankProcessor implements BankProcessor {
         return transactionDateTime;
     }
 
-    getDescription(mailString: string): string {
-        let matchArray = mailString?.match(this.infoRegexExpression);
+    getDescription(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.infoRegexExpression);
         if (matchArray) return matchArray[1];
         return '';
     }
@@ -56,10 +56,10 @@ export class PnbBankProcessor implements BankProcessor {
             let isCredit: boolean | undefined = mailText.toLowerCase().includes('credited');
             if (!isCredit && !isDebit) return;
 
-            amount = this.getAmount(mailText);
-            accountNo = this.getAccountNumber(mailText);
-            transactionDateTime = this.getDate(mailText);
-            transactionInfo = this.getDescription(mailText);
+            amount = this.getAmount(mailText, this.decimalAmountRegexExpression);
+            accountNo = this.getAccountNumber(mailText, this.accountNumberRegexExpression);
+            transactionDateTime = this.getDate(mailText, this.dateRegexExpression);
+            transactionInfo = this.getDescription(mailText, this.infoRegexExpression);
             let note = {
                 transactionDate: transactionDateTime,
                 transactionAccount: accountNo,

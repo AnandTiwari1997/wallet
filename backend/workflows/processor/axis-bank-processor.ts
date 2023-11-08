@@ -4,15 +4,40 @@ import { Logger } from '../../core/logger.js';
 import { BankProcessor } from './bank-processor.js';
 import { Account } from '../../database/models/account.js';
 import { htmlParser } from '../html-parser.js';
+import { parse, subHours, subMinutes } from 'date-fns';
 
 const logger: Logger = new Logger('AxisBankProcessor');
 
 export class AxisBankProcessor implements BankProcessor {
     emailId: string = 'alerts@axisbank.com';
-    decimalAmountRegexExpression = new RegExp('(\\d+(\\.\\d+)?)');
-    accountNumberRegexExpression = new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)');
-    infoRegexExpression = new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)');
-    dateRegexExpression = new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?');
+    regexMap: { [key: string]: { amount: RegExp; account: RegExp; date: RegExp; description: RegExp } } = {
+        BANK: {
+            account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
+            amount: new RegExp('(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)'),
+            date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
+        },
+        LOAN: {
+            account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
+            amount: new RegExp('(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)'),
+            date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
+        },
+        CREDIT_CARD: {
+            account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
+            amount: new RegExp('INR (\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)'),
+            date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
+        }
+    };
+    infoMap: { [key: string]: string } = {
+        LOAN: 'Credited to Loan Account',
+        CREDIT_CARD: 'Credited to Credit Card'
+    };
+    debitMap: { [key: string]: { true: string; false: string } } = {
+        BANK: { true: TransactionType.EXPENSE, false: TransactionType.INCOME },
+        CREDIT_CARD: { true: TransactionType.INCOME, false: TransactionType.EXPENSE }
+    };
 
     process(parsedMail: ParsedMail, account: Account): Transaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
@@ -31,32 +56,31 @@ export class AxisBankProcessor implements BankProcessor {
             let accountNo: string = '';
             let transactionDateTime: string = '';
             let transactionInfo: string = '';
-
             let isDebit: boolean | undefined = mailText.toLowerCase().includes('debited');
-            let isCredit: boolean | undefined = mailText.toLowerCase().includes('credited');
+            let isCredit: boolean | undefined = mailText.toLowerCase().includes('credited') || mailText.toLowerCase().includes('using your card no.');
             if (!isCredit && !isDebit) return;
 
-            amount = this.getAmount(mailText);
+            amount = this.getAmount(mailText, this.regexMap[account.account_type]['amount']);
             if (amount.length > 0) {
-                mailText = mailText.replace(this.decimalAmountRegexExpression, '');
+                mailText = mailText.replace(this.regexMap[account.account_type]['amount'], '');
             }
-            accountNo = this.getAccountNumber(mailText);
+            accountNo = this.getAccountNumber(mailText, this.regexMap[account.account_type]['account']);
             if (accountNo.length > 0) {
-                mailText = mailText.replace(this.accountNumberRegexExpression, '');
+                mailText = mailText.replace(this.regexMap[account.account_type]['account'], '');
             }
-            transactionDateTime = this.getDate(mailText);
+            transactionDateTime = this.getDate(mailText, this.regexMap[account.account_type]['date']);
             if (transactionDateTime.length > 0) {
-                mailText = mailText.replace(this.dateRegexExpression, '');
+                mailText = mailText.replace(this.regexMap[account.account_type]['date'], '');
             }
-            transactionInfo = this.getDescription(mailText);
+            transactionInfo = this.getDescription(mailText, this.regexMap[account.account_type]['description']);
             let note = {
                 transactionDate: transactionDateTime,
-                transactionAccount: account.account_type === 'LOAN' ? account.account_number : accountNo,
-                transactionInfo: account.account_type === 'LOAN' ? 'Credited to Loan Account' : transactionInfo,
+                transactionAccount: account.account_type === 'BANK' ? accountNo : account.account_number,
+                transactionInfo: account.account_type === 'BANK' || account.account_type === 'CREDIT_CARD' ? transactionInfo : this.infoMap[account.account_type],
                 transactionAmount: amount
             };
 
-            if (account.account_type !== 'LOAN') {
+            if (account.account_type === 'BANK') {
                 if (accountNo.includes('XX')) {
                     let startIndex = account.account_number.length - 4;
                     let actualAccountNumber = 'XX' + account.account_number.substring(startIndex);
@@ -67,21 +91,23 @@ export class AxisBankProcessor implements BankProcessor {
                     if (actualAccountNumber !== accountNo) return;
                 }
             }
-
             let description: string = JSON.stringify(note);
+            let date: Date = parse(transactionDateTime, 'dd-MM-yy HH:mm:ss', new Date());
+            date = subHours(date, 5);
+            date = subMinutes(date, 30);
             if (amount.length > 0) {
                 return {
                     transaction_id: '',
                     account: account,
-                    transaction_date: parsedMail.date || new Date(),
+                    transaction_date: date,
                     amount: Number.parseFloat(amount),
                     category: Category.OTHER,
                     labels: [],
                     note: description,
                     transaction_state: TransactionStatus.COMPLETED,
-                    payment_mode: account.account_type === 'LOAN' ? PaymentMode.BANK_TRANSFER : transactionInfo.includes('UPI') ? PaymentMode.MOBILE_TRANSFER : PaymentMode.BANK_TRANSFER,
-                    transaction_type: account.account_type === 'LOAN' ? TransactionType.INCOME : isDebit ? TransactionType.EXPENSE : TransactionType.INCOME,
-                    dated: parsedMail.date || new Date(),
+                    payment_mode: account.account_type === 'BANK' ? (transactionInfo.includes('UPI') ? PaymentMode.MOBILE_TRANSFER : PaymentMode.BANK_TRANSFER) : PaymentMode.BANK_TRANSFER,
+                    transaction_type: account.account_type === 'LOAN' ? TransactionType.INCOME : this.debitMap[account.account_type][`${isDebit}`],
+                    dated: date,
                     currency: 'INR'
                 };
             }
@@ -89,26 +115,26 @@ export class AxisBankProcessor implements BankProcessor {
         return;
     }
 
-    getAmount(mailString: string): string {
-        let matchArray = mailString?.match(this.decimalAmountRegexExpression);
+    getAmount(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.regexMap['BANK']['amount']);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getAccountNumber(mailString: string): string {
-        let matchArray = mailString?.match(this.accountNumberRegexExpression);
+    getAccountNumber(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.regexMap['BANK']['account']);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getDescription(mailString: string): string {
-        let matchArray = mailString?.match(this.infoRegexExpression);
+    getDescription(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.regexMap['BANK']['description']);
         if (matchArray) return matchArray[3];
         return '';
     }
 
-    getDate(mailString: string): string {
-        let matchArray = mailString?.match(this.dateRegexExpression);
+    getDate(mailString: string, regex: RegExp | undefined): string {
+        let matchArray = mailString?.match(regex || this.regexMap['BANK']['date']);
         let transactionDateTime = '';
         if (matchArray) {
             transactionDateTime = matchArray[0];

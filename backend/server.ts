@@ -17,6 +17,7 @@ import { Account } from './database/models/account.js';
 import { bankAccountTransactionSyncProvider } from './workflows/sync-providers/bank-account-transaction-sync-provider.js';
 import { loanAccountTransactionSyncProvider } from './workflows/sync-providers/loan-account-transaction-sync-provider.js';
 import { billSyncProvider } from './workflows/sync-providers/bills-sync-provider.js';
+import { creditCardSyncProvider } from './workflows/sync-providers/credit-card-sync-provider.js';
 
 Logger.level = LoggerLevel.INFO;
 
@@ -65,6 +66,9 @@ app.listen(port, () => {
         });
         accountRepository.findAll({ filters: [{ key: 'account_type', value: 'LOAN' }] }).then((accounts: Account[]) => {
             loanAccountTransactionSyncProvider.manualSync(accounts, true);
+        });
+        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'CREDIT_CARD' }] }).then((accounts: Account[]) => {
+            creditCardSyncProvider.manualSync(accounts, true);
         });
         billSyncProvider.sync();
     });

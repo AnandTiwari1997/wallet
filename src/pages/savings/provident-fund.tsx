@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrayUtil, MutualFundTransaction, ProvidentFundTransaction } from '../../data/transaction-data';
+import { ArrayUtil } from '../../data/transaction-data';
 import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee } from '../../icons/icons';
@@ -7,6 +7,7 @@ import { format } from 'date-fns/esm';
 import Table, { TableColumn } from '../../modules/table/table';
 import { darkGreen, darkRed } from '../../App';
 import { useGlobalLoadingState } from '../../index';
+import { ProvidentFundTransaction } from '../../data/models';
 
 const ProvidentFund = () => {
     const [initialData, setInitialData] = useState<ProvidentFundTransaction[]>([]);
@@ -33,8 +34,8 @@ const ProvidentFund = () => {
         getInvestmentsTransaction('provident_fund', requestBody, dispatch)
             .then((response: ApiResponse<any>) => {
                 setCount(response.num_found);
-                const formattedTransactions: ProvidentFundTransaction[] = ArrayUtil.map(response.results, (item: any) => ProvidentFundTransaction.build(item));
-                const sortedTransactions = ArrayUtil.sort(formattedTransactions, (item: ProvidentFundTransaction) => item.financialYear);
+                // const formattedTransactions: ProvidentFundTransaction[] = ArrayUtil.map(response.results, (item: any) => ProvidentFundTransaction.build(item));
+                const sortedTransactions = ArrayUtil.sort(response.results, (item: ProvidentFundTransaction) => item.financial_year);
                 setInitialData(sortedTransactions);
             })
             .catch((reason) => {
@@ -48,25 +49,25 @@ const ProvidentFund = () => {
 
     const columns: TableColumn[] = [
         {
-            key: 'financialYear',
+            key: 'financial_year',
             label: 'Financial Year',
-            groupByKey: (row: ProvidentFundTransaction) => row.financialYear,
+            groupByKey: (row: ProvidentFundTransaction) => row.financial_year,
             sortable: false
         },
         {
-            key: 'wageMonth',
+            key: 'wage_month',
             label: 'Salary Month',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
                     <div style={{ display: 'block' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Salary Month:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{rows[0].wageMonth}</div>
+                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{rows[0].wage_month}</div>
                     </div>
                 );
             }
         },
         {
-            key: 'transactionDate',
+            key: 'transaction_date',
             label: 'Transaction Date',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
@@ -79,13 +80,13 @@ const ProvidentFund = () => {
                                 fontWeight: '700'
                             }}
                         >
-                            {format(rows[0].transactionDate, 'dd MMM yyy')}
+                            {format(rows[0].transaction_date, 'dd MMM yyy')}
                         </div>
                     </div>
                 );
             },
-            customRender: (row: MutualFundTransaction) => {
-                return format(row.transactionDate, 'dd MMM yyy');
+            customRender: (row: ProvidentFundTransaction) => {
+                return format(row.transaction_date, 'dd MMM yyy');
             }
         },
         {
@@ -93,7 +94,7 @@ const ProvidentFund = () => {
             label: 'Description'
         },
         {
-            key: 'employeeContribution',
+            key: 'employee_contribution',
             label: 'Employee Contribution',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
@@ -102,25 +103,25 @@ const ProvidentFund = () => {
                             <i className="table-body-column-icon icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (item) => item.employeeContribution).toFixed(2)}
+                            {ArrayUtil.sum(rows, (item) => item.employee_contribution).toFixed(2)}
                         </div>
                     </div>
                 );
             },
             customRender: (row: ProvidentFundTransaction) => {
                 return (
-                    <span style={{ color: row.employeeContribution > 0 ? `${darkGreen}` : `${darkRed}` }}>
+                    <span style={{ color: row.employee_contribution > 0 ? `${darkGreen}` : `${darkRed}` }}>
                         <i className="table-body-column-icon icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.employeeContribution.toFixed(2)}
+                        {row.employee_contribution.toFixed(2)}
                     </span>
                 );
             },
             sortable: true
         },
         {
-            key: 'employerContribution',
+            key: 'employer_contribution',
             label: 'Employer Contribution',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
@@ -129,25 +130,25 @@ const ProvidentFund = () => {
                             <i className="table-body-column-icon icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: ProvidentFundTransaction) => a.employerContribution).toFixed(2)}
+                            {ArrayUtil.sum(rows, (a: ProvidentFundTransaction) => a.employer_contribution).toFixed(2)}
                         </div>
                     </div>
                 );
             },
             customRender: (row: ProvidentFundTransaction) => {
                 return (
-                    <span style={{ color: row.employerContribution > 0 ? `${darkGreen}` : `${darkRed}` }}>
+                    <span style={{ color: row.employer_contribution > 0 ? `${darkGreen}` : `${darkRed}` }}>
                         <i className="table-body-column-icon icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.employerContribution.toFixed(2)}
+                        {row.employer_contribution.toFixed(2)}
                     </span>
                 );
             },
             sortable: true
         },
         {
-            key: 'pensionAmount',
+            key: 'pension_amount',
             label: 'Pension Amount',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
@@ -156,18 +157,18 @@ const ProvidentFund = () => {
                             <i className="table-body-column-icon icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: ProvidentFundTransaction) => a.pensionAmount).toFixed(2)}
+                            {ArrayUtil.sum(rows, (a: ProvidentFundTransaction) => a.pension_amount).toFixed(2)}
                         </div>
                     </div>
                 );
             },
             customRender: (row: ProvidentFundTransaction) => {
                 return (
-                    <span style={{ color: row.pensionAmount > 0 ? `${darkGreen}` : `${darkRed}` }}>
+                    <span style={{ color: row.pension_amount > 0 ? `${darkGreen}` : `${darkRed}` }}>
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {row.pensionAmount.toFixed(2)}
+                        {row.pension_amount.toFixed(2)}
                     </span>
                 );
             },

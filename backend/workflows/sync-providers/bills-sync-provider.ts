@@ -23,7 +23,6 @@ class BillsSyncProvider implements SyncProvider<Bill> {
                 return;
             }
             if (isSameDay(currentDate, nextBillDate)) {
-                bill.label = 'ACTIVE';
                 bill.previous_bill_date = nextBillDate;
                 bill.next_bill_date = addMonths(nextBillDate, 1);
                 billRepository.update(bill);
@@ -40,7 +39,6 @@ class BillsSyncProvider implements SyncProvider<Bill> {
     }
 
     sync(): void {
-        logger.info('sync');
         billRepository.findAll({}).then((bills: Bill[]) => {
             this.manualSync(bills, false);
         });

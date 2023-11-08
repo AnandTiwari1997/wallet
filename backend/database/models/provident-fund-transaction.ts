@@ -1,64 +1,17 @@
 import { parse } from 'date-fns';
 
-export class ProvidentFundTransaction {
-    transactionId: string;
-    wageMonth: string;
-    transactionDate: Date;
+export interface ProvidentFundTransaction {
+    transaction_id: string;
+    wage_month: string;
+    transaction_date: Date;
     description: string;
-    epfAmount: number;
-    epsAmount: number;
-    employeeContribution: number;
-    employerContribution: number;
-    pensionAmount: number;
-    transactionType: string;
-    financialYear: string;
-
-    constructor(
-        transactionId: string,
-        wageMonth: string,
-        transactionDate: Date,
-        description: string,
-        transactionType: string,
-        epfAmount: number,
-        epsAmount: number,
-        employeeContribution: number,
-        employerContribution: number,
-        pensionAmount: number,
-        financialYear: string
-    ) {
-        this.transactionId = transactionId;
-        this.wageMonth = wageMonth;
-        this.transactionDate = transactionDate;
-        this.description = description;
-        this.epfAmount = epfAmount;
-        this.transactionType = transactionType;
-        this.epsAmount = epsAmount;
-        this.employeeContribution = employeeContribution;
-        this.employerContribution = employerContribution;
-        this.pensionAmount = pensionAmount;
-        this.financialYear = financialYear;
-    }
-
-    [Symbol.iterator]() {
-        let array = [
-            this.wageMonth,
-            this.transactionDate,
-            this.description,
-            this.epfAmount,
-            this.transactionType,
-            this.epsAmount,
-            this.employeeContribution,
-            this.employerContribution,
-            this.pensionAmount,
-            this.financialYear
-        ];
-        let i = 0;
-        return {
-            next: function () {
-                return { value: array[i++], done: i == array.length };
-            }
-        };
-    }
+    epf_amount: number;
+    eps_amount: number;
+    employee_contribution: number;
+    employer_contribution: number;
+    pension_amount: number;
+    transaction_type: string;
+    financial_year: string;
 }
 
 export interface IProvidentFundTransaction {
@@ -76,37 +29,37 @@ export interface IProvidentFundTransaction {
 }
 
 export class ProvidentFundTransactionBuilder {
-    static build = (item: { [key: string]: any }) => {
-        return new ProvidentFundTransaction(
-            item.transactionId,
-            item.wageMonth,
-            parse(item.transactionDate, 'dd-MMM-yyyy', new Date(), {
+    static build = (item: { [key: string]: any }): ProvidentFundTransaction => {
+        return {
+            transaction_id: item.transactionId,
+            wage_month: item.wageMonth,
+            transaction_date: parse(item.transactionDate, 'dd-MMM-yyyy', new Date(), {
                 weekStartsOn: 0
             }),
-            item.description,
-            item.transactionType,
-            item.epfAmount,
-            item.epsAmount,
-            item.employeeContribution,
-            item.employerContribution,
-            item.pensionAmount,
-            item.financialYear
-        );
+            description: item.description,
+            transaction_type: item.transactionType,
+            epf_amount: item.epfAmount,
+            eps_amount: item.epsAmount,
+            employee_contribution: item.employeeContribution,
+            employer_contribution: item.employerContribution,
+            pension_amount: item.pensionAmount,
+            financial_year: item.financialYear
+        };
     };
 
-    static buildFromEntity = (item: { [key: string]: any }) => {
-        return new ProvidentFundTransaction(
-            item.transaction_id,
-            item.wage_month,
-            new Date(item.transaction_date),
-            item.description,
-            item.transaction_type,
-            item.epf_amount,
-            item.eps_amount,
-            item.employee_contribution,
-            item.employer_contribution,
-            item.pension_amount,
-            item.financial_year
-        );
+    static buildFromEntity = (item: IProvidentFundTransaction): ProvidentFundTransaction => {
+        return {
+            transaction_id: item.transaction_id,
+            wage_month: item.wage_month,
+            transaction_date: new Date(item.transaction_date),
+            description: item.description,
+            transaction_type: item.transaction_type,
+            epf_amount: item.epf_amount,
+            eps_amount: item.eps_amount,
+            employee_contribution: item.employee_contribution,
+            employer_contribution: item.employer_contribution,
+            pension_amount: item.pension_amount,
+            financial_year: item.financial_year
+        };
     };
 }

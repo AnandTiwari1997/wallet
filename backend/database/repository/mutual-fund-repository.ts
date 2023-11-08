@@ -24,10 +24,10 @@ class MutualFundRepository implements Repository<MutualFundTransaction, string> 
         const mutualFundT = await mutualFundPromise;
         if (mutualFundT) return mutualFundT;
         try {
-            item.transactionId = id;
+            item.transaction_id = id;
             let queryResult = await sqlDatabaseProvider.execute<IMutualFundTransaction>(
                 'INSERT INTO mutual_fund(transaction_id, fund_name, portfolio_number, transaction_date, description, amount, is_credit, nav, units, latest_nav) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;',
-                [item.transactionId, item.fundName, item.portfolioNumber, item.transactionDate.toISOString(), item.description, item.amount, item.isCredit, item.nav, item.units, item.latestNav],
+                [item.transaction_id, item.fund_name, item.portfolio_number, item.transaction_date.toISOString(), item.description, item.amount, item.is_credit, item.nav, item.units, item.latest_nav],
                 true
             );
             return MutualFundTransactionBuilder.buildFromEntity(queryResult.rows[0]);
@@ -77,7 +77,7 @@ class MutualFundRepository implements Repository<MutualFundTransaction, string> 
         try {
             let queryResult = await sqlDatabaseProvider.execute<IMutualFundTransaction>(
                 'UPDATE mutual_fund SET fund_name=$1, portfolio_number=$2, transaction_date=$3, description=$4, amount=$5, is_credit=$6, nav=$7, units=$8, latest_nav=$9 WHERE transaction_id=$10 RETURNING *;',
-                [item.fundName, item.portfolioNumber, item.transactionDate.toISOString(), item.description, item.amount, item.isCredit, item.nav, item.units, item.latestNav, item.transactionId],
+                [item.fund_name, item.portfolio_number, item.transaction_date.toISOString(), item.description, item.amount, item.is_credit, item.nav, item.units, item.latest_nav, item.transaction_id],
                 true
             );
             return MutualFundTransactionBuilder.buildFromEntity(queryResult.rows[0]);
@@ -88,7 +88,7 @@ class MutualFundRepository implements Repository<MutualFundTransaction, string> 
     }
 
     generateId = (item: MutualFundTransaction): string => {
-        return item.fundName + '_' + item.portfolioNumber + '_' + item.transactionDate;
+        return item.fund_name + '_' + item.portfolio_number + '_' + item.transaction_date + '_' + item.description;
     };
 
     async findAllUsingGroupBy(criteria: Criteria) {

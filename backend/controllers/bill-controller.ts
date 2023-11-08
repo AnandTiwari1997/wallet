@@ -7,10 +7,11 @@ import { billRepository } from '../database/repository/bill-repository.js';
 import { Bill } from '../database/models/bill.js';
 import { BadRequestError, InternalError } from '../core/api-error.js';
 import { ApiRequestPathParam } from '../types/api-request-path-param.js';
+import { billSyncProvider } from '../workflows/sync-providers/bills-sync-provider.js';
 
 const router = express.Router();
 router.post(
-    '/',
+    '/_search',
     AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<Bill>, ApiRequestBody<Bill>>, res: Response<ApiResponseBody<Bill>>) => {
         let bills = await billRepository.findAll(req.body.criteria || {});
         let apiResponse: ApiResponseBody<Bill> = {
@@ -21,7 +22,7 @@ router.post(
     })
 );
 router.post(
-    '/add',
+    '/',
     AsyncHandler(async (req: Request<any, ApiResponseBody<Bill>, ApiRequestBody<Bill>>, res: Response<ApiResponseBody<Bill>>) => {
         let bill = req.body.data;
         if (!bill) throw new BadRequestError('Invalid data provided to add.');
@@ -31,13 +32,12 @@ router.post(
             num_found: 1,
             results: [newBill]
         };
-        // deriveBillStatus(bill);
+        billSyncProvider.syncer([newBill]);
         return new SuccessResponse<ApiResponseBody<Bill>>(apiResponse).send(res);
     })
 );
-const deriveBillStatus = (bill: Bill) => {};
 router.put(
-    '/update',
+    '/',
     AsyncHandler(async (req: Request<any, ApiResponseBody<Bill>, ApiRequestBody<Bill>>, res: Response<ApiResponseBody<Bill>>) => {
         let bill = req.body.data;
         if (!bill) throw new BadRequestError('Invalid data provided to add.');

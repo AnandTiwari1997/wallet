@@ -107,7 +107,7 @@ const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (succe
                         </>
                     )}
 
-                    {accountType === 'LOAN' && (
+                    {(accountType == 'LOAN' || accountType == 'CREDIT_CARD') && (
                         <>
                             <p style={{ margin: '0.5em 0' }}>Search Text</p>
                             <TextBox setValue={setSearchText} value={searchText} placeholder={'Enter Text to filter mail'} />
@@ -125,7 +125,7 @@ const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (succe
                                 let account: Account = {
                                     account_id: accountId,
                                     account_name: accountName,
-                                    account_balance: accountType === 'LOAN' ? -1 * Math.abs(accountBalance) : accountBalance,
+                                    account_balance: accountBalance,
                                     account_number: accountNumber,
                                     account_type: accountType,
                                     bank: banks[bankId],

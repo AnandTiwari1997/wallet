@@ -27,10 +27,10 @@ export class LicHflBankProcessor implements BankProcessor {
                     return;
                 });
                 let note: { [key: string]: string } = {
-                    transactionDate: bankProcessor?.getDate(bankMailText || '') || '',
+                    transactionDate: bankProcessor?.getDate(bankMailText || '', undefined) || '',
                     transactionAccount: account.account_number,
                     transactionInfo: 'Credited to Loan Account',
-                    transactionAmount: bankProcessor?.getAmount(bankMailText || '') || ''
+                    transactionAmount: bankProcessor?.getAmount(bankMailText || '', undefined) || ''
                 };
                 if (note.transactionAmount.length > 0) {
                     return {
@@ -53,19 +53,19 @@ export class LicHflBankProcessor implements BankProcessor {
         return undefined;
     }
 
-    getAccountNumber(mailString: string): string {
+    getAccountNumber(mailString: string, regex: RegExp | undefined): string {
         return '';
     }
 
-    getAmount(mailString: string): string {
+    getAmount(mailString: string, regex: RegExp | undefined): string {
         return '';
     }
 
-    getDate(mailString: string): string {
+    getDate(mailString: string, regex: RegExp | undefined): string {
         return '';
     }
 
-    getDescription(mailString: string): string {
+    getDescription(mailString: string, regex: RegExp | undefined): string {
         return '';
     }
 

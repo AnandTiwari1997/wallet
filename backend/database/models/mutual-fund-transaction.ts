@@ -1,44 +1,21 @@
 import { parse } from 'date-fns';
 
-export class MutualFundTransaction {
-    transactionId: string;
-    fundName: string;
-    portfolioNumber: string;
-    transactionDate: Date;
+export interface MutualFundTransaction {
+    transaction_id: string;
+    fund_name: string;
+    portfolio_number: string;
+    transaction_date: Date;
     description: string;
     amount: number;
-    isCredit: boolean;
+    is_credit: boolean;
     nav: number;
     units: number;
-    latestNav: number;
-
-    constructor(transactionId: string, portfolioNumber: string, fundName: string, transactionDate: Date, description: string, amount: number, nav: number, units: number, latestNav: number) {
-        this.transactionId = transactionId;
-        this.fundName = fundName;
-        this.portfolioNumber = portfolioNumber;
-        this.transactionDate = transactionDate;
-        this.description = description;
-        this.amount = amount;
-        this.isCredit = this.amount > 0;
-        this.units = units;
-        this.nav = nav;
-        this.latestNav = latestNav;
-    }
-
-    [Symbol.iterator]() {
-        let array = [this.fundName, this.portfolioNumber, this.transactionDate, this.description, this.amount, this.isCredit, this.nav, this.units, this.latestNav];
-        let i = 0;
-        return {
-            next: function () {
-                return { value: array[i++], done: i == array.length };
-            }
-        };
-    }
+    latest_nav: number;
 }
 
 export interface IMutualFundTransaction {
     transaction_id: string;
-    fundName: string;
+    fund_name: string;
     portfolio_number: string;
     transaction_date: string;
     description: string;
@@ -50,33 +27,35 @@ export interface IMutualFundTransaction {
 }
 
 export class MutualFundTransactionBuilder {
-    static build = (item: { [key: string]: any }) => {
-        return new MutualFundTransaction(
-            item.transactionId,
-            item.portfolioNumber,
-            item.fundName,
-            parse(item.transactionDate, 'dd-MMM-yyyy', new Date(), {
+    static build = (item: { [key: string]: any }): MutualFundTransaction => {
+        return {
+            transaction_id: item.transactionId,
+            portfolio_number: item.portfolioNumber,
+            fund_name: item.fundName,
+            transaction_date: parse(item.transactionDate, 'dd-MMM-yyyy', new Date(), {
                 weekStartsOn: 0
             }),
-            item.description,
-            item.amount,
-            item.nav,
-            item.units,
-            item.latestNav
-        );
+            description: item.description,
+            amount: item.amount,
+            nav: item.nav,
+            units: item.units,
+            latest_nav: item.latestNav,
+            is_credit: item.amount > 0
+        };
     };
 
-    static buildFromEntity = (item: { [key: string]: any }) => {
-        return new MutualFundTransaction(
-            item.transaction_id,
-            item.portfolio_number,
-            item.fund_name,
-            new Date(item.transaction_date),
-            item.description,
-            item.amount,
-            item.nav,
-            item.units,
-            item.latest_nav
-        );
+    static buildFromEntity = (item: IMutualFundTransaction): MutualFundTransaction => {
+        return {
+            transaction_id: item.transaction_id,
+            portfolio_number: item.portfolio_number,
+            fund_name: item.fund_name,
+            transaction_date: new Date(item.transaction_date),
+            description: item.description,
+            amount: item.amount,
+            nav: item.nav,
+            units: item.units,
+            latest_nav: item.latest_nav,
+            is_credit: item.is_credit
+        };
     };
 }

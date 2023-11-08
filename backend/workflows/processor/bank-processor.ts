@@ -7,10 +7,10 @@ import { PnbBankProcessor } from './pnb-bank-processor.js';
 
 export interface BankProcessor {
     process: (parsedMail: ParsedMail, account: Account) => Transaction | undefined;
-    getAmount: (mailString: string) => string;
-    getAccountNumber: (mailString: string) => string;
-    getDescription: (mailString: string) => string;
-    getDate: (mailString: string) => string;
+    getAmount: (mailString: string, regex: RegExp | undefined) => string;
+    getAccountNumber: (mailString: string, regex: RegExp | undefined) => string;
+    getDescription: (mailString: string, regex: RegExp | undefined) => string;
+    getDate: (mailString: string, regex: RegExp | undefined) => string;
     getMailText: (parsedMail: ParsedMail, onText: (text: string) => string | undefined) => string;
 }
 

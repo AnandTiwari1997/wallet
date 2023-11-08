@@ -1,7 +1,7 @@
 import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import CSS from 'csstype';
 import './transaction.css';
-import { ArrayUtil, TransactionType } from '../../data/transaction-data';
+import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
 import { useEffect, useState } from 'react';
 import { indianRupee, view } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -114,10 +114,10 @@ const TransactionPage = () => {
         {
             key: 'account',
             label: 'Account',
-            groupByRender: (row: Transaction[]) => {
+            groupByRender: (rows: Transaction[]) => {
                 return (
                     <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Account Used:`}</div>
+                        <div style={{ width: '100%', textAlign: 'left' }}>{`Most Used Account:`}</div>
                         <div
                             style={{
                                 width: '100%',
@@ -125,7 +125,36 @@ const TransactionPage = () => {
                                 fontWeight: '700'
                             }}
                         >
-                            {row[0].account.account_name}
+                            {
+                                accounts.find((value) => {
+                                    return (
+                                        value.account_id ===
+                                        ArrayUtil.max<{
+                                            account_id: number;
+                                            count: number;
+                                        }>(
+                                            ArrayUtil.freq<
+                                                Transaction,
+                                                {
+                                                    account_id: number;
+                                                    count: number;
+                                                }
+                                            >(rows, (previousValue, currentValue) => {
+                                                let accountFreqMap = previousValue[currentValue.account.account_id] || {
+                                                    account_id: currentValue.account.account_id,
+                                                    count: 0
+                                                };
+                                                previousValue[currentValue.account.account_id] = {
+                                                    account_id: currentValue.account.account_id,
+                                                    count: accountFreqMap.count + 1
+                                                };
+                                                return previousValue;
+                                            }),
+                                            (item) => item.count
+                                        ).account_id
+                                    );
+                                })?.account_name
+                            }
                         </div>
                     </div>
                 );
@@ -320,7 +349,7 @@ const TransactionPage = () => {
                 </div>
                 <Dialog
                     open={openDetailedView}
-                    header={detailedRow?.transaction_type === TransactionType.EXPENSE ? TransactionType.EXPENSE : TransactionType.INCOME}
+                    header={detailedRow?.transaction_type === TransactionType.EXPENSE.label ? TransactionType.EXPENSE.label : TransactionType.INCOME.label}
                     onClose={() => {
                         setOpenDetailedView(false);
                         setDetailedRow(undefined);
