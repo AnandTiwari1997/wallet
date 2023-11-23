@@ -12,7 +12,7 @@ const GroupByRow = ({
     selected,
     onRowSelectionChange
 }: {
-    groupingKey?: any;
+    groupingKey?: any[];
     columns: TableColumn[];
     row: any;
     selectable?: boolean;
@@ -47,8 +47,11 @@ const GroupByRow = ({
                     />
                 </td>
             )}
-            {groupingKey && <td className="td-body" style={{ width: `${_columnWidth()}%` }}></td>}
-            {groupingKey && (
+            {groupingKey &&
+                groupingKey.map((key) => {
+                    return <td className="td-body" style={{ width: `${_columnWidth()}%` }}></td>;
+                })}
+            {groupingKey && groupingKey.length > 0 && (
                 <td className="td-body td-icon" style={{ width: '5%' }}>
                     <span className="td-span">
                         <button className="td-icon-button">

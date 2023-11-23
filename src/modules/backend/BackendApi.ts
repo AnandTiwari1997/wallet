@@ -1,4 +1,4 @@
-import { Account, Bank, Bill, MutualFundTransaction, ProvidentFundTransaction, Transaction } from '../../data/models';
+import { Account, Bank, Bill, Broker, DematAccount, MutualFundTransaction, ProvidentFundTransaction, StockTransaction, Transaction } from '../../data/models';
 import axios from 'axios';
 import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
 
@@ -11,12 +11,26 @@ export interface ApiResponse<T> {
 }
 
 export interface ApiCriteria {
-    filters?: { key: string; value: string }[];
-    sorts?: { key: string; ascending: boolean }[];
-    between?: { key: string; range: { start: string; end: string } }[];
+    filters?: {
+        key: string;
+        value: string;
+    }[];
+    sorts?: {
+        key: string;
+        ascending: boolean;
+    }[];
+    between?: {
+        key: string;
+        range: {
+            start: string;
+            end: string;
+        };
+    }[];
     offset?: number;
     limit?: number;
-    groupBy?: { key: string }[];
+    groupBy?: {
+        key: string;
+    }[];
 }
 
 export interface ApiRequestBody<T> {
@@ -92,7 +106,11 @@ export const updateAccount = async (account: Account): Promise<ApiResponse<Accou
     );
 };
 
-export const syncAccount = async (apiRequest: ApiRequestBody<Account>): Promise<{ message: string }> => {
+export const syncAccount = async (
+    apiRequest: ApiRequestBody<Account>
+): Promise<{
+    message: string;
+}> => {
     return await axios.post<
         any,
         {
@@ -106,8 +124,16 @@ export const syncAccount = async (apiRequest: ApiRequestBody<Account>): Promise<
     });
 };
 
-export const syncAccounts = async (): Promise<{ message: string }> => {
-    return await axios.get<any, { message: string }, any>(`http://${API_URL}:${API_PORT}/wallet/account/sync`);
+export const syncAccounts = async (): Promise<{
+    message: string;
+}> => {
+    return await axios.get<
+        any,
+        {
+            message: string;
+        },
+        any
+    >(`http://${API_URL}:${API_PORT}/wallet/account/sync`);
 };
 
 export const syncInvestmentAccount = (type: string): EventSource => {
@@ -196,6 +222,49 @@ export const addBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<A
 export const updateBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<ApiResponse<Bill>> => {
     return await axios
         .put(`http://${API_URL}:${API_PORT}/wallet/bill`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const getBroker = async (requestBody: ApiRequestBody<Broker> = {}): Promise<ApiResponse<Broker>> => {
+    // dispatch(true);
+    return await axios
+        .post(`http://${API_URL}:${API_PORT}/wallet/stock/broker/_search`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const getStockAccount = async (requestBody: ApiRequestBody<DematAccount> = {}, dispatch: any): Promise<ApiResponse<DematAccount>> => {
+    dispatch(true);
+    return await axios
+        .post(`http://${API_URL}:${API_PORT}/wallet/stock/account/_search`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const addStockAccount = async (requestBody: ApiRequestBody<DematAccount> = {}): Promise<ApiResponse<DematAccount>> => {
+    return await axios
+        .post(`http://${API_URL}:${API_PORT}/wallet/stock/account`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const getStockTransaction = async (requestBody: ApiRequestBody<StockTransaction> = {}, dispatch: any): Promise<ApiResponse<StockTransaction>> => {
+    dispatch(true);
+    return await axios
+        .post(`http://${API_URL}:${API_PORT}/wallet/stock/transaction/_search`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }

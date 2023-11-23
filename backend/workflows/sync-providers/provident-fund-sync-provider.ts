@@ -133,7 +133,9 @@ export class ProvidentFundSyncProvider implements SyncProvider<any> {
                             syncTracker.endTime = new Date();
                             syncTrackerStorage.update(syncTracker);
                         },
-                        () => {}
+                        (data) => {
+                            console.error(data);
+                        }
                     );
                 }
                 console.log(`Data from the pipes:`);

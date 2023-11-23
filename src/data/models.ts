@@ -112,3 +112,45 @@ export interface ProvidentFundTransaction {
     is_credit: boolean;
     financial_year: string;
 }
+
+export interface Broker {
+    broker_id: string;
+    broker_name: string;
+    broker_icon: string;
+    broker_email_id: string;
+    broker_primary_color: string;
+    broker_exchange: string;
+}
+
+export interface DematAccount {
+    account_bo_id: string;
+    account_client_id: string;
+    account_name: string;
+    broker: Broker;
+    account_type: string;
+    start_date: Date;
+}
+
+export interface Holding {
+    holding_id: string;
+    stock_name: string;
+    stock_symbol_code: string;
+    stock_symbol: string;
+    stock_exchange: string;
+    stock_isin: string;
+    current_price: number;
+    total_shares: string;
+    invested_amount: string;
+}
+
+export interface StockTransaction {
+    transaction_id: string;
+    holding: Holding;
+    demat_account: DematAccount;
+    transaction_date: Date;
+    transaction_type: string;
+    stock_quantity: number;
+    stock_transaction_price: number;
+    amount: number;
+    dated: Date;
+}

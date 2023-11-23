@@ -138,7 +138,7 @@ export class AxisBankProcessor implements BankProcessor {
         let transactionDateTime = '';
         if (matchArray) {
             transactionDateTime = matchArray[0];
-            transactionDateTime = transactionDateTime.replace(' at ', ' ');
+            transactionDateTime = transactionDateTime.replace(/at/, '').replace(/\s+/, ' ');
         }
         return transactionDateTime;
     }

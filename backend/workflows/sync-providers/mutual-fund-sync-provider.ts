@@ -25,7 +25,7 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                 }
             });
             logger.info(`Removed Reports Folder`);
-            let driver = await getFirefoxWebDriver(downloadDirectory, true);
+            let driver = await getFirefoxWebDriver(downloadDirectory, false);
             try {
                 let id = new Date().getTime().toString();
                 await driver.get('https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement');
@@ -104,9 +104,11 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
             }
         })()
             .then((success) => {
+                console.log(success);
                 if (success) {
                     let date = new Date();
                     let getMFMail = (args: any[]) => {
+                        logger.info(args);
                         try {
                             connection.search(
                                 [
@@ -123,11 +125,8 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                                             simpleParser(stream, async (error, parsedMail) => {
                                                 if (!parsedMail.date) return;
                                                 if (isAfter(parsedMail.date, date)) {
-                                                    console.log(`Subject ${parsedMail.subject}`);
                                                     if (parsedMail.attachments.length > 0) {
                                                         let attachment = parsedMail.attachments[0];
-                                                        console.log(`Filename: ${attachment.filename}`);
-                                                        console.log(`Content Type: ${attachment.contentType}`);
                                                         const buffer = Buffer.from(attachment.content);
                                                         fs.mkdirSync(path.resolve(rootDirectoryPath, 'reports', 'mutual_fund'), {
                                                             recursive: true
@@ -145,15 +144,10 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                                                                 const parsedData: {
                                                                     [key: string]: string;
                                                                 }[] = JSON.parse(newData);
-                                                                console.log(parsedData.length);
                                                                 for (let parseData of parsedData) {
                                                                     let mutualFund = MutualFundTransactionBuilder.build(parseData);
                                                                     let mfTransaction = await mutualFundRepository.find(mutualFundRepository.generateId(mutualFund));
-                                                                    if (mfTransaction) {
-                                                                        mfTransaction.units = mfTransaction.units + mutualFund.units;
-                                                                        mfTransaction.amount = mfTransaction.amount + mutualFund.amount;
-                                                                        await mutualFundRepository.update(mfTransaction);
-                                                                    } else {
+                                                                    if (!mfTransaction) {
                                                                         await mutualFundRepository.add(mutualFund);
                                                                     }
                                                                 }
@@ -163,7 +157,7 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                                                                 syncTracker.endTime = new Date();
                                                                 syncTrackerStorage.update(syncTracker);
                                                             },
-                                                            () => {}
+                                                            (data) => {}
                                                         );
                                                     }
                                                 }
@@ -181,7 +175,8 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                             eventEmitter.removeListener('mail', getMFMail);
                         }
                     };
-                    eventEmitter.prependListener('mail', getMFMail);
+                    console.log('Waiting for mail');
+                    eventEmitter.prependOnceListener('mail', getMFMail);
                 }
             })
             .catch((reason) => {

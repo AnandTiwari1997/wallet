@@ -82,5 +82,53 @@ export const migrations: { [key: string]: string } = {
              bill_amount        DOUBLE PRECISION NOT NULL,
              bill_consumer_no   TEXT             NOT NULL,
              CONSTRAINT bill_id_pk PRIMARY KEY (bill_id)
+         );`,
+    V7: `CREATE TABLE IF NOT EXISTS stock_broker
+         (
+             broker_id            TEXT NOT NULL,
+             broker_name          TEXT NOT NULL,
+             broker_email_id      TEXT NOT NULL,
+             broker_icon          TEXT NOT NULL,
+             broker_primary_color TEXT NOT NULL,
+             CONSTRAINT broker_id_pk PRIMARY KEY (broker_id)
+         );`,
+    V8: `CREATE TABLE IF NOT EXISTS demat_account
+         (
+             account_bo_id     TEXT        NOT NULL,
+             account_client_id TEXT        NOT NULL,
+             account_name      TEXT        NOT NULL,
+             broker            TEXT        NOT NULL,
+             start_date        TIMESTAMPTZ NOT NULL,
+             last_synced_on    TIMESTAMPTZ,
+             CONSTRAINT demat_account_bo_id_pk PRIMARY KEY (account_bo_id),
+             CONSTRAINT stock_broker_fk FOREIGN KEY (broker) REFERENCES stock_broker (broker_id)
+         )`,
+    v9: `CREATE TABLE IF NOT EXISTS holding
+        ( 
+            holding_id                  TEXT NOT NULL, 
+            stock_name                  TEXT NOT NULL, 
+            stock_symbol_code           TEXT NOT NULL,
+            stock_symbol                TEXT NOT NULL, 
+            stock_exchange              TEXT NOT NULL,
+            stock_isin                  TEXT NOT NULL,
+            total_shares                TEXT NOT NULL,
+            invested_amount             TEXT NOT NULL,
+            current_price               DOUBLE PRECISION NOT NULL,
+            CONSTRAINT holding_id_pk    PRIMARY KEY (holding_id)
+        );`,
+    V10: `CREATE TABlE IF NOT EXISTS stock
+         (
+             transaction_id             TEXT             NOT NULL,
+             holding                    TEXT             NOT NULL,
+             transaction_date           TIMESTAMPTZ      NOT NULL,
+             transaction_type           TEXT             NOT NULL,
+             stock_quantity             DOUBLE PRECISION NOT NULL,
+             stock_transaction_price    DOUBLE PRECISION NOT NULL,
+             amount                     DOUBLE PRECISION NOT NULL,
+             dated                      DATE             NOT NULL,
+             demat_account              TEXT NOT NULL,
+             CONSTRAINT stock_transaction_id_pk PRIMARY KEY (transaction_id),
+             CONSTRAINT holding_fk FOREIGN KEY (holding) REFERENCES holding (holding_id),
+             CONSTRAINT demat_account_fk FOREIGN KEY (demat_account) REFERENCES demat_account (account_bo_id)
          );`
 };

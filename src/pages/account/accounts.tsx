@@ -99,7 +99,7 @@ const AccountPage = () => {
             groupByRender: (rows: Account[]) => {
                 return (
                     <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Account Balance:`}</div>
+                        <div style={{ width: '100%', textAlign: 'left' }}>{`Total Account Balance:`}</div>
                         <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
@@ -194,7 +194,7 @@ const AccountPage = () => {
                     <Button onClick={() => setShowAddAccount(true)}>Add</Button>
                 </div>
                 <div className="account-table-division">
-                    <Table columns={columns} rows={accounts} groupByColumn={columns[0]} count={count} />
+                    <Table columns={columns} rows={accounts} groupByColumn={[columns[0]]} count={count} />
                 </div>
             </div>
             <Dialog

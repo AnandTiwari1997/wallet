@@ -1,4 +1,4 @@
-import { MUTUAL_FUND, PROVIDENT_FUND } from '../constant.js';
+import { MUTUAL_FUND, PROVIDENT_FUND, STOCK } from '../constant.js';
 import { mutualFundRepository } from '../database/repository/mutual-fund-repository.js';
 import { providentFundRepository } from '../database/repository/provident-fund-repository.js';
 import { syncTrackerStorage } from '../database/repository/sync-tracker-storage.js';
@@ -13,6 +13,8 @@ import { MutualFundTransaction } from '../database/models/mutual-fund-transactio
 import { ProvidentFundTransaction } from '../database/models/provident-fund-transaction.js';
 import { ApiRequestPathParam } from '../types/api-request-path-param.js';
 import { SuccessResponse } from '../core/api-response.js';
+import { stockTransactionRepository } from '../database/repository/stock-transaction-repository.js';
+import { StockTransaction } from '../database/models/stock-transaction.js';
 
 const router = express.Router();
 
@@ -27,6 +29,8 @@ const getFundStorage = (type: string) => {
             return mutualFundRepository;
         case PROVIDENT_FUND:
             return providentFundRepository;
+        case STOCK:
+            return stockTransactionRepository;
     }
 };
 export const _syncInvestment = (req: any, res: any) => {
@@ -65,7 +69,11 @@ router.post(
     '/:investmentType/transaction',
     AsyncHandler(
         async (
-            req: Request<ApiRequestPathParam, ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>, ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction>>,
+            req: Request<
+                ApiRequestPathParam,
+                ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction | StockTransaction>,
+                ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction | StockTransaction>
+            >,
             res: Response<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>>
         ) => {
             let fundStorage: any = getFundStorage(req.params.investmentType);
@@ -75,7 +83,7 @@ router.post(
                 num_found: count,
                 results: result
             };
-            return new SuccessResponse<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>>(apiResponse).send(res);
+            return new SuccessResponse<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction | StockTransaction>>(apiResponse).send(res);
         }
     )
 );

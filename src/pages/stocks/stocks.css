@@ -1,0 +1,52 @@
+.stocks-action-body {
+    display: flex;
+    flex-direction: row;
+    height: 76px;
+}
+
+.stocks-tabs-body {
+    height: calc(100% - 76px);
+    display: block;
+    background: white;
+    align-items: center;
+    justify-content: center;
+}
+
+.stocks-tabs-root {
+    overflow: hidden !important;
+    display: flex !important;
+    min-height: 2.5rem !important;
+    border-bottom: 1px solid gainsboro !important;
+    width: 100%;
+}
+
+.stocks-tabs-flex-container {
+    align-items: center;
+    justify-content: center;
+}
+
+.stocks-tab-root {
+    width: 50%;
+}
+
+.stocks-tab-content {
+    width: 100%;
+    height: calc(100vh - 6rem - 22px);
+}
+
+.fund-name-width {
+    width: 30%;
+}
+
+.other-column-width {
+    width: 14%;
+}
+
+.tab-refresh-icon {
+    position: absolute;
+    right: 0;
+    margin: 0 20px;
+    height: 49px;
+    cursor: pointer;
+    z-index: 2;
+}

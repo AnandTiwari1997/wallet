@@ -32,6 +32,6 @@ export class Logger {
     };
 
     error = (...message: any[]) => {
-        console.error(`\u001b[31m [${new Date().toISOString()} - ERROR] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', '\u001b[31m ' + message);
+        console.error(`\u001b[31m [${new Date().toISOString()} - ERROR] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', message);
     };
 }

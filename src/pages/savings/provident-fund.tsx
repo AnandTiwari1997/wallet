@@ -4,7 +4,7 @@ import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../mo
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { indianRupee } from '../../icons/icons';
 import { format } from 'date-fns/esm';
-import Table, { TableColumn } from '../../modules/table/table';
+import Table, { TableColumn, TableData } from '../../modules/table/table';
 import { darkGreen, darkRed } from '../../App';
 import { useGlobalLoadingState } from '../../index';
 import { ProvidentFundTransaction } from '../../data/models';
@@ -118,6 +118,31 @@ const ProvidentFund = () => {
                     </span>
                 );
             },
+            columnFooter: (rows: TableData<ProvidentFundTransaction>[]) => {
+                return (
+                    <div style={{ display: 'flex' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                justifyContent: 'right'
+                            }}
+                        >{`Total Amount:`}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'right',
+                                fontWeight: '700'
+                            }}
+                        >
+                            <i className="icon">
+                                <FontAwesomeIcon icon={indianRupee} />
+                            </i>
+                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) => ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employee_contribution)).toFixed(2)}
+                        </div>
+                    </div>
+                );
+            },
             sortable: true
         },
         {
@@ -143,6 +168,31 @@ const ProvidentFund = () => {
                         </i>
                         {row.employer_contribution.toFixed(2)}
                     </span>
+                );
+            },
+            columnFooter: (rows: TableData<ProvidentFundTransaction>[]) => {
+                return (
+                    <div style={{ display: 'flex' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                justifyContent: 'right'
+                            }}
+                        >{`Total Amount:`}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'right',
+                                fontWeight: '700'
+                            }}
+                        >
+                            <i className="icon">
+                                <FontAwesomeIcon icon={indianRupee} />
+                            </i>
+                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) => ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employer_contribution)).toFixed(2)}
+                        </div>
+                    </div>
                 );
             },
             sortable: true
@@ -172,6 +222,31 @@ const ProvidentFund = () => {
                     </span>
                 );
             },
+            columnFooter: (rows: TableData<ProvidentFundTransaction>[]) => {
+                return (
+                    <div style={{ display: 'flex' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                justifyContent: 'right'
+                            }}
+                        >{`Total Amount:`}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'right',
+                                fontWeight: '700'
+                            }}
+                        >
+                            <i className="icon">
+                                <FontAwesomeIcon icon={indianRupee} />
+                            </i>
+                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) => ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.pension_amount)).toFixed(2)}
+                        </div>
+                    </div>
+                );
+            },
             sortable: true
         }
     ];
@@ -181,7 +256,7 @@ const ProvidentFund = () => {
             columns={columns}
             count={count}
             rows={initialData}
-            groupByColumn={columns[0]}
+            groupByColumn={[columns[0]]}
             onSort={(sortedColumn) => {
                 if (!sortedColumn)
                     fetchInvestmentTransactions({

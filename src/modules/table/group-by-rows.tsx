@@ -64,9 +64,14 @@ const GroupByRows = ({
                                     />
                                 </td>
                             )}
-                            <td className="td-body" style={{ width: `${_columnWidth()}%` }}>
-                                {row.key}
-                            </td>
+                            {row.key.map((r) => {
+                                return (
+                                    <td className="td-body" style={{ width: `${_columnWidth()}%` }}>
+                                        {r}
+                                    </td>
+                                );
+                            })}
+
                             <td className="td-body td-icon" style={{ width: '5%' }}>
                                 <span className="td-span">
                                     <button

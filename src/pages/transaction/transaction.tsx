@@ -339,7 +339,7 @@ const TransactionPage = () => {
                     <Table
                         columns={columns}
                         rows={initialData}
-                        groupByColumn={columns[0]}
+                        groupByColumn={[columns[0]]}
                         selectable={true}
                         count={count}
                         onPagination={(tablePagination: TablePagination) => {

@@ -18,6 +18,7 @@ export interface TableColumn {
     groupByRender?: (row: any[]) => any;
     customRender?: (row: any) => any;
     groupByKey?: (row: any) => string;
+    columnFooter?: (rows: TableData<any>[]) => any;
 }
 
 export interface TableData<T> {
@@ -26,7 +27,7 @@ export interface TableData<T> {
 }
 
 export interface GroupedTableData<T> extends TableData<T> {
-    key: string;
+    key: string[];
     expanded: boolean;
 }
 
@@ -75,7 +76,7 @@ const Table = ({
 }: {
     columns: TableColumn[];
     rows: any[];
-    groupByColumn?: TableColumn | undefined;
+    groupByColumn?: TableColumn[] | [] | undefined;
     selectable?: boolean;
     onSort?: (sortedColumn: SortedColumn | undefined) => any | void;
     onPagination?: (tablePagination: TablePagination) => any | void;
@@ -90,6 +91,7 @@ const Table = ({
     const [isAllSelected, setAllSelect] = useState<boolean | undefined>(undefined);
     const [selectedCount, setSelectedCount] = useState<number>(0);
     const [expandedCount, setExpandedCount] = useState<number>(0);
+    const [columnFooterEnabled, setColumnFooterEnabled] = useState<boolean>(false);
 
     // Table Pagination State
     const [currentPageSize, setCurrentPageSize] = useState<number>(25);
@@ -104,12 +106,19 @@ const Table = ({
 
     useEffect(() => {
         setInitialData(rows);
-        if (groupByColumn) {
-            if (!groupByColumn.groupByKey) return;
-            const groupedTransaction: { [key: string]: any[] } = ArrayUtil.groupBy(rows, groupByColumn.groupByKey);
+        let col = columns.find((column) => column.columnFooter !== undefined);
+        setColumnFooterEnabled(col !== undefined);
+        if (groupByColumn && groupByColumn.length > 0) {
+            const groupedTransaction: { [key: string]: any[] } = ArrayUtil.groupBy(rows, (item) => {
+                let key: string[] = [];
+                for (let col of groupByColumn) {
+                    if (col.groupByKey) key.push(col.groupByKey(item) || '');
+                }
+                return key.join('%%%');
+            });
             const newData: GroupedTableData<any>[] = Object.keys(groupedTransaction).map((transactionKey) => {
                 return {
-                    key: transactionKey,
+                    key: transactionKey.split('%%%'),
                     data: groupedTransaction[transactionKey],
                     expanded: false
                 };
@@ -125,8 +134,8 @@ const Table = ({
     }, [rows]);
 
     const _columns = (): TableColumn[] => {
-        if (!groupByColumn) return columns;
-        return columns.filter((value) => value.key !== groupByColumn.key);
+        if (!groupByColumn || groupByColumn.length == 0) return columns;
+        return columns.filter((col) => groupByColumn.find((tableCol) => col.key === tableCol.key) === undefined);
     };
 
     const _columnAlignment = (column: string) => {
@@ -184,17 +193,20 @@ const Table = ({
                             />
                         </td>
                     )}
-                    {groupByColumn && (
-                        <td className={`td-header`} style={{ width: `${_columnWidth()}%` }}>
-                            {groupByColumn.sortable && (
-                                <SortColumn column={groupByColumn} sortOption={getSortOption(groupByColumn)} onSort={_sort}>
-                                    <span className="td-span">{groupByColumn.label}</span>
-                                </SortColumn>
-                            )}
-                            {!groupByColumn.sortable && <span className="td-span">{groupByColumn.label}</span>}
-                        </td>
-                    )}
-                    {groupByColumn && (
+                    {groupByColumn &&
+                        groupByColumn.map((groupColumn) => {
+                            return (
+                                <td className={`td-header`} style={{ width: `${_columnWidth()}%` }}>
+                                    {groupColumn.sortable && (
+                                        <SortColumn column={groupColumn} sortOption={getSortOption(groupColumn)} onSort={_sort}>
+                                            <span className="td-span">{groupColumn.label}</span>
+                                        </SortColumn>
+                                    )}
+                                    {!groupColumn.sortable && <span className="td-span">{groupColumn.label}</span>}
+                                </td>
+                            );
+                        })}
+                    {groupByColumn && groupByColumn.length > 0 && (
                         <td className="td-header td-icon" style={{ width: '5%' }}>
                             <span className="td-span">
                                 <button
@@ -231,13 +243,17 @@ const Table = ({
                     </tr>
                 )}
             </thead>
-            <tbody className="tbody">
+            <tbody
+                className="tbody"
+                style={{
+                    height: columnFooterEnabled ? 'calc(100% - 144px)' : 'calc(100% - 96px)'
+                }}
+            >
                 {state && <></>}
                 {!state &&
                     tableData.map((groupedTableData: TableData<any>) => {
                         return (
                             <>
-                                {' '}
                                 {groupByColumn ? (
                                     <RowExpandContext.Provider value={isAllExpanded}>
                                         <GroupByRows
@@ -277,8 +293,51 @@ const Table = ({
                         );
                     })}
             </tbody>
-            <tfoot className="tfoot">
-                <tr className="tr-footer">
+            <tfoot
+                className="tfoot"
+                style={{
+                    height: columnFooterEnabled ? '96px' : '48px'
+                }}
+            >
+                {columnFooterEnabled && (
+                    <tr
+                        className="tr-footer"
+                        style={{
+                            height: columnFooterEnabled ? 'calc(50% - 1px)' : 'calc(100% - 1px)',
+                            borderBottom: '1px solid lightgray'
+                        }}
+                    >
+                        {selectable && <td className="td-body" style={{ width: '5%' }}></td>}
+                        {groupByColumn &&
+                            groupByColumn.map((column) => (
+                                <td
+                                    className="td-body"
+                                    style={{
+                                        width: `${(100 - (selectable ? 5 : 0) - (groupByColumn && groupByColumn.length > 0 ? 5 : 0)) / columns.length}%`
+                                    }}
+                                >
+                                    {column.columnFooter ? column.columnFooter(tableData) : ''}
+                                </td>
+                            ))}
+                        {groupByColumn && groupByColumn.length > 0 && <td className="td-body" style={{ width: '5%' }}></td>}
+                        {_columns().map((column) => (
+                            <td
+                                className="td-body"
+                                style={{
+                                    width: `${(100 - (selectable ? 5 : 0) - (groupByColumn && groupByColumn.length > 0 ? 5 : 0)) / columns.length}%`
+                                }}
+                            >
+                                {column.columnFooter ? column.columnFooter(tableData) : ''}
+                            </td>
+                        ))}
+                    </tr>
+                )}
+                <tr
+                    className="tr-footer"
+                    style={{
+                        height: columnFooterEnabled ? '50%' : '100%'
+                    }}
+                >
                     <td className="td-footer">
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div className="td-footer-page-size-container">

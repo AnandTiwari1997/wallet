@@ -23,7 +23,7 @@ export interface Criteria {
 
 export class QueryHelper {}
 
-export const addWhereClause = (sql: string, criteria: Criteria) => {
+export const addWhereClause = (sql: string, criteria: Criteria, alias: string = '') => {
     let whereClauseValues: any[] = [];
     let whereClause = [];
     let count = 1;
@@ -31,7 +31,11 @@ export const addWhereClause = (sql: string, criteria: Criteria) => {
         whereClause.push(
             criteria.filters.map((item) => {
                 whereClauseValues.push(item.value);
-                return `${item.key} = $${count++}`;
+                let aliased = '';
+                if (alias.length > 0) {
+                    aliased = `${alias}.`;
+                }
+                return `${aliased}${item.key} = $${count++}`;
             })
         );
     }
@@ -66,11 +70,15 @@ export const addGroupByClause = (sql: string, criteria: Criteria) => {
     return sql;
 };
 
-export const addOrderByClause = (sql: string, criteria: Criteria) => {
+export const addOrderByClause = (sql: string, criteria: Criteria, alias: string = '') => {
     if (criteria.sorts) {
         let orderByClause = criteria.sorts
             .map((item) => {
-                return `${item.key} ${item.ascending ? 'ASC' : 'DESC'}`;
+                let aliased = '';
+                if (alias.length > 0) {
+                    aliased = `${alias}.`;
+                }
+                return `${aliased}${item.key} ${item.ascending ? 'ASC' : 'DESC'}`;
             })
             .join(', ');
         if (orderByClause && orderByClause.length > 0) {

@@ -40,6 +40,11 @@ const Navigation = ({ activeTab, setActiveTab }: { [key: string]: any }) => {
                     </NavLink>
                 </li>
                 <li>
+                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Stocks')} to="/stocks">
+                        <span>Stocks</span>
+                    </NavLink>
+                </li>
+                <li>
                     <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Statistics')} to="/statistics">
                         <span>Statistics</span>
                     </NavLink>

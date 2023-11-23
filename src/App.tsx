@@ -8,6 +8,7 @@ import TransactionPage from './pages/transaction/transaction';
 import SavingsPage from './pages/savings/savings';
 import AccountPage from './pages/account/accounts';
 import BillsPage from './pages/bills/bills';
+import StockPage from './pages/stocks/stocks';
 
 const mainStyle: CSS.Properties = {
     minHeight: '100vh',
@@ -54,6 +55,7 @@ const App = (): JSX.Element => {
                             <Route index path="/dashboard" element={<DashboardPage />} />
                             <Route index path="/account" element={<AccountPage />} />
                             <Route index path="/savings" element={<SavingsPage />} />
+                            <Route index path="/stocks" element={<StockPage />} />
                             <Route index path="/transaction" element={<TransactionPage />} />
                             <Route index path="/bills" element={<BillsPage />} />
                         </Routes>
