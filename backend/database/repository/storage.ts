@@ -13,15 +13,27 @@ export interface Storage<T> {
 }
 
 export interface Criteria {
-    filters?: { key: string; value: string }[];
-    sorts?: { key: string; ascending: boolean }[];
-    between?: { key: string; range: { start: string; end: string } }[];
+    filters?: {
+        key: string;
+        value: string;
+    }[];
+    sorts?: {
+        key: string;
+        ascending: boolean;
+    }[];
+    between?: {
+        key: string;
+        range: {
+            start: string;
+            end: string;
+        };
+    }[];
     offset?: number;
     limit?: number;
-    groupBy?: { key: string }[];
+    groupBy?: {
+        key: string;
+    }[];
 }
-
-export class QueryHelper {}
 
 export const addWhereClause = (sql: string, criteria: Criteria, alias: string = '') => {
     let whereClauseValues: any[] = [];

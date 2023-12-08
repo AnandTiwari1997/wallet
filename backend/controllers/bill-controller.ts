@@ -8,6 +8,7 @@ import { Bill } from '../database/models/bill.js';
 import { BadRequestError, InternalError } from '../core/api-error.js';
 import { ApiRequestPathParam } from '../types/api-request-path-param.js';
 import { billSyncProvider } from '../workflows/sync-providers/bills-sync-provider.js';
+import { electricityVendors } from '../config.js';
 
 const router = express.Router();
 router.post(
@@ -32,7 +33,7 @@ router.post(
             num_found: 1,
             results: [newBill]
         };
-        billSyncProvider.syncer([newBill]);
+        billSyncProvider.manualSync([newBill], false);
         return new SuccessResponse<ApiResponseBody<Bill>>(apiResponse).send(res);
     })
 );
@@ -48,6 +49,16 @@ router.put(
             results: [updatedBill]
         };
         return new SuccessResponse<ApiResponseBody<Bill>>(apiResponse).send(res);
+    })
+);
+router.get(
+    '/electricity/vendors',
+    AsyncHandler(async (req: Request<any, ApiResponseBody<{ value: string; label: string }>, ApiRequestBody<Bill>>, res: Response<ApiResponseBody<{ value: string; label: string }>>) => {
+        let apiResponse: ApiResponseBody<{ value: string; label: string }> = {
+            num_found: electricityVendors.length,
+            results: electricityVendors
+        };
+        return new SuccessResponse<ApiResponseBody<{ value: string; label: string }>>(apiResponse).send(res);
     })
 );
 export default router;

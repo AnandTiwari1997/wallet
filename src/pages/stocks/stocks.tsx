@@ -10,8 +10,9 @@ import Select, { SelectOption } from '../../modules/select/select';
 import Button from '../../modules/button/button';
 import Dialog from '../../modules/dialog/dialog';
 import AddStockAccount from './add-stock-account';
-import { DematAccount } from '../../data/models';
+import { DematAccount, StockTransaction } from '../../data/models';
 import { useGlobalLoadingState } from '../../index';
+import AddStockTransaction from './add-stock-transaction';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -43,9 +44,12 @@ const StockPage = () => {
     const [state, dispatch] = useGlobalLoadingState();
     const [accounts, setAccounts] = useState<DematAccount[]>([]);
     const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
-    const [accountsMap, setAccountsMap] = useState<{ [key: string]: DematAccount }>({});
+    const [accountsMap, setAccountsMap] = useState<{
+        [key: string]: DematAccount;
+    }>({});
     const [filterAccount, setFilteredAccount] = useState('');
     const [filterTransactionType, setFilterTransactionType] = useState('');
+    const [showAddStockTransaction, setShowAddStockTransaction] = useState<boolean>(false);
 
     const switchTabs = (e: any, tab: string) => {
         setSelectedTab(tab);
@@ -64,7 +68,7 @@ const StockPage = () => {
                 accountsMap[accounts.account_bo_id] = accounts;
                 setAccountsMap({ ...accountsMap });
             });
-            setSelectOptions([{ value: '', label: 'All' }, ...options]);
+            setSelectOptions([...options]);
         });
     }, [setAccounts, getStockAccount]);
 
@@ -104,7 +108,7 @@ const StockPage = () => {
                             }}
                         >
                             <p style={{ height: '20px', margin: '0' }}>Account: </p>
-                            <Select selectedOption={filterAccount} onChange={(event) => setFilteredAccount(event.target.value)} options={selectOptions}></Select>
+                            <Select selectedOption={filterAccount} onChange={(event) => setFilteredAccount(event.target.value)} options={[{ value: '', label: 'All' }, ...selectOptions]}></Select>
                         </div>
                     )}
                     {selectedTab === StocksTab.TRANSACTION.value && (
@@ -124,6 +128,27 @@ const StockPage = () => {
                                     { value: 'S', label: 'Sell' }
                                 ]}
                             ></Select>
+                        </div>
+                    )}
+                    {selectedTab === StocksTab.TRANSACTION.value && (
+                        <div
+                            style={{
+                                height: 'calc(3rem - 10px)',
+                                display: 'block',
+                                marginTop: '30px',
+                                marginRight: '1%',
+                                float: 'right',
+                                right: '0',
+                                position: 'absolute'
+                            }}
+                        >
+                            <Button
+                                onClick={() => {
+                                    setShowAddStockTransaction(true);
+                                }}
+                            >
+                                Add
+                            </Button>
                         </div>
                     )}
                     {selectedTab === StocksTab.ACCOUNTS.value && (
@@ -178,7 +203,31 @@ const StockPage = () => {
                 }}
                 header="Demat Account"
             >
-                <AddStockAccount account={selectedAccount} onSubmit={(success) => console.log(success)} />
+                <AddStockAccount
+                    account={selectedAccount}
+                    onSubmit={(success: boolean, data: DematAccount | undefined) => {
+                        setShowAddDematAccount(false);
+                        console.log(success);
+                        console.log(data);
+                    }}
+                />
+            </Dialog>
+            <Dialog
+                open={showAddStockTransaction}
+                onClose={() => {
+                    setShowAddStockTransaction(false);
+                }}
+                header="Stock Transaction"
+            >
+                <AddStockTransaction
+                    accountMap={accountsMap}
+                    accountOptions={selectOptions}
+                    onSubmit={(success: boolean, data: StockTransaction | undefined) => {
+                        setShowAddStockTransaction(false);
+                        console.log(success);
+                        console.log(data);
+                    }}
+                />
             </Dialog>
         </div>
     );

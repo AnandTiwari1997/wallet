@@ -1,8 +1,8 @@
-import { Account, Bank, Bill, Broker, DematAccount, MutualFundTransaction, ProvidentFundTransaction, StockTransaction, Transaction } from '../../data/models';
+import { Account, Bank, Bill, Broker, DematAccount, Holding, MutualFundTransaction, ProvidentFundTransaction, StockTransaction, Transaction } from '../../data/models';
 import axios from 'axios';
 import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
 
-const API_PORT = 8000;
+const API_PORT = 8001;
 const API_URL = 'localhost';
 
 export interface ApiResponse<T> {
@@ -265,6 +265,41 @@ export const getStockTransaction = async (requestBody: ApiRequestBody<StockTrans
     dispatch(true);
     return await axios
         .post(`http://${API_URL}:${API_PORT}/wallet/stock/transaction/_search`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const getElectricityVendors = async (): Promise<
+    ApiResponse<{
+        value: string;
+        label: string;
+    }>
+> => {
+    return await axios
+        .get(`http://${API_URL}:${API_PORT}/wallet/bill/electricity/vendors`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const getStockHolding = async (requestBody: ApiRequestBody<Holding> = {}): Promise<ApiResponse<Holding>> => {
+    return await axios
+        .post(`http://${API_URL}:${API_PORT}/wallet/stock/holding/_search`, requestBody, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((value) => value.data);
+};
+
+export const addStockTransaction = async (requestBody: ApiRequestBody<StockTransaction> = {}): Promise<ApiResponse<StockTransaction>> => {
+    return await axios
+        .post(`http://${API_URL}:${API_PORT}/wallet/stock/transaction`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }

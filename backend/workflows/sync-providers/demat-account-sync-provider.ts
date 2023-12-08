@@ -6,7 +6,7 @@ import { Logger } from '../../core/logger.js';
 import fs from 'fs';
 import path from 'path';
 import { rootDirectoryPath } from '../../server.js';
-import { parse } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { ALL_STOCKS, ArrayUtil } from '../../constant.js';
 import { holdingRepository } from '../../database/repository/holding-repository.js';
 import { StockTransaction } from '../../database/models/stock-transaction.js';
@@ -15,6 +15,7 @@ import { stockTransactionRepository } from '../../database/repository/stock-tran
 import fetch from 'node-fetch';
 import { mfParam } from '../../config.js';
 import { dematAccountRepository } from '../../database/repository/demat-account-repository.js';
+import { ContractNoteProcessorFactory } from '../processor/processors.js';
 
 const logger: Logger = new Logger('DematAccountSyncProvider');
 
@@ -44,10 +45,13 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                             });
                         }
                         let count = 1;
+                        let processor = ContractNoteProcessorFactory.getProcessor(dematAccount.broker.broker_email_id);
+                        if (!processor) return;
                         const iFetch = connection.fetch(uids, {
                             bodies: ''
                         });
                         let fileNo = 1;
+                        let files: { [key: string]: boolean } = {};
                         iFetch.on('message', function (msg, sequenceNumber) {
                             msg.once('body', function (stream, info) {
                                 simpleParser(stream, async (error, parsedMail) => {
@@ -57,8 +61,10 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                     }
                                     if (!parsedMail.text && !parsedMail.html) return;
                                     if (!parsedMail.from?.value[0].address) return;
-
                                     if (parsedMail.attachments.length > 0) {
+                                        if (!processor) return;
+                                        let tradeDate = processor.process(parsedMail, dematAccount);
+                                        if (!tradeDate) return;
                                         let attachment = parsedMail.attachments[0];
                                         const buffer = Buffer.from(attachment.content);
                                         fs.mkdirSync(path.resolve(rootDirectoryPath, 'reports', brokerUniqueDirName), {
@@ -66,7 +72,12 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                         });
                                         let fileName = attachment.filename ? attachment.filename.replace(' ', '_').replace(' ', '_') : 'contract_note.pdf';
                                         const names: string[] = fileName.split('.');
-                                        fileName = names[0] + '_' + Date.now();
+                                        fileName = names[0] + '_' + format(tradeDate, 'dd-MM-yyyy');
+                                        if (files[fileName]) {
+                                            fileNo++;
+                                            return;
+                                        }
+                                        files[fileName] = true;
                                         logger.debug(`${fileNo}. ${fileName}.pdf`);
                                         fs.writeFileSync(path.resolve(rootDirectoryPath, 'reports', brokerUniqueDirName, `${fileName}.pdf`), buffer);
                                         let data: any = fileProcessorSync(brokerUniqueDirName, `${fileName}.pdf`, `${fileName}.json`, `${mfParam.panNo.toUpperCase()}`);
@@ -96,7 +107,10 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
 
     sync(): void {
         eventEmitter.on('mail', (args) => {
-            const mails: { numberOfNewMails: number; totalMails: number } = args;
+            const mails: {
+                numberOfNewMails: number;
+                totalMails: number;
+            } = args;
             const iFetch = connection.seq.fetch(`${Math.abs(mails.totalMails - mails.numberOfNewMails)}:${mails.totalMails}`, {
                 bodies: ''
             });
@@ -112,6 +126,8 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                         if (!parsedMail.subject || !parsedMail.subject?.toUpperCase().includes('CONTRACT NOTE')) return;
                         dematAccountRepository.findAll({}).then((dematAccounts) => {
                             for (let dematAccount of dematAccounts) {
+                                let processor = ContractNoteProcessorFactory.getProcessor(dematAccount.broker.broker_email_id);
+                                if (!processor) continue;
                                 let from = parsedMail.from;
                                 if (!from || !from.value || !from.value[0].address || !from.value[0].address.includes(dematAccount.broker.broker_email_id)) continue;
                                 let brokerUniqueDirName = `stock_${dematAccount.broker.broker_id}`;
@@ -122,6 +138,9 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                     });
                                 }
                                 if (parsedMail.attachments.length > 0) {
+                                    if (!processor) continue;
+                                    let tradeDate = processor.process(parsedMail, dematAccount);
+                                    if (!tradeDate) continue;
                                     let attachment = parsedMail.attachments[0];
                                     const buffer = Buffer.from(attachment.content);
                                     fs.mkdirSync(path.resolve(rootDirectoryPath, 'reports', brokerUniqueDirName), {
@@ -129,7 +148,7 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                     });
                                     let fileName = attachment.filename ? attachment.filename.replace(' ', '_').replace(' ', '_') : 'contract_note.pdf';
                                     const names: string[] = fileName.split('.');
-                                    fileName = names[0] + '_' + Date.now();
+                                    fileName = names[0] + '_' + format(tradeDate, 'dd-MM-yyyy');
                                     logger.debug(`${fileName}.pdf`);
                                     fs.writeFileSync(path.resolve(rootDirectoryPath, 'reports', brokerUniqueDirName, `${fileName}.pdf`), buffer);
                                     let data: any = fileProcessorSync(brokerUniqueDirName, `${fileName}.pdf`, `${fileName}.json`, `${mfParam.panNo.toUpperCase()}`);
@@ -156,7 +175,9 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
     }
 }
 
-let allStockData: { [key: string]: string }[] = [];
+let allStockData: {
+    [key: string]: string;
+}[] = [];
 eventEmitter.on('stock', async (data: any[]) => {
     if (data[0] === 'start') {
         logger.info(`Processing started for ${(data[1] as DematAccount).account_name}`);
@@ -186,7 +207,9 @@ eventEmitter.on('stock', async (data: any[]) => {
                 }
                 let amountPerAccount: number = 0;
                 let sharesPerAccount: number = 0;
-                let exchanges: { [key: string]: boolean } = {};
+                let exchanges: {
+                    [key: string]: boolean;
+                } = {};
                 if (holding) {
                     amountPerAccount = Number.parseFloat(holding.invested_amount.toString(2));
                     sharesPerAccount = Number.parseFloat(holding.total_shares.toString(2));
@@ -205,7 +228,8 @@ eventEmitter.on('stock', async (data: any[]) => {
                     stock_isin: parseData['stock_isin'],
                     current_price: currentPrice,
                     invested_amount: amountPerAccount,
-                    total_shares: sharesPerAccount
+                    total_shares: sharesPerAccount,
+                    account_id: dematAccount.account_bo_id
                 });
             }
             if (!holding) return;
@@ -218,8 +242,6 @@ eventEmitter.on('stock', async (data: any[]) => {
                 holding.invested_amount = Number.parseFloat(holding.invested_amount.toString(2)) + -1 * Number.parseFloat(parseData['amount']);
             }
             holding.stock_exchange = JSON.stringify(exchanges);
-            holding = await holdingRepository.update(holding);
-            if (!holding) return;
             const stock: StockTransaction = {
                 transaction_id: randomUUID(),
                 holding: holding,
@@ -228,13 +250,16 @@ eventEmitter.on('stock', async (data: any[]) => {
                 transaction_type: parseData['transaction_type'],
                 stock_quantity: Math.abs(Number.parseFloat(parseData['stock_quantity'])),
                 stock_transaction_price: Math.abs(Number.parseFloat(parseData['stock_transaction_price'])),
-                amount: Number.parseFloat(holding.invested_amount.toString(2)),
+                amount: holding.invested_amount,
                 dated: parse(parseData['transaction_date'], 'dd-MMM-yyyy HH:mm:ss', new Date())
             };
             await stockTransactionRepository.add(stock);
-            dematAccount.last_synced_on = new Date();
-            await dematAccountRepository.update(dematAccount);
+            await holdingRepository.update(holding);
         }
+        let stocks = await stockTransactionRepository.findAll({});
+        logger.info(`Data Stored Count ${stocks.length}`);
+        dematAccount.last_synced_on = new Date();
+        await dematAccountRepository.update(dematAccount);
     } else {
         allStockData.push(...data);
     }

@@ -383,7 +383,14 @@ const TransactionPage = () => {
                     </div>
                 </Dialog>
                 <Dialog open={showAddTransaction} onClose={() => setShowAddTransaction(false)} header={'Transaction'}>
-                    <AddTransaction accounts={accounts}></AddTransaction>
+                    <AddTransaction
+                        accounts={accounts}
+                        onSubmit={(success: boolean, data: Transaction | undefined) => {
+                            setShowAddTransaction(false);
+                            console.log(success);
+                            console.log(data);
+                        }}
+                    ></AddTransaction>
                 </Dialog>
             </div>
         </div>

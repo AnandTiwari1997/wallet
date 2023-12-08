@@ -5,8 +5,9 @@ import TextBox from '../../modules/text-box/text-box';
 import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
 import Button from '../../modules/button/button';
 import { addTransaction } from '../../modules/backend/BackendApi';
+import { format, parse } from 'date-fns';
 
-const AddTransaction = ({ accounts }: { accounts: Account[] }) => {
+const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit: (success: boolean, data: Transaction | undefined) => any }) => {
     const [account, setAccount] = useState<Account>(accounts[0]);
     const [amount, setAmount] = useState(0);
     const [category, setCategory] = useState(Category.OTHERS.value);
@@ -15,6 +16,7 @@ const AddTransaction = ({ accounts }: { accounts: Account[] }) => {
     const [paymentMode, setPaymentMode] = useState(PaymentMode.CASH.value);
     const [type, setType] = useState(TransactionType.EXPENSE.value);
     const [accountOptions, setAccountOptions] = useState<{ [key: string]: Account }>({});
+    const [transactionDate, setTransactionDate] = useState<string>(format(new Date(), 'dd-MM-yyyy'));
 
     useEffect(() => {
         accounts.forEach((account) => {
@@ -57,13 +59,16 @@ const AddTransaction = ({ accounts }: { accounts: Account[] }) => {
                     <p style={{ margin: '0.5em 0' }}>Description</p>
                     <TextBox setValue={setNote} value={note} placeholder={'Enter Description'} />
 
+                    <p style={{ margin: '0.5em 0' }}>Date</p>
+                    <TextBox setValue={setTransactionDate} value={transactionDate} placeholder={'Enter Date in dd-MM-yyyy'} />
+
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <Button
                             onClick={() => {
                                 let transaction: Transaction = {
                                     amount: amount,
                                     account: account,
-                                    transaction_date: new Date(),
+                                    transaction_date: parse(transactionDate, 'dd-MM-yyyy', new Date()),
                                     transaction_type: type,
                                     transaction_state: status,
                                     payment_mode: paymentMode,
@@ -75,11 +80,12 @@ const AddTransaction = ({ accounts }: { accounts: Account[] }) => {
                                         transactionDate: new Date()
                                     }),
                                     labels: [],
-                                    dated: new Date(),
+                                    dated: parse(transactionDate, 'dd-MM-yyyy', new Date()),
                                     currency: 'INR',
                                     transaction_id: ''
                                 };
                                 addTransaction(transaction).then((apiResponse) => {
+                                    onSubmit(apiResponse && apiResponse.num_found === 1, apiResponse.results ? apiResponse.results[0] : undefined);
                                     console.log('Saved Object', apiResponse.results);
                                 });
                             }}

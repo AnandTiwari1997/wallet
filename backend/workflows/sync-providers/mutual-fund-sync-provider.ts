@@ -157,7 +157,9 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                                                                 syncTracker.endTime = new Date();
                                                                 syncTrackerStorage.update(syncTracker);
                                                             },
-                                                            (data) => {}
+                                                            (data) => {
+                                                                logger.error(data);
+                                                            }
                                                         );
                                                     }
                                                 }

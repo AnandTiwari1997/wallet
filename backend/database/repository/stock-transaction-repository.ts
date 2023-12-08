@@ -78,8 +78,14 @@ class StockTransactionRepository implements Repository<StockTransaction, string>
         }
     }
 
-    update(item: StockTransaction): Promise<StockTransaction | undefined> {
-        return Promise.resolve(undefined);
+    async update(item: StockTransaction): Promise<StockTransaction | undefined> {
+        try {
+            let queryResult = await sqlDatabaseProvider.execute<StockTransaction>('UPDATE stock SET amount=$1 WHERE transaction_id=$2 RETURNING *', [item.amount, item.transaction_id], true);
+            return await this.find(queryResult.rows[0].transaction_id);
+        } catch (error) {
+            logger.error(`[Update] - Error On Update ${error}`);
+            return;
+        }
     }
 
     async findAllUsingGroupBy(criteria: Criteria) {

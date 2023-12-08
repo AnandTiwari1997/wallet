@@ -24,10 +24,11 @@ class StockLatestTradingPriceSyncProvider implements SyncProvider<Holding> {
                         logger.debug(response);
                     }
                 } catch (e) {
-                    logger.error(e);
+                    // logger.error(e);
                 }
             }
             if (holding.current_price === currentPrice) return;
+            logger.info(`Updated price of ${holding.stock_name} to ${currentPrice}`);
             await holdingRepository.update({
                 holding_id: holding.holding_id,
                 stock_name: holding.stock_name,
@@ -37,12 +38,23 @@ class StockLatestTradingPriceSyncProvider implements SyncProvider<Holding> {
                 stock_isin: holding.stock_isin,
                 current_price: currentPrice,
                 total_shares: holding.total_shares,
-                invested_amount: holding.invested_amount
+                invested_amount: holding.invested_amount,
+                account_id: holding.account_id
             });
         });
     }
 
-    sync(): void {}
+    sync(): void {
+        setInterval(
+            () => {
+                holdingRepository.findAll({}).then((holdings) => {
+                    stockLatestTradingPriceSynProvider.manualSync(holdings, false);
+                });
+            },
+            1000 * 60 * 5
+        );
+    }
 }
 
 export const stockLatestTradingPriceSynProvider = new StockLatestTradingPriceSyncProvider();
+stockLatestTradingPriceSynProvider.sync();

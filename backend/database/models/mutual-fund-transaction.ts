@@ -11,6 +11,7 @@ export interface MutualFundTransaction {
     nav: number;
     units: number;
     latest_nav: number;
+    isin: string;
 }
 
 export interface IMutualFundTransaction {
@@ -24,6 +25,7 @@ export interface IMutualFundTransaction {
     nav: number;
     units: number;
     latest_nav: number;
+    isin: string;
 }
 
 export class MutualFundTransactionBuilder {
@@ -40,7 +42,8 @@ export class MutualFundTransactionBuilder {
             nav: item.nav,
             units: item.units,
             latest_nav: item.latestNav,
-            is_credit: item.amount > 0
+            is_credit: item.amount > 0,
+            isin: item.isin
         };
     };
 
@@ -55,7 +58,8 @@ export class MutualFundTransactionBuilder {
             nav: item.nav,
             units: item.units,
             latest_nav: item.latest_nav,
-            is_credit: item.is_credit
+            is_credit: item.is_credit,
+            isin: item.isin
         };
     };
 }

@@ -3,7 +3,7 @@ import Select from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
 import { useEffect, useState } from 'react';
 import { addMonths } from 'date-fns';
-import { addBill, updateBill } from '../../modules/backend/BackendApi';
+import { addBill, getElectricityVendors, updateBill } from '../../modules/backend/BackendApi';
 
 const dates = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
 
@@ -19,6 +19,12 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
     const [billStatus, setBillStatus] = useState<string>('PAID');
     const [billLabel, setBillLabel] = useState<string>('NON_ACTIVE');
     const [billTransactionDate, setBillTransactionDate] = useState<string | undefined>(undefined);
+    const [electricityVendors, setElectricityVendors] = useState<
+        {
+            value: string;
+            label: string;
+        }[]
+    >([]);
 
     useEffect(() => {
         setEdit(bill !== undefined);
@@ -34,6 +40,13 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
             setBillLabel(bill.label);
             setBillTransactionDate(bill.transaction_date);
         }
+        getElectricityVendors().then((response) => {
+            setElectricityVendors(
+                response.results.map((value) => {
+                    return { value: value.label, label: value.label };
+                })
+            );
+        });
     }, [bill]);
 
     return (
@@ -50,11 +63,29 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                             { value: 'MONTHLY_INSTALLMENT_BILL', label: 'EMI' },
                             { value: 'RENT', label: 'Rent' }
                         ]}
-                        onChange={(event) => setBillCategory(event.target.value)}
+                        onChange={(event) => {
+                            if (event.target.value === 'ELECTRICITY_BILL') {
+                                setVendorName(edit && bill ? bill.vendor_name : electricityVendors[0].label);
+                            } else {
+                                setVendorName('');
+                            }
+                            setBillCategory(event.target.value);
+                        }}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
-                    <TextBox setValue={setVendorName} value={vendorName} placeholder={'Enter Vendor Name'} />
+                    {billCategory !== 'ELECTRICITY_BILL' && (
+                        <>
+                            <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
+                            <TextBox setValue={setVendorName} value={vendorName} placeholder={'Enter Vendor Name'} />
+                        </>
+                    )}
+
+                    {billCategory === 'ELECTRICITY_BILL' && (
+                        <>
+                            <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
+                            <Select selectedOption={vendorName} options={electricityVendors} onChange={(event) => setVendorName(event.target.value)} />
+                        </>
+                    )}
 
                     <p style={{ margin: '0.5em 0' }}>Consumer Number</p>
                     <TextBox setValue={setBillConsumerNo} value={billConsumerNo} placeholder={'Enter Bill Consumer Number'} />
@@ -62,19 +93,27 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                     <p style={{ margin: '0.5em 0' }}>Bill Name</p>
                     <TextBox setValue={setBillName} value={billName} placeholder={'Enter Bill Name'} />
 
-                    <p style={{ margin: '0.5em 0' }}>Billing Date</p>
-                    <Select
-                        selectedOption={billingDate}
-                        options={dates.map((date) => {
-                            return { value: date.toString(), label: date.toString() };
-                        })}
-                        onChange={(event) => {
-                            setBillingDate(event.target.value);
-                        }}
-                    />
+                    {billCategory !== 'ELECTRICITY_BILL' && billCategory !== 'INTERNET_BILL' && (
+                        <>
+                            <p style={{ margin: '0.5em 0' }}>Billing Date</p>
+                            <Select
+                                selectedOption={billingDate}
+                                options={dates.map((date) => {
+                                    return { value: date.toString(), label: date.toString() };
+                                })}
+                                onChange={(event) => {
+                                    setBillingDate(event.target.value);
+                                }}
+                            />
+                        </>
+                    )}
 
-                    <p style={{ margin: '0.5em 0' }}>Bill Amount</p>
-                    <TextBox setValue={setBillAmount} value={billAmount} type={'number'} placeholder={'Enter Bill Amount'} />
+                    {billCategory !== 'ELECTRICITY_BILL' && billCategory !== 'INTERNET_BILL' && (
+                        <>
+                            <p style={{ margin: '0.5em 0' }}>Bill Amount</p>
+                            <TextBox setValue={setBillAmount} value={billAmount} type={'number'} placeholder={'Enter Bill Amount'} />
+                        </>
+                    )}
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button
@@ -83,6 +122,12 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                                 let day = Number.parseInt(billingDate);
                                 let date = new Date(new Date().setDate(day));
                                 if (day < new Date().getDate()) date = addMonths(date, 1);
+                                let auto_sync = false;
+                                if (billCategory === 'ELECTRICITY_BILL' || billCategory !== 'INTERNET_BILL') {
+                                    date = new Date();
+                                    setBillAmount(0.0);
+                                    auto_sync = true;
+                                }
                                 let newBill: Bill = {
                                     bill_id: billId,
                                     bill_name: billName,
@@ -93,7 +138,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                                     transaction_date: billTransactionDate,
                                     bill_status: billStatus,
                                     label: billLabel,
-                                    auto_sync: false,
+                                    auto_sync: auto_sync,
                                     bill_amount: billAmount,
                                     bill_consumer_no: billConsumerNo
                                 };

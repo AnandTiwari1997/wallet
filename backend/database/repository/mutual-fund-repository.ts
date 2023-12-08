@@ -26,8 +26,20 @@ class MutualFundRepository implements Repository<MutualFundTransaction, string> 
         try {
             item.transaction_id = id;
             let queryResult = await sqlDatabaseProvider.execute<IMutualFundTransaction>(
-                'INSERT INTO mutual_fund(transaction_id, fund_name, portfolio_number, transaction_date, description, amount, is_credit, nav, units, latest_nav) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;',
-                [item.transaction_id, item.fund_name, item.portfolio_number, item.transaction_date.toISOString(), item.description, item.amount, item.is_credit, item.nav, item.units, item.latest_nav],
+                'INSERT INTO mutual_fund(transaction_id, fund_name, portfolio_number, transaction_date, description, amount, is_credit, nav, units, latest_nav, isin) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *;',
+                [
+                    item.transaction_id,
+                    item.fund_name,
+                    item.portfolio_number,
+                    item.transaction_date.toISOString(),
+                    item.description,
+                    item.amount,
+                    item.is_credit,
+                    item.nav,
+                    item.units,
+                    item.latest_nav,
+                    item.isin
+                ],
                 true
             );
             return MutualFundTransactionBuilder.buildFromEntity(queryResult.rows[0]);
@@ -126,6 +138,30 @@ class MutualFundRepository implements Repository<MutualFundTransaction, string> 
         } catch (error) {
             logger.error(`[Count] - Error On Count ${error}`);
             return 0;
+        }
+    }
+
+    async findAllDistinctFundByISIN() {
+        try {
+            let sql = `SELECT isin
+                            FROM mutual_fund GROUP BY isin`;
+            let queryResult = await sqlDatabaseProvider.execute<{
+                isin: string;
+            }>(sql, [], false);
+            return queryResult.rows.map((row) => row.isin);
+        } catch (error) {
+            logger.error(`[Count] - Error On Count ${error}`);
+            return [];
+        }
+    }
+
+    async updateByISIN(item: String, latest_nav: number): Promise<MutualFundTransaction | undefined> {
+        try {
+            let queryResult = await sqlDatabaseProvider.execute<IMutualFundTransaction>('UPDATE mutual_fund SET latest_nav=$1 WHERE isin=$2 RETURNING *;', [latest_nav, item], true);
+            return MutualFundTransactionBuilder.buildFromEntity(queryResult.rows[0]);
+        } catch (error) {
+            logger.error(`[Update] - Error On Update ${error}`);
+            return;
         }
     }
 }

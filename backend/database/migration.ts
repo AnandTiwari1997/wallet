@@ -1,4 +1,6 @@
-export const migrations: { [key: string]: string } = {
+export const migrations: {
+    [key: string]: string;
+} = {
     V1: `CREATE TABLE IF NOT EXISTS bank
          (
              bank_id        INT8 NOT NULL,
@@ -33,6 +35,7 @@ export const migrations: { [key: string]: string } = {
              nav              DOUBLE PRECISION NOT NULL,
              units            DOUBLE PRECISION NOT NULL,
              latest_nav       DOUBLE PRECISION NOT NULL,
+             isin             TEXT             NOT NULL,
              CONSTRAINT mutual_fund_transactionId_pk PRIMARY KEY (transaction_id)
          );`,
     V4: `CREATE TABLE IF NOT EXISTS provident_fund
@@ -114,6 +117,7 @@ export const migrations: { [key: string]: string } = {
             total_shares                TEXT NOT NULL,
             invested_amount             TEXT NOT NULL,
             current_price               DOUBLE PRECISION NOT NULL,
+            account_id                  TEXT NOT NULL,
             CONSTRAINT holding_id_pk    PRIMARY KEY (holding_id)
         );`,
     V10: `CREATE TABlE IF NOT EXISTS stock

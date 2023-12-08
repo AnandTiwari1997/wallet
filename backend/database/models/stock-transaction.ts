@@ -38,7 +38,8 @@ export class StockTransactionBuilder {
                 stock_name: iStock.stock_name,
                 stock_symbol_code: iStock.stock_symbol_code,
                 invested_amount: iStock.invested_amount,
-                total_shares: iStock.total_shares
+                total_shares: iStock.total_shares,
+                account_id: iStock.account_id
             },
             demat_account: {
                 account_bo_id: iStock.account_bo_id,

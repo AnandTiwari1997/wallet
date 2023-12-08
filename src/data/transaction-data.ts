@@ -66,7 +66,7 @@ export class Category {
     static BROADBAND_RECHARGE = { label: 'Broadband Recharge', value: 'BROADBAND_RECHARGE' };
     static DIVIDEND = { label: 'Dividend', value: 'DIVIDEND' };
     static INTEREST_RECEIVED = { label: 'Interest Received', value: 'INTEREST_RECEIVED' };
-    static OTHERS = { label: 'Others', value: 'OTHERS' };
+    static OTHERS = { label: 'Others', value: 'OTHER' };
     static INVESTMENT = { label: 'Investment', value: 'INVESTMENT' };
     static SUBSCRIPTION = { label: 'Subscription', value: 'SUBSCRIPTION' };
     static RENT = { label: 'Rent', value: 'RENT' };

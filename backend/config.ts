@@ -41,3 +41,30 @@ export const mfParam = {
     panNo: process.env.MF_PAN_NO || '',
     password: process.env.MF_PASSWORD || ''
 };
+
+export const electricityVendors = [
+    {
+        value: 'MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD',
+        label: 'Maharashtra State Electricity Distribution Co. Ltd.'
+    },
+    {
+        value: 'M_P_PASHCHIM_KSHETRA_VIDYUT_VITARAN_CO_LTD',
+        label: 'M.P. Pashchim Kshetra Vidyut Vitaran Co. Ltd.'
+    }
+];
+
+export const electricityVendorMap: { [key: string]: string } = {
+    'M.P. Pashchim Kshetra Vidyut Vitaran Co. Ltd.': 'M_P_PASHCHIM_KSHETRA_VIDYUT_VITARAN_CO_LTD',
+    'Maharashtra State Electricity Distribution Co. Ltd.': 'MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD'
+};
+
+export const electricityParam = {
+    MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD: {
+        due_date_xpath: '//*[@id="billingTable"]/tbody/tr[2]/td[7]',
+        bill_amount_xpath: '//*[@id="billingTable"]/tbody/tr[2]/td[6]'
+    },
+    M_P_PASHCHIM_KSHETRA_VIDYUT_VITARAN_CO_LTD: {
+        due_date_xpath: '//*[@id="iframe"]/div[1]/div/div/div[2]/div[1]/table/tbody/tr[2]/td[2]',
+        bill_amount_xpath: '//*[@id="iframe"]/div[1]/div/div/div[2]/div[1]/table/tbody/tr[3]/td[2]'
+    }
+};

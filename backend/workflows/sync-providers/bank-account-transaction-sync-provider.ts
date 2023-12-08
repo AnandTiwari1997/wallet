@@ -6,7 +6,7 @@ import { bankRepository } from '../../database/repository/bank-repository.js';
 import { Logger } from '../../core/logger.js';
 import { accountTransactionRepository } from '../../database/repository/account-transaction-repository.js';
 import { startOfYear, subYears } from 'date-fns';
-import { BankProcessor, BankProcessorFactory } from '../processor/bank-processor.js';
+import { BankProcessor, BankProcessorFactory } from '../processor/processors.js';
 import { Account } from '../../database/models/account.js';
 import { TransactionType } from '../../database/models/account-transaction.js';
 

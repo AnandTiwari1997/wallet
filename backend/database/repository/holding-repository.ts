@@ -10,8 +10,19 @@ class HoldingRepository implements Repository<Holding, string> {
     async add(item: Holding): Promise<Holding | undefined> {
         try {
             let queryResult = await sqlDatabaseProvider.execute<Holding>(
-                'INSERT INTO holding(holding_id, stock_name, stock_isin, stock_symbol_code, stock_symbol, stock_exchange, current_price, total_shares, invested_amount) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (holding_id) DO UPDATE SET current_price=$7 RETURNING *;',
-                [item.holding_id, item.stock_name, item.stock_isin, item.stock_symbol_code, item.stock_symbol, item.stock_exchange, item.current_price, item.total_shares, item.invested_amount],
+                'INSERT INTO holding(holding_id, stock_name, stock_isin, stock_symbol_code, stock_symbol, stock_exchange, current_price, total_shares, invested_amount, account_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (holding_id) DO UPDATE SET current_price=$7 RETURNING *;',
+                [
+                    item.holding_id,
+                    item.stock_name,
+                    item.stock_isin,
+                    item.stock_symbol_code,
+                    item.stock_symbol,
+                    item.stock_exchange,
+                    item.current_price,
+                    item.total_shares,
+                    item.invested_amount,
+                    item.account_id
+                ],
                 true
             );
             return await this.find(queryResult.rows[0].holding_id);

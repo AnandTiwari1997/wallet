@@ -11,12 +11,12 @@ import billsRoutes from './controllers/bill-controller.js';
 import stocksRoutes from './controllers/stock-transaction-controller.js';
 import dematAccountRoutes from './controllers/demat-account-controller.js';
 import brokerRoutes from './controllers/broker-controller.js';
+import holdingRoutes from './controllers/stock-holding-controller.js';
 import { Logger, LoggerLevel } from './core/logger.js';
 import { ApiError, ErrorType, InternalError, NotFoundError } from './core/api-error.js';
 import { API_PATH } from './constant.js';
 import { environment, port } from './config.js';
 import { accountRepository } from './database/repository/account-repository.js';
-import { Account } from './database/models/account.js';
 import { bankAccountTransactionSyncProvider } from './workflows/sync-providers/bank-account-transaction-sync-provider.js';
 import { loanAccountTransactionSyncProvider } from './workflows/sync-providers/loan-account-transaction-sync-provider.js';
 import { billSyncProvider } from './workflows/sync-providers/bills-sync-provider.js';
@@ -24,6 +24,8 @@ import { creditCardSyncProvider } from './workflows/sync-providers/credit-card-s
 import { holdingRepository } from './database/repository/holding-repository.js';
 import { stockLatestTradingPriceSynProvider } from './workflows/sync-providers/stock-latest-trading-price-sync-provider.js';
 import { dematAccountRepository } from './database/repository/demat-account-repository.js';
+import { mutualFundRepository } from './database/repository/mutual-fund-repository.js';
+import { mutualFundNavSyncProvider } from './workflows/sync-providers/mutual-fund-latest-nav-sync-provider.js';
 import { dematAccountSyncProvider } from './workflows/sync-providers/demat-account-sync-provider.js';
 
 Logger.level = LoggerLevel.INFO;
@@ -47,6 +49,7 @@ router.use(API_PATH.BILLS, billsRoutes);
 router.use(API_PATH.STOCKS, stocksRoutes);
 router.use(API_PATH.DEMAT_ACCOUNT, dematAccountRoutes);
 router.use(API_PATH.BROKERS, brokerRoutes);
+router.use(API_PATH.HOLDING, holdingRoutes);
 
 const app = express();
 app.use(cors(corsOptions));
@@ -70,46 +73,231 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
     logger.info(`Backend Server Started listening on ${port}`);
     connection.connect();
-    eventEmitter.addListener('boxOpened', () => {
-        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'BANK' }] }).then((accounts: Account[]) => {
-            bankAccountTransactionSyncProvider.manualSync(accounts, true);
+    eventEmitter.addListener('boxOpened', async () => {
+        let bankAccounts = await accountRepository.findAll({ filters: [{ key: 'account_type', value: 'BANK' }] });
+        bankAccountTransactionSyncProvider.manualSync(bankAccounts, true);
+        let loanAccounts = await accountRepository.findAll({ filters: [{ key: 'account_type', value: 'LOAN' }] });
+        loanAccountTransactionSyncProvider.manualSync(loanAccounts, true);
+        let creditCardAccounts = await accountRepository.findAll({
+            filters: [
+                {
+                    key: 'account_type',
+                    value: 'CREDIT_CARD'
+                }
+            ]
         });
-        accountRepository.findAll({ filters: [{ key: 'account_type', value: 'LOAN' }] }).then((accounts: Account[]) => {
-            loanAccountTransactionSyncProvider.manualSync(accounts, true);
-        });
-        accountRepository
-            .findAll({
-                filters: [
-                    {
-                        key: 'account_type',
-                        value: 'CREDIT_CARD'
-                    }
-                ]
-            })
-            .then((accounts: Account[]) => {
-                creditCardSyncProvider.manualSync(accounts, true);
-            });
-        billSyncProvider.sync();
-        dematAccountRepository.findAll({}).then((accounts) => {
-            dematAccountSyncProvider.manualSync(accounts, true);
-        });
-        holdingRepository.findAll({}).then((holdings) => {
-            stockLatestTradingPriceSynProvider.manualSync(holdings, false);
-        });
-        setInterval(
-            () => {
-                holdingRepository.findAll({}).then((holdings) => {
-                    stockLatestTradingPriceSynProvider.manualSync(holdings, false);
-                });
-            },
-            1000 * 60 * 5
-        );
+        creditCardSyncProvider.manualSync(creditCardAccounts, true);
         // manualStockAddition();
+        let dematAccounts = await dematAccountRepository.findAll({});
+        dematAccountSyncProvider.manualSync(dematAccounts, true);
+        let holdings = await holdingRepository.findAll({});
+        stockLatestTradingPriceSynProvider.manualSync(holdings, false);
+        let mutualFunds = await mutualFundRepository.findAllDistinctFundByISIN();
+        mutualFundNavSyncProvider.manualSync(mutualFunds, false);
+        billSyncProvider.sync();
     });
 });
 
 const manualStockAddition = () => {
     let data = [
+        {
+            order_no: '1100000019328833',
+            stock_isin: 'INE090A01021',
+            transaction_type: 'B',
+            stock_quantity: 2.0,
+            stock_transaction_price: 594.7,
+            amount: -1189.4,
+            transaction_date: '01-Feb-2021 13:56:34'
+        },
+        {
+            order_no: '1100000019592543',
+            stock_isin: 'INE043D01016',
+            transaction_type: 'B',
+            stock_quantity: 10.0,
+            stock_transaction_price: 42.6,
+            amount: -426.0,
+            transaction_date: '01-Feb-2021 14:00:36'
+        },
+        {
+            order_no: '1100000024462279',
+            stock_isin: 'INE043D01016',
+            transaction_type: 'S',
+            stock_quantity: -10.0,
+            stock_transaction_price: 43.25,
+            amount: 432.5,
+            transaction_date: '01-Feb-2021 15:22:14'
+        },
+        {
+            order_no: '1300000000972495',
+            stock_isin: 'INE062A01020',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 321.5,
+            amount: -1607.5,
+            transaction_date: '02-Feb-2021 09:19:36'
+        },
+        {
+            order_no: '1612236600056086135',
+            stock_isin: 'INE090A01021',
+            transaction_type: 'B',
+            stock_quantity: 2.0,
+            stock_transaction_price: 618.85,
+            amount: -1237.7,
+            transaction_date: '02-Feb-2021 09:29:37'
+        },
+        {
+            order_no: '1300000024202524',
+            stock_isin: 'INE062A01020',
+            transaction_type: 'S',
+            stock_quantity: -5.0,
+            stock_transaction_price: 331.3,
+            amount: 1656.5,
+            transaction_date: '02-Feb-2021 15:22:20'
+        },
+        {
+            order_no: '1612254451724190094',
+            stock_isin: 'INE090A01021',
+            transaction_type: 'S',
+            stock_quantity: -2.0,
+            stock_transaction_price: 619.65,
+            amount: 1239.3,
+            transaction_date: '02-Feb-2021 15:23:34'
+        },
+        {
+            order_no: '1100000002533129',
+            stock_isin: 'INE043D01016',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 43.8,
+            amount: -219.0,
+            transaction_date: '03-Feb-2021 09:34:04'
+        },
+        {
+            order_no: '1100000002604094',
+            stock_isin: 'INE095A01012',
+            transaction_type: 'B',
+            stock_quantity: 1.0,
+            stock_transaction_price: 1013.7,
+            amount: -1013.7,
+            transaction_date: '03-Feb-2021 09:34:47'
+        },
+        {
+            order_no: '1000000003221863',
+            stock_isin: 'INE814H01011',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 52.95,
+            amount: -264.75,
+            transaction_date: '03-Feb-2021 09:35:02'
+        },
+        {
+            order_no: '1100000003415879',
+            stock_isin: 'INE053F01010',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 24.2,
+            amount: -121.0,
+            transaction_date: '04-Feb-2021 09:43:30'
+        },
+        {
+            order_no: '1200000013203805',
+            stock_isin: 'INE160A01022',
+            transaction_type: 'B',
+            stock_quantity: 1.0,
+            stock_transaction_price: 39.45,
+            amount: -39.45,
+            transaction_date: '04-Feb-2021 13:19:00'
+        },
+        {
+            order_no: '1100000001812702',
+            stock_isin: 'INE053F01010',
+            transaction_type: 'B',
+            stock_quantity: 1.0,
+            stock_transaction_price: 25.9,
+            amount: -25.9,
+            transaction_date: '05-Feb-2021 09:24:56'
+        },
+        {
+            order_no: '1100000001796800',
+            stock_isin: 'INE053F01010',
+            transaction_type: 'B',
+            stock_quantity: 15.0,
+            stock_transaction_price: 25.85,
+            amount: -387.75,
+            transaction_date: '08-Feb-2021 09:29:32'
+        },
+        {
+            order_no: '1300000002105975',
+            stock_isin: 'INE245A01021',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 90.15,
+            amount: -450.75,
+            transaction_date: '08-Feb-2021 09:30:15'
+        },
+        {
+            order_no: '1612755000066079992',
+            stock_isin: 'INE160A01022',
+            transaction_type: 'B',
+            stock_quantity: 4.0,
+            stock_transaction_price: 40.3,
+            amount: -161.2,
+            transaction_date: '08-Feb-2021 09:30:30'
+        },
+        {
+            order_no: '1000000000168831',
+            stock_isin: 'INE029A01011',
+            transaction_type: 'B',
+            stock_quantity: 1.0,
+            stock_transaction_price: 431.0,
+            amount: -431.0,
+            transaction_date: '09-Feb-2021 09:07:26'
+        },
+        {
+            order_no: '1100000009575184',
+            stock_isin: 'INE092T01019',
+            transaction_type: 'B',
+            stock_quantity: 1.0,
+            stock_transaction_price: 62.95,
+            amount: -62.95,
+            transaction_date: '26-Feb-2021 11:16:37'
+        },
+        {
+            order_no: '1300000018007124',
+            stock_isin: 'INE245A01021',
+            transaction_type: 'B',
+            stock_quantity: 10.0,
+            stock_transaction_price: 99.8,
+            amount: -998.0,
+            transaction_date: '02-Mar-2021 14:46:47'
+        },
+        {
+            order_no: '1100000008778215',
+            stock_isin: 'INE092T01019',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 66.8,
+            amount: -334.0,
+            transaction_date: '03-Mar-2021 12:02:41'
+        },
+        {
+            order_no: '1000000012059868',
+            stock_isin: 'INE814H01011',
+            transaction_type: 'B',
+            stock_quantity: 5.0,
+            stock_transaction_price: 65.45,
+            amount: -327.25,
+            transaction_date: '03-Mar-2021 12:02:54'
+        },
+        {
+            order_no: '1000000006374218',
+            stock_isin: 'INE028A01039',
+            transaction_type: 'B',
+            stock_quantity: 4.0,
+            stock_transaction_price: 85.8,
+            amount: -343.2,
+            transaction_date: '04-Mar-2021 10:13:26'
+        },
         {
             order_no: '1100000006983842',
             stock_isin: 'INE019C01026',

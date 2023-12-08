@@ -19,7 +19,10 @@ export const API_PATH = {
     STOCKS: '/wallet/stock/transaction',
 
     // Demat Account
-    DEMAT_ACCOUNT: '/wallet/stock/account'
+    DEMAT_ACCOUNT: '/wallet/stock/account',
+
+    // Stock
+    HOLDING: '/wallet/stock/holding'
 };
 
 export const MUTUAL_FUND = 'mutual_fund';

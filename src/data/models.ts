@@ -41,7 +41,9 @@ export const billCategory = [
     { value: 'MONTHLY_INSTALLMENT_BILL', label: 'EMI' }
 ];
 
-export const billCategoryMap: { [key: string]: string } = {
+export const billCategoryMap: {
+    [key: string]: string;
+} = {
     INTERNET_BILL: 'Internet',
     ELECTRICITY_BILL: 'Electricity',
     MUTUAL_FUND_BILL: 'Mutual Fund',
@@ -55,7 +57,12 @@ export class AccountType {
     static LOAN = { label: 'Loan', value: 'LOAN' };
     static CREDIT_CARD = { label: 'Credit Card', value: 'CREDIT_CARD' };
 
-    static typeMap: { [key: string]: { label: string; value: string } } = {
+    static typeMap: {
+        [key: string]: {
+            label: string;
+            value: string;
+        };
+    } = {
         CASH: AccountType.CASH,
         BANK: AccountType.BANK,
         LOAN: AccountType.LOAN,
@@ -141,6 +148,7 @@ export interface Holding {
     current_price: number;
     total_shares: string;
     invested_amount: string;
+    account_id: string;
 }
 
 export interface StockTransaction {

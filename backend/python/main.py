@@ -45,6 +45,8 @@ class MutualFundProcessor(FundProcessor):
         # Defining RegEx patterns
         folio_pat = re.compile(r"(^Folio No:\s(\d+\s\/\s\d+))")  # Extracting Folio information
         fund_name = re.compile(r"^(.*?)\bFund\b")  # Extracting Fund Name
+        isin_pattern_1 = re.compile(r"INF[0-9]{3}\w[0-9]{5}")
+        isin_pattern_2 = re.compile(r"INF[0-9]{3}\w[0-9]{2}\w\w\d")
         # Extracting Transaction data
         trans_details = re.compile(
             r"(^\d{2}-\w{3}-\d{4})(\s.+?\s(?=[\d(]))([\d\(]+[,.]\d+[.\d\)]+)(\s[\d\(\,\.\)]+)(\s[\d\,\.]+)(\s[\d,\.]+)")
@@ -52,14 +54,24 @@ class MutualFundProcessor(FundProcessor):
         latest_nav = re.compile(r".+INR\s(\d+[.,-]\d+)\s")
         folio = ''
         fun_name = ''
+        isin = ''
         latest_nav_dict = {}
-        for i in doc_txt.splitlines():
+        lines = doc_txt.splitlines()
+        for i_, i in enumerate(lines):
             if folio_pat.match(i):
                 folio = folio_pat.match(i).group(2)
             if fund_name.match(i):
                 fun_name = fund_name.match(i).group(0)
                 if len(fun_name.split("-")) == 2:
                     fun_name = fun_name.split("-")[1]
+                    search = isin_pattern_1.search(i) or isin_pattern_2.search(i)
+                    if search:
+                        isin = search.group()
+                    elif 'INF' in i:
+                        search_1 = re.search(r'[0-9]{3}\w[0-9]{5}', lines[i_ + 1])
+                        search_2 = re.search(r'[0-9]{3}\w[0-9]{2}\w\w\d', lines[i_ + 1])
+                        isin = 'INF' + (search_1 or search_2).group()
+
             txt = trans_details.search(i)
             if txt:
                 date = txt.group(1)
@@ -68,18 +80,18 @@ class MutualFundProcessor(FundProcessor):
                 units = txt.group(4)
                 price = txt.group(5)
                 unit_bal = txt.group(6)
-                self.dataItems.append([str(uuid.uuid4()), folio, fun_name, date, description, amount, price, units,
-                                       unit_bal])
+                self.dataItems.append([str(uuid.uuid4()), folio, fun_name.upper(), date, description, amount, price, units,
+                                       unit_bal, isin])
             if latest_nav.match(i):
-                latest_nav_dict[fun_name] = latest_nav.match(i).group(1).replace(",", "")
-                
+                latest_nav_dict[isin] = latest_nav.match(i).group(1).replace(",", "")
+
         for item in self.dataItems:
-            item.append(latest_nav_dict[item[2]])
+            item.append(latest_nav_dict[item[-1]])
 
     def save(self, file_format="json", file_path=None):
         df = DataFrame(self.dataItems,
                        columns=["transactionId", "portfolioNumber", "fundName", "transactionDate", "description",
-                                "amount", "nav", "units", "unitBalance", "latestNav"])
+                                "amount", "nav", "units", "unitBalance", "isin", "latestNav"])
         clean_txt(df.amount)
         clean_txt(df.units)
         clean_txt(df.nav)
@@ -154,6 +166,22 @@ class ProvidentFundProcessor(FundProcessor):
                 row.append(financial_year)
                 row.append(str(uuid.uuid4()))
                 self.data.append(row)
+
+            # Interest Received Row
+            row = table_.data[-2]
+            if len(row) > 0:
+                date = re.search(r'\d+/\d+/\d+', row[0])
+                if date:
+                    temp = row[0]
+                    row[0] = 'Mar-' + financial_year.split("-")[1]
+                    row[1] = date.group().replace('/', '-')
+                    row[2] = 'CR'
+                    row[3] = temp
+                    row[4] = 0
+                    row[5] = 0
+                    row.append(financial_year)
+                    row.append(str(uuid.uuid4()))
+                    self.data.append(row)
 
     def save(self, file_format="json", file_path=None):
         df = DataFrame(self.data, columns=self.header)

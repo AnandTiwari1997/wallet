@@ -1,10 +1,10 @@
 import Tabs from '../../modules/tabs/tabs';
 import Tab from '../../modules/tabs/tab';
-import Table, { TableColumn } from '../../modules/table/table';
+import Table, { TableColumn, TableData } from '../../modules/table/table';
 import './bill.css';
 import { Bill, billCategoryMap } from '../../data/models';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { menu } from '../../icons/icons';
+import { indianRupee, menu } from '../../icons/icons';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
 import { ApiCriteria, getBills, updateBill } from '../../modules/backend/BackendApi';
@@ -15,6 +15,7 @@ import AddBill from './add-bill';
 import { addMonths, format } from 'date-fns';
 import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import Button from '../../modules/button/button';
+import { ArrayUtil } from '../../data/transaction-data';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -82,7 +83,32 @@ const BillsPage = () => {
     const BILL_AMOUNT: TableColumn = {
         label: 'Amount',
         key: 'bill_amount',
-        customRender: (row: Bill) => row.bill_amount.toFixed(2)
+        customRender: (row: Bill) => row.bill_amount.toFixed(2),
+        columnFooter: (rows: TableData<Bill>[]) => {
+            return (
+                <div style={{ display: 'flex' }}>
+                    <div
+                        style={{
+                            width: '100%',
+                            justifyContent: 'right'
+                        }}
+                    >{`All Unpaid Amount:`}</div>
+                    <div
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'right',
+                            fontWeight: '700'
+                        }}
+                    >
+                        <i className="icon">
+                            <FontAwesomeIcon icon={indianRupee} />
+                        </i>
+                        {ArrayUtil.sum(rows, (a: TableData<Bill>) => ArrayUtil.sum(a.data, (b: Bill) => b.bill_amount)).toFixed(2)}
+                    </div>
+                </div>
+            );
+        }
     };
     const ACTION = {
         key: '',

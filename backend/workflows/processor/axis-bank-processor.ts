@@ -1,7 +1,7 @@
 import { Category, PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../database/models/account-transaction.js';
 import { ParsedMail } from 'mailparser';
 import { Logger } from '../../core/logger.js';
-import { BankProcessor } from './bank-processor.js';
+import { BankProcessor } from './processors.js';
 import { Account } from '../../database/models/account.js';
 import { htmlParser } from '../html-parser.js';
 import { parse, subHours, subMinutes } from 'date-fns';

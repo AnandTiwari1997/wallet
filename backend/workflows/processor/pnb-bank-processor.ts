@@ -1,4 +1,4 @@
-import { BankProcessor } from './bank-processor.js';
+import { BankProcessor } from './processors.js';
 import { ParsedMail } from 'mailparser';
 import { Account } from '../../database/models/account.js';
 import { Category, PaymentMode, Transaction, TransactionStatus, TransactionType } from '../../database/models/account-transaction.js';

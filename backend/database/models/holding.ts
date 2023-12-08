@@ -8,6 +8,7 @@ export interface Holding {
     total_shares: number;
     invested_amount: number;
     current_price: number;
+    account_id: string;
 }
 
 export class HoldingBuilder {
@@ -21,7 +22,8 @@ export class HoldingBuilder {
             stock_isin: item.stock_isin,
             total_shares: item.total_shares,
             invested_amount: item.invested_amount,
-            current_price: item.current_price
+            current_price: item.current_price,
+            account_id: item.account_id
         };
     }
 }
