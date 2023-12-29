@@ -131,3 +131,30 @@
 .custom-font-size {
     font-size: 0.875em !important;
 }
+
+.dashboard_chart_body_wrapper {
+    overflow: scroll;
+    height: calc(81% - 3rem);
+    margin: 0 1% 1% 1%;
+}
+
+.dashboard_chart_row_wrapper {
+    height: 40vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.dashboard_chart_wrapper {
+    width: 48%;
+    margin: 1%;
+    background: rgb(255, 255, 255);
+    box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px, rgba(128, 135, 148, 0.56) 2px 2px 5px;
+}
+
+.dashboard_chart {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /*width: 80%;*/
+}

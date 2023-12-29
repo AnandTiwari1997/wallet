@@ -48,7 +48,8 @@ export const billCategoryMap: {
     ELECTRICITY_BILL: 'Electricity',
     MUTUAL_FUND_BILL: 'Mutual Fund',
     MONTHLY_INSTALLMENT_BILL: 'EMI',
-    RENT: 'Rent'
+    RENT: 'Rent',
+    CREDIT_CARD_BILL: 'Credit Card'
 };
 
 export class AccountType {
@@ -104,6 +105,7 @@ export interface MutualFundTransaction {
     nav: number;
     units: number;
     latest_nav: number;
+    isin: string;
 }
 
 export interface ProvidentFundTransaction {

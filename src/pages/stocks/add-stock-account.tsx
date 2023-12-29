@@ -1,10 +1,11 @@
 import Select, { SelectOption } from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
 import { Broker, DematAccount } from '../../data/models';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format, parse } from 'date-fns';
 import { addStockAccount, getBroker } from '../../modules/backend/BackendApi';
 import { useGlobalLoadingState } from '../../index';
+import DateInput from '../../modules/date-input/date-input';
 
 const AddStockAccount = ({ account, onSubmit }: { account?: DematAccount; onSubmit: (success: boolean, data: DematAccount | undefined) => any | void }) => {
     const [accountBoId, setAccountBoId] = useState<string>('');
@@ -71,7 +72,7 @@ const AddStockAccount = ({ account, onSubmit }: { account?: DematAccount; onSubm
                     <TextBox setValue={setAccountClientId} value={accountClientId} placeholder={'Enter Client Id'} />
 
                     <p>Account Start Date</p>
-                    <TextBox setValue={setStartDate} value={startDate} placeholder={'Enter Loan Start Date in dd-MM-yyyy'} />
+                    <DateInput setValue={setStartDate} value={startDate} />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button

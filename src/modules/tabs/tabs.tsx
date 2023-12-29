@@ -9,7 +9,6 @@ interface TabHeaderInfo {
 }
 
 interface SelectedTab {
-    tabLabel: string;
     tabValue: string;
 }
 
@@ -44,14 +43,12 @@ const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: 
                 {tabHeaders.map((tabHeaderInfo) => {
                     return (
                         <div
-                            aria-label={tabHeaderInfo.label}
                             className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${tabHeaderInfo.classes ? tabHeaderInfo.classes : ''}`}
                             onClick={() => {
                                 setActiveTab(tabHeaderInfo.value);
                                 if (onTabChange)
                                     onTabChange({
-                                        tabValue: tabHeaderInfo.value,
-                                        tabLabel: tabHeaderInfo.label
+                                        tabValue: tabHeaderInfo.value
                                     });
                             }}
                         >

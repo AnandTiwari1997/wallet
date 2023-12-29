@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Account, Transaction } from '../../data/models';
 import Select from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
@@ -6,6 +6,7 @@ import { Category, PaymentMode, TransactionStatus, TransactionType } from '../..
 import Button from '../../modules/button/button';
 import { addTransaction } from '../../modules/backend/BackendApi';
 import { format, parse } from 'date-fns';
+import DateInput from '../../modules/date-input/date-input';
 
 const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit: (success: boolean, data: Transaction | undefined) => any }) => {
     const [account, setAccount] = useState<Account>(accounts[0]);
@@ -27,7 +28,7 @@ const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit:
 
     return (
         <>
-            <div style={{ width: '250px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '350px', display: 'flex', justifyContent: 'center' }}>
                 <div>
                     <p style={{ margin: '0.5em 0' }}>Bill Category</p>
                     <Select
@@ -60,7 +61,7 @@ const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit:
                     <TextBox setValue={setNote} value={note} placeholder={'Enter Description'} />
 
                     <p style={{ margin: '0.5em 0' }}>Date</p>
-                    <TextBox setValue={setTransactionDate} value={transactionDate} placeholder={'Enter Date in dd-MM-yyyy'} />
+                    <DateInput setValue={setTransactionDate} value={transactionDate} />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <Button

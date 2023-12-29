@@ -2,21 +2,7 @@ import './date-picker.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { arrowLeft, arrowRight } from '../../icons/icons';
 import { useState } from 'react';
-import {
-    addDays,
-    addMonths,
-    endOfMonth,
-    endOfWeek,
-    format,
-    isAfter,
-    isBefore,
-    isSameDay,
-    parse,
-    startOfMonth,
-    startOfWeek,
-    subDays,
-    subMonths
-} from 'date-fns/esm';
+import { addDays, addMonths, endOfMonth, endOfWeek, format, isAfter, isBefore, isSameDay, parse, startOfMonth, startOfWeek, subDays, subMonths } from 'date-fns/esm';
 
 export interface DateRange {
     startDate: Date;
@@ -54,7 +40,7 @@ const rangeToSelection = (dateRange: DateRange): string[] => {
     return newSoftSelectionRange;
 };
 
-const DatePicker = ({ range, onSelectionChange }: { range: DateRange; onSelectionChange: (dateRange: DateRange) => any | void }) => {
+const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { range: DateRange; onSelectionChange: (dateRange: DateRange) => any | void; enableSelection: boolean }) => {
     const [month, setMonth] = useState(range?.startDate ? range.startDate.getMonth() : new Date().getMonth());
     const [year, setYear] = useState(range?.startDate ? range.startDate.getFullYear() : new Date().getMonth());
     const [selectionInPreview, setSelectionInPreview] = useState(false);
@@ -231,6 +217,20 @@ const DatePicker = ({ range, onSelectionChange }: { range: DateRange; onSelectio
     };
 
     const _handleOnClick = (elementId: string) => {
+        if (!enableSelection) {
+            let start = _parse(elementId);
+            setSelection({
+                start: elementId,
+                middle: [],
+                end: elementId,
+                forward: false
+            });
+            onSelectionChange({
+                startDate: start,
+                endDate: start
+            });
+            return;
+        }
         if (selectionInPreview) {
             if (!selection?.start) return;
             setSelectionInPreview(false);
@@ -297,13 +297,7 @@ const DatePicker = ({ range, onSelectionChange }: { range: DateRange; onSelectio
             const classNames = getClasses(currentMonthDate, true);
             const formattedId: string = _format(currentMonthDate);
             currentMonthDates.push(
-                <button
-                    key={formattedId}
-                    className={classNames}
-                    onMouseOver={() => _handleOnMouseOver(formattedId)}
-                    onMouseLeave={_handleOnMouseLeave}
-                    onClick={() => _handleOnClick(formattedId)}
-                >
+                <button key={formattedId} className={classNames} onMouseOver={() => _handleOnMouseOver(formattedId)} onMouseLeave={_handleOnMouseLeave} onClick={() => _handleOnClick(formattedId)}>
                     {doesRenderSelectionSpan(formattedId) && <span className={renderSelectionSpanClasses(formattedId)}></span>}
                     {doesRenderSoftSelectionSpan(formattedId) && <span className={renderSoftSelectionSpanClasses(formattedId)}></span>}
                     <span className={renderSelectedDaySpanClasses(formattedId)}>{currentMonthDate.getDate()}</span>

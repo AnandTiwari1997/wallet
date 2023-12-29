@@ -74,6 +74,13 @@ export class PnbBankProcessor implements BankProcessor {
             }
 
             let description: string = JSON.stringify(note);
+            transactionInfo = transactionInfo.replace(new RegExp('/(P2A|P2M|P2P)'), '');
+            transactionInfo = transactionInfo.replace(new RegExp('/\\d+/'), '/');
+            let labels: string[] = transactionInfo.split('/');
+            if (labels.length === 1) {
+                labels = transactionInfo.split(' ');
+            }
+
             if (amount.length > 0) {
                 return {
                     transaction_id: '',
@@ -81,7 +88,7 @@ export class PnbBankProcessor implements BankProcessor {
                     transaction_date: parsedMail.date || new Date(),
                     amount: Number.parseFloat(amount),
                     category: Category.OTHER,
-                    labels: [],
+                    labels: labels,
                     note: description,
                     transaction_state: TransactionStatus.COMPLETED,
                     payment_mode: transactionInfo.includes('NEFT') ? PaymentMode.BANK_TRANSFER : 'ATM',

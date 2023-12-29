@@ -1,5 +1,7 @@
+import * as React from 'react';
+
 export interface TabProp {
-    label: string;
+    label: React.ReactNode;
     value: string;
     children: any;
     classes?: string;

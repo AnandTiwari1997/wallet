@@ -174,7 +174,8 @@ export const getInvestmentsTransaction = async (type: string, requestBody: ApiRe
                     latest_nav: transaction.latest_nav,
                     is_credit: transaction.is_credit,
                     portfolio_number: transaction.portfolio_number,
-                    description: transaction.description
+                    description: transaction.description,
+                    isin: transaction.isin
                 };
             } else {
                 transaction = transaction as ProvidentFundTransaction;
@@ -305,4 +306,29 @@ export const addStockTransaction = async (requestBody: ApiRequestBody<StockTrans
             }
         })
         .then((value) => value.data);
+};
+
+export const updateAccountTransaction = async (requestBody: ApiRequestBody<Transaction> = {}): Promise<ApiResponse<Transaction>> => {
+    let response = await axios.put<ApiResponse<Transaction>>(`http://${API_URL}:${API_PORT}/wallet/transaction`, requestBody, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    let data = response.data.results.map<Transaction>((transaction) => {
+        return {
+            transaction_id: transaction.transaction_id,
+            account: transaction.account,
+            transaction_date: transaction.transaction_date,
+            amount: transaction.amount,
+            currency: transaction.currency,
+            dated: transaction.dated,
+            labels: transaction.labels,
+            note: transaction.note,
+            category: Category.getLabel(transaction.category.toString()),
+            transaction_state: TransactionStatus.getLabel(transaction.transaction_state.toString()),
+            transaction_type: TransactionType.getLabel(transaction.transaction_type.toString()),
+            payment_mode: PaymentMode.getLabel(transaction.payment_mode.toString())
+        };
+    });
+    return { results: data, num_found: response.data.num_found };
 };

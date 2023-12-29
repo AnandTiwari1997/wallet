@@ -9,6 +9,7 @@ import {
     faArrowLeft,
     faArrowRight,
     faArrowUp,
+    faCalendar,
     faCaretDown,
     faCaretLeft,
     faCaretRight,
@@ -23,7 +24,8 @@ import {
     faPlus,
     faRefresh,
     faRupee,
-    faRupeeSign
+    faRupeeSign,
+    faSave
 } from '@fortawesome/free-solid-svg-icons';
 
 export const moneyBall = faMoneyBill;
@@ -52,3 +54,5 @@ export const sortDown = faArrowDown;
 export const view = faEye;
 export const close = faClose;
 export const menu = faEllipsisVertical;
+export const calender = faCalendar;
+export const save = faSave;

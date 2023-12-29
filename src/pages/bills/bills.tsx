@@ -16,6 +16,7 @@ import { addMonths, format } from 'date-fns';
 import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import Button from '../../modules/button/button';
 import { ArrayUtil } from '../../data/transaction-data';
+import Badge from '../../modules/badge/badge';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -32,6 +33,7 @@ const BillsPage = () => {
     const [state, dispatch] = useState();
     const [showBillActionMenu, setShowBillActionMenu] = useState(false);
     const [billMenuOptionFor, setBillMenuOptionFor] = useState<string>('');
+    const [dueBillsCount, setDueBillsCount] = useState<number>(0);
 
     const VENDOR: TableColumn = {
         label: 'Vendor',
@@ -90,12 +92,6 @@ const BillsPage = () => {
                     <div
                         style={{
                             width: '100%',
-                            justifyContent: 'right'
-                        }}
-                    >{`All Unpaid Amount:`}</div>
-                    <div
-                        style={{
-                            width: '100%',
                             display: 'flex',
                             justifyContent: 'right',
                             fontWeight: '700'
@@ -104,7 +100,7 @@ const BillsPage = () => {
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {ArrayUtil.sum(rows, (a: TableData<Bill>) => ArrayUtil.sum(a.data, (b: Bill) => b.bill_amount)).toFixed(2)}
+                        {ArrayUtil.sum(rows, (a: TableData<Bill>) => ArrayUtil.sum(a.data, (b: Bill) => (b.bill_status === 'UNPAID' ? b.bill_amount : 0))).toFixed(2)}
                     </div>
                 </div>
             );
@@ -167,7 +163,9 @@ const BillsPage = () => {
         key: 'bill_consumer_no'
     };
 
-    const columnsPerTab: { [key: string]: TableColumn[] } = {
+    const columnsPerTab: {
+        [key: string]: TableColumn[];
+    } = {
         ACTIVE: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, NEXT_BILL_DATE, ACTION],
         DUE: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, LAST_BILL_DATE, TRANSACTION_DATE, DUE_BILLS, ACTION],
         ALL: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, NEXT_BILL_DATE, TRANSACTION_DATE, STATUS, BILL_AMOUNT, ACTION]
@@ -188,9 +186,18 @@ const BillsPage = () => {
             setCount(value.num_found);
         });
     };
+    const getDueBillsCount = () => {
+        let criteria = buildCriteria('DUE');
+        let body: ApiRequestBody<Bill> = { criteria: criteria };
+        getBills(body, dispatch).then((value) => {
+            setDueBillsCount(value.num_found);
+            setDueBillsCount(value.num_found);
+        });
+    };
 
     useEffect(() => {
         fetchBills();
+        getDueBillsCount();
     }, [selectedTab]);
 
     const buildCriteria = (label: string) => {
@@ -216,6 +223,14 @@ const BillsPage = () => {
                 onPagination={(tablePagination) => console.log(tablePagination)}
                 count={count}
             />
+        );
+    };
+
+    const _renderBadgedLabel = (count: number) => {
+        return (
+            <Badge badgeContent={count} anchorOrigin={{ vertical: 'center', horizontal: 'center' }}>
+                Due Bills
+            </Badge>
         );
     };
 
@@ -245,7 +260,7 @@ const BillsPage = () => {
                     <Tab label={'Upcoming Bills'} value={'ACTIVE'} classes={'tab--width'}>
                         {_renderTabData('ACTIVE')}
                     </Tab>
-                    <Tab label={'Due Bills'} value={'DUE'} classes={'tab--width'}>
+                    <Tab label={_renderBadgedLabel(dueBillsCount)} value={'DUE'} classes={'tab--width'}>
                         {_renderTabData('DUE')}
                     </Tab>
                     <Tab label={'All Bills'} value={'ALL'} classes={'tab--width'}>

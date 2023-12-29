@@ -6,7 +6,7 @@ import { Logger } from '../../core/logger.js';
 import fs from 'fs';
 import path from 'path';
 import { rootDirectoryPath } from '../../server.js';
-import { format, parse } from 'date-fns';
+import { format, isBefore, parse } from 'date-fns';
 import { ALL_STOCKS, ArrayUtil } from '../../constant.js';
 import { holdingRepository } from '../../database/repository/holding-repository.js';
 import { StockTransaction } from '../../database/models/stock-transaction.js';
@@ -50,6 +50,7 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                         const iFetch = connection.fetch(uids, {
                             bodies: ''
                         });
+                        let alreadyProcessed = 0;
                         let fileNo = 1;
                         let files: { [key: string]: boolean } = {};
                         iFetch.on('message', function (msg, sequenceNumber) {
@@ -57,6 +58,10 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                 simpleParser(stream, async (error, parsedMail) => {
                                     if (error) {
                                         logger.error(error.message);
+                                        return;
+                                    }
+                                    if (isBefore(parsedMail.date ? parsedMail.date : new Date(), dematAccount.last_synced_on)) {
+                                        alreadyProcessed++;
                                         return;
                                     }
                                     if (!parsedMail.text && !parsedMail.html) return;
@@ -87,7 +92,7 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                         }[] = JSON.parse(newData);
                                         if (fileNo === 1) eventEmitter.emit('stock', ['start', dematAccount]);
                                         eventEmitter.emit('stock', parsedData);
-                                        if (fileNo === uids.length) eventEmitter.emit('stock', ['end', dematAccount]);
+                                        if (fileNo + alreadyProcessed === uids.length) eventEmitter.emit('stock', ['end', dematAccount]);
                                         fileNo++;
                                     }
                                 });

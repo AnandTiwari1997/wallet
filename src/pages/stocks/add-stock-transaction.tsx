@@ -1,11 +1,12 @@
 import TextBox from '../../modules/text-box/text-box';
 import Select, { SelectOption } from '../../modules/select/select';
 import { format, parse } from 'date-fns';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useGlobalLoadingState } from '../../index';
 import { DematAccount, Holding, StockTransaction } from '../../data/models';
 import { addStockTransaction, getStockHolding } from '../../modules/backend/BackendApi';
 import { v4 } from 'uuid';
+import DateInput from '../../modules/date-input/date-input';
 
 const AddStockTransaction = ({
     accountMap,
@@ -84,7 +85,7 @@ const AddStockTransaction = ({
                     <TextBox setValue={setTransactionPrice} value={transactionPrice} placeholder={'Enter Account Name'} />
 
                     <p>Transaction Date</p>
-                    <TextBox setValue={setTransactionDate} value={transactionDate} placeholder={'Enter Loan Start Date in dd-MM-yyyy'} />
+                    <DateInput setValue={setTransactionDate} value={transactionDate} />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button

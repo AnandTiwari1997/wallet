@@ -3,9 +3,9 @@ import CSS from 'csstype';
 import './transaction.css';
 import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
 import { useEffect, useState } from 'react';
-import { indianRupee, view } from '../../icons/icons';
+import { edit, indianRupee, save, view } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ApiCriteria, getAccounts, getAllTransactions } from '../../modules/backend/BackendApi';
+import { ApiCriteria, getAccounts, getAllTransactions, updateAccountTransaction } from '../../modules/backend/BackendApi';
 import Table, { TableColumn, TablePagination } from '../../modules/table/table';
 import { startOfYear } from 'date-fns/esm';
 import { format } from 'date-fns';
@@ -16,6 +16,7 @@ import { Account, Transaction } from '../../data/models';
 import Select, { SelectOption } from '../../modules/select/select';
 import Button from '../../modules/button/button';
 import AddTransaction from './add-transaction';
+import Chip from '../../modules/chips/chip';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -48,6 +49,8 @@ const TransactionPage = () => {
     const [showAddTransaction, setShowAddTransaction] = useState(false);
 
     const [state, dispatch] = useGlobalLoadingState();
+    const [category, setCategory] = useState<string>('');
+    const [categoryUpdateRow, setCategoryUpdateRow] = useState<Transaction | undefined>(undefined);
 
     const _getCriteria = (start: Date, end: Date, offset: number, limit: number) => {
         let criteria: ApiCriteria = {
@@ -181,6 +184,94 @@ const TransactionPage = () => {
                         </div>
                     </div>
                 );
+            },
+            customRender: (row: Transaction) => {
+                return (
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            width: '100%'
+                        }}
+                    >
+                        {!(categoryUpdateRow?.transaction_id === row.transaction_id) && (
+                            <>
+                                <div
+                                    style={{
+                                        width: '80%',
+                                        textAlign: 'left',
+                                        fontWeight: '700'
+                                    }}
+                                >
+                                    {row.category.toString()}
+                                </div>
+                                <div>
+                                    <i
+                                        className="icon"
+                                        onClick={() => {
+                                            setCategory(row.category.toString());
+                                            setCategoryUpdateRow(row);
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <FontAwesomeIcon icon={edit} />
+                                    </i>
+                                </div>
+                            </>
+                        )}
+                        {categoryUpdateRow?.transaction_id === row.transaction_id && (
+                            <>
+                                <div
+                                    style={{
+                                        width: '80%',
+                                        textAlign: 'left',
+                                        fontWeight: '700'
+                                    }}
+                                >
+                                    <Select
+                                        style={{
+                                            minWidth: 'unset'
+                                        }}
+                                        selectedOption={category}
+                                        options={Category.get()}
+                                        onChange={(event) => {
+                                            if (event) {
+                                                if (categoryUpdateRow) {
+                                                    categoryUpdateRow.category = event.target.value;
+                                                    setCategory(categoryUpdateRow.category.toString());
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        width: '20%',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <i
+                                        className="icon"
+                                        onClick={() => {
+                                            if (categoryUpdateRow) {
+                                                categoryUpdateRow.category = category;
+                                                updateAccountTransaction({ data: categoryUpdateRow }).then((value) => {
+                                                    row.category = value.results[0].category;
+                                                    setCategoryUpdateRow(undefined);
+                                                });
+                                            }
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <FontAwesomeIcon icon={save} />
+                                    </i>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                );
             }
         },
         {
@@ -205,23 +296,44 @@ const TransactionPage = () => {
         {
             key: 'labels',
             label: 'Labels',
-            groupByRender: (row: Transaction[]) => {
+            // groupByRender: (row: Transaction[]) => {
+            //     return (
+            //         <div style={{ display: 'block' }}>
+            //             <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Labels Used:`}</div>
+            //             <div
+            //                 style={{
+            //                     width: '100%',
+            //                     textAlign: 'left',
+            //                     fontWeight: '700'
+            //                 }}
+            //             >
+            //                 {row[0].labels.map((value) => {
+            //                     return (
+            //                         <>
+            //                             <Chip label={value} variant={''} />
+            //                         </>
+            //                     );
+            //                 })}
+            //             </div>
+            //         </div>
+            //     );
+            // },
+            customRender: (row: Transaction) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Labels Used:`}</div>
+                    <>
                         <div
                             style={{
                                 width: '100%',
-                                textAlign: 'left',
-                                fontWeight: '700'
+                                textAlign: 'left'
                             }}
                         >
-                            {row[0].labels ? row[0].labels : 'None'}
+                            {row.labels.map((value) => {
+                                return <Chip label={value} variant={'outline'} />;
+                            })}
                         </div>
-                    </div>
+                    </>
                 );
-            },
-            customRender: (row: Transaction) => (row.labels ? row.labels : 'None')
+            }
         },
         {
             key: 'amount',

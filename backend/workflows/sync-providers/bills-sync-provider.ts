@@ -7,7 +7,7 @@ import { Bill } from '../../database/models/bill.js';
 import { simpleParser } from 'mailparser';
 import { BillProcessorFactory } from '../processor/bill-processor.js';
 import { getFirefoxWebDriver } from '../web-driver-util.js';
-import { ElectricityBillProcessorFactory } from '../processor/processors.js';
+import { CreditCardBillProcessorFactory, ElectricityBillProcessorFactory } from '../processor/processors.js';
 import { electricityVendorMap } from '../../config.js';
 
 const logger = new Logger('BillsSyncProvider');
@@ -51,18 +51,19 @@ class BillsSyncProvider implements SyncProvider<Bill> {
     manualSync(bills: Bill[], deltaSync: boolean) {
         this.syncer(bills);
         bills.forEach((bill) => {
-            if (!bill.auto_sync || bill.category === 'ELECTRICITY_BILL') return;
-            if (bill.bill_status === 'ACTIVE') {
+            if (bill.category !== 'INTERNET_BILL') return;
+            if (bill.label === 'ACTIVE') {
                 if (isBefore(new Date(), addDays(bill.previous_bill_date, 10))) {
                     bill.label = 'DUE';
+                    billRepository.update(bill).then();
                     return;
                 }
             }
-            let syncDate: Date = subMonths(new Date(), 1);
+            let syncDate: Date = new Date();
             if (isBefore(syncDate, bill.next_bill_date)) return;
             connection.search(
                 [
-                    ['SINCE', syncDate],
+                    ['SINCE', bill.next_bill_date],
                     ['SUBJECT', bill.bill_consumer_no]
                 ],
                 (error, uids) => {
@@ -85,8 +86,7 @@ class BillsSyncProvider implements SyncProvider<Bill> {
                                 let billProcessor = BillProcessorFactory.getProcessor(parsedMail.from?.text);
                                 if (billProcessor) {
                                     let updatedBill = billProcessor.process(parsedMail, bill);
-                                    logger.info(updatedBill);
-                                    // if (updatedBill) billRepository.update(bill).then();
+                                    if (updatedBill) billRepository.update(bill).then();
                                 }
                             });
                         });
@@ -101,7 +101,6 @@ class BillsSyncProvider implements SyncProvider<Bill> {
             );
         });
         (async () => {
-            logger.info('Processing Electricity Bills If Any');
             for (let bill of bills) {
                 if (bill.category !== 'ELECTRICITY_BILL') continue;
                 if (bill.label === 'ACTIVE') continue;
@@ -109,7 +108,7 @@ class BillsSyncProvider implements SyncProvider<Bill> {
                 if (!billProcessor) continue;
                 let driver = await getFirefoxWebDriver('', true);
                 let result = await billProcessor.process(bill.bill_consumer_no, driver);
-                logger.info(`Received following for consumer`, bill.bill_consumer_no, ':', result);
+                logger.info(`Received following for consumer`, bill.bill_consumer_no, ':', result?.billAmount, result?.billDueDate);
                 if (result) {
                     if (isAfter(result.billDueDate, bill.previous_bill_date)) {
                         bill.bill_amount = result.billAmount;
@@ -120,6 +119,58 @@ class BillsSyncProvider implements SyncProvider<Bill> {
                         await billRepository.update(bill);
                     }
                 }
+            }
+        })();
+        (async () => {
+            for (let bill of bills) {
+                if (bill.category !== 'CREDIT_CARD_BILL') continue;
+                if (bill.label === 'ACTIVE') {
+                    if (isBefore(new Date(), addDays(bill.previous_bill_date, 15))) {
+                        bill.label = 'DUE';
+                        billRepository.update(bill).then();
+                        continue;
+                    }
+                }
+                let syncDate: Date = new Date();
+                if (isBefore(syncDate, bill.next_bill_date)) continue;
+                connection.search(
+                    [
+                        ['SINCE', subMonths(bill.next_bill_date, 1)],
+                        ['SUBJECT', bill.bill_consumer_no]
+                    ],
+                    (error, uids) => {
+                        if (error) {
+                            logger.error(error.message);
+                            return;
+                        }
+                        if (uids.length === 0) return;
+                        const iFetch = connection.fetch(uids, {
+                            bodies: ''
+                        });
+                        iFetch.on('message', function (msg, sequenceNumber) {
+                            msg.once('body', function (stream, info) {
+                                simpleParser(stream, async (error, parsedMail) => {
+                                    if (error) {
+                                        logger.error(error.message);
+                                        return;
+                                    }
+                                    if (!parsedMail.from?.text) return;
+                                    let billProcessor = CreditCardBillProcessorFactory.getProcessor(parsedMail.from?.text);
+                                    if (billProcessor) {
+                                        let updatedBill = billProcessor.process(parsedMail, bill);
+                                        if (updatedBill) billRepository.update(bill).then();
+                                    }
+                                });
+                            });
+                        });
+                        iFetch.on('error', (error) => {
+                            logger.error(`Error On Processing Mail ${error.message}`);
+                        });
+                        iFetch.on('end', () => {
+                            logger.info(`Message has been processed`);
+                        });
+                    }
+                );
             }
         })();
     }

@@ -39,4 +39,18 @@ router.post(
         return new SuccessResponse<ApiResponseBody<TransactionDto>>(apiResponse).send(res);
     })
 );
+router.put(
+    '/',
+    AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<TransactionDto>, ApiRequestBody<TransactionDto>>, res: Response<ApiResponseBody<TransactionDto>>) => {
+        let transactionDto = req.body.data;
+        if (!transactionDto) throw new BadRequestError('Invalid transaction provided');
+        let transaction = await accountTransactionRepository.update(TransactionBuilder.toTransaction(transactionDto));
+        if (!transaction) throw new InternalError('Not able to update transaction');
+        let apiResponse: ApiResponseBody<TransactionDto> = {
+            num_found: 1,
+            results: [TransactionBuilder.toTransactionDto(transaction)]
+        };
+        return new SuccessResponse<ApiResponseBody<TransactionDto>>(apiResponse).send(res);
+    })
+);
 export default router;

@@ -39,7 +39,7 @@ export class LicHflBankProcessor implements BankProcessor {
                         transaction_date: parsedMail.date || new Date(),
                         amount: Number.parseFloat(note.transactionAmount),
                         category: 'EMI',
-                        labels: [],
+                        labels: ['LIC', 'EMI', 'Loan Account'],
                         note: JSON.stringify(note),
                         transaction_state: TransactionStatus.COMPLETED,
                         payment_mode: PaymentMode.BANK_TRANSFER,

@@ -9,6 +9,21 @@ import { getAccounts } from '../../modules/backend/BackendApi';
 import { useGlobalLoadingState } from '../../index';
 import Dialog from '../../modules/dialog/dialog';
 import AddAccount from '../account/add-account';
+import { Chart, registerables } from 'chart.js';
+import { startOfMonth } from 'date-fns';
+import ExpenseChart from './charts/expense-chart';
+import LoanAccountBalancePerAccountChart from './charts/loan-account-balance-per-account-chart';
+import MutualFundInvestmentChart from './charts/mutual-fund-investment-chart';
+import ProvidentFundInvestmentChart from './charts/provident-fund-investment-chart';
+import StocksInvestmentChart from './charts/stocks-investment-chart';
+import StockInvestmentChart from './charts/stock-investment-chart';
+import AmountPerTransactionTypeChart from './charts/ammount-per-transaction-type-chart';
+import ExpensePerCategoryChart from './charts/expense-per-category-chart';
+import BalancePerAccountChart from './charts/balance-per-account-chart';
+import CreditCardUsagePerMonthChart from './charts/credit-card-usage-per-month-chart';
+import CreditCardBalancePerAccountChart from './charts/credit-card-balance-per-account-chart';
+
+Chart.register(...registerables);
 
 const accountTopDivStyle: CSS.Properties = {
     display: 'flex',
@@ -53,12 +68,16 @@ const DashboardPage = () => {
     const [state, dispatch] = useGlobalLoadingState();
     const [showAddAccount, setShowAddAccount] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
+    const [range, setRange] = useState<{ from: Date; to: Date }>({
+        from: startOfMonth(new Date()),
+        to: new Date()
+    });
 
     useEffect(() => {
         getAccounts(dispatch).then((response) => {
             setAccounts(response.results);
         });
-    }, [setAccounts, getAccounts]);
+    }, [range]);
 
     const accountCards = accounts.map((account) => {
         const backgroundColor: CSS.Properties = {
@@ -122,7 +141,71 @@ const DashboardPage = () => {
                 </div>
             </div>
             <div className="_1G4RrpLL512uJptsH35-hS">
-                <CalenderPicker onChange={(item) => console.log(item)} />
+                <CalenderPicker
+                    onChange={(item) => {
+                        setRange({ from: item.rangeStart, to: item.rangeEnd });
+                    }}
+                    range={range}
+                />
+            </div>
+            <div className="dashboard_chart_body_wrapper">
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <ExpenseChart range={range} />
+                        </div>
+                    </div>
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <AmountPerTransactionTypeChart range={range} />
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <ExpensePerCategoryChart range={range} />
+                        </div>
+                    </div>
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <BalancePerAccountChart />
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <LoanAccountBalancePerAccountChart />
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <CreditCardBalancePerAccountChart />
+                        </div>
+                    </div>
+                    <div className="dashboard_chart_wrapper">
+                        <CreditCardUsagePerMonthChart range={range} />
+                    </div>
+                </div>
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <MutualFundInvestmentChart />
+                    </div>
+                    <div className="dashboard_chart_wrapper">
+                        <ProvidentFundInvestmentChart />
+                    </div>
+                </div>
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <StocksInvestmentChart />
+                    </div>
+                    <div className="dashboard_chart_wrapper">
+                        <StockInvestmentChart />
+                    </div>
+                </div>
             </div>
             <Dialog
                 open={showAddAccount}

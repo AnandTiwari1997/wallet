@@ -79,8 +79,18 @@ class AccountTransactionRepository implements Repository<Transaction, string> {
         }
     }
 
-    update(item: Transaction): Promise<Transaction | undefined> {
-        return Promise.resolve(undefined);
+    async update(item: Transaction): Promise<Transaction | undefined> {
+        try {
+            let queryResult = await sqlDatabaseProvider.execute<Transaction>(
+                'UPDATE account_transaction SET category=$1 WHERE transaction_id=$2 RETURNING *',
+                [item.category, item.transaction_id],
+                true
+            );
+            return await this.find(queryResult.rows[0].transaction_id);
+        } catch (error) {
+            logger.error(`[Update] - Error On Update ${error}`);
+            return;
+        }
     }
 
     generateId = (item: Transaction): string => {

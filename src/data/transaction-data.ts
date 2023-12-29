@@ -23,12 +23,14 @@ export class PaymentMode {
     static BANK_TRANSFER = { label: 'Bank Transfer', value: 'BANK_TRANSFER' };
     static MOBILE_TRANSFER = { label: 'Mobile Transfer', value: 'MOBILE_TRANSFER' };
     static CHEQUE = { label: 'Cheque', value: 'CHEQUE' };
+    static ATM = { label: 'ATM', value: 'ATM' };
 
     static paymentModeMap: { [key: string]: { label: string; value: string } } = {
         CASH: PaymentMode.CASH,
         BANK_TRANSFER: PaymentMode.BANK_TRANSFER,
         MOBILE_TRANSFER: PaymentMode.MOBILE_TRANSFER,
-        CHEQUE: PaymentMode.CHEQUE
+        CHEQUE: PaymentMode.CHEQUE,
+        ATM: PaymentMode.ATM
     };
 
     static getLabel(value: string) {
@@ -72,6 +74,8 @@ export class Category {
     static RENT = { label: 'Rent', value: 'RENT' };
     static GROCERY = { label: 'Grocery', value: 'GROCERY' };
     static EMI = { label: 'EMI', value: 'EMI' };
+    static DAIRY_PRODUCT = { label: 'Dairy Product', value: 'DAIRY_PRODUCT' };
+    static HOUSE_CHORES = { label: 'House Chores', value: 'HOUSE_CHORES' };
 
     static categoryMap: { [key: string]: { label: string; value: string } } = {
         SALARY: Category.SALARY,
@@ -86,7 +90,9 @@ export class Category {
         SUBSCRIPTION: Category.SUBSCRIPTION,
         RENT: Category.RENT,
         GROCERY: Category.GROCERY,
-        EMI: Category.EMI
+        EMI: Category.EMI,
+        DAIRY_PRODUCT: Category.DAIRY_PRODUCT,
+        HOUSE_CHORES: Category.HOUSE_CHORES
     };
 
     static getLabel(value: string) {
@@ -107,6 +113,8 @@ export class Category {
             Category.BROADBAND_RECHARGE,
             Category.PHONE_RECHARGE,
             Category.EMI,
+            Category.DAIRY_PRODUCT,
+            Category.HOUSE_CHORES,
             Category.OTHERS
         ];
     }

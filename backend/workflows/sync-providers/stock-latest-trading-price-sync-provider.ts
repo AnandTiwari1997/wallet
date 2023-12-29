@@ -28,7 +28,7 @@ class StockLatestTradingPriceSyncProvider implements SyncProvider<Holding> {
                 }
             }
             if (holding.current_price === currentPrice) return;
-            logger.info(`Updated price of ${holding.stock_name} to ${currentPrice}`);
+            logger.debug(`Updated price of ${holding.stock_name} to ${currentPrice}`);
             await holdingRepository.update({
                 holding_id: holding.holding_id,
                 stock_name: holding.stock_name,

@@ -13,20 +13,20 @@ export class AxisBankProcessor implements BankProcessor {
     regexMap: { [key: string]: { amount: RegExp; account: RegExp; date: RegExp; description: RegExp } } = {
         BANK: {
             account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
-            amount: new RegExp('(\\d+(\\.\\d+)?)'),
-            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)'),
+            amount: new RegExp('(INR|INR.|INR |INR. |Rs|Rs.|Rs |Rs. )(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s([^.]*)|(IST)*\\sby\\s)([^.]*)'),
             date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
         },
         LOAN: {
             account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
-            amount: new RegExp('(\\d+(\\.\\d+)?)'),
-            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)'),
+            amount: new RegExp('(INR|INR.|INR |INR. |Rs|Rs.|Rs |Rs. )(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s([^.]*)|(IST)*\\sby\\s)([^.]*)'),
             date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
         },
         CREDIT_CARD: {
             account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
-            amount: new RegExp('INR (\\d+(\\.\\d+)?)'),
-            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s)([^.]*)'),
+            amount: new RegExp('(INR|INR.|INR |INR. |Rs|Rs.|Rs |Rs. )(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s([^.]*)|(IST)*\\sby\\s)([^.]*)'),
             date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
         }
     };
@@ -79,6 +79,14 @@ export class AxisBankProcessor implements BankProcessor {
                 transactionInfo: account.account_type === 'BANK' || account.account_type === 'CREDIT_CARD' ? transactionInfo : this.infoMap[account.account_type],
                 transactionAmount: amount
             };
+            let description: string = JSON.stringify(note);
+            transactionInfo = transactionInfo.replace(new RegExp('/(P2A|P2M|P2P)'), '');
+            transactionInfo = transactionInfo.replace(new RegExp('/\\d+/'), '/');
+            let labels: string[] = transactionInfo.split('/');
+            if (labels.length === 1) {
+                labels = account.account_type === 'LOAN' ? ['Axis Bank', 'Loan Account', 'EMI'] : labels;
+                labels = account.account_type === 'CREDIT_CARD' ? ['Credit Card', 'Payment'] : labels;
+            }
 
             if (account.account_type === 'BANK') {
                 if (accountNo.includes('XX')) {
@@ -91,8 +99,10 @@ export class AxisBankProcessor implements BankProcessor {
                     if (actualAccountNumber !== accountNo) return;
                 }
             }
-            let description: string = JSON.stringify(note);
             let date: Date = parse(transactionDateTime, 'dd-MM-yy HH:mm:ss', new Date());
+            if (isNaN(date.getTime())) {
+                date = parse(transactionDateTime, 'dd-MM-yyyy HH:mm:ss', new Date());
+            }
             date = subHours(date, 5);
             date = subMinutes(date, 30);
             if (amount.length > 0) {
@@ -102,7 +112,7 @@ export class AxisBankProcessor implements BankProcessor {
                     transaction_date: date,
                     amount: Number.parseFloat(amount),
                     category: Category.OTHER,
-                    labels: [],
+                    labels: labels,
                     note: description,
                     transaction_state: TransactionStatus.COMPLETED,
                     payment_mode: account.account_type === 'BANK' ? (transactionInfo.includes('UPI') ? PaymentMode.MOBILE_TRANSFER : PaymentMode.BANK_TRANSFER) : PaymentMode.BANK_TRANSFER,
@@ -117,7 +127,7 @@ export class AxisBankProcessor implements BankProcessor {
 
     getAmount(mailString: string, regex: RegExp | undefined): string {
         let matchArray = mailString?.match(regex || this.regexMap['BANK']['amount']);
-        if (matchArray) return matchArray[1];
+        if (matchArray) return matchArray[2];
         return '';
     }
 
@@ -129,7 +139,10 @@ export class AxisBankProcessor implements BankProcessor {
 
     getDescription(mailString: string, regex: RegExp | undefined): string {
         let matchArray = mailString?.match(regex || this.regexMap['BANK']['description']);
-        if (matchArray) return matchArray[3];
+        if (matchArray) {
+            if (matchArray[3]) return matchArray[3];
+            else if (matchArray[5]) return matchArray[5];
+        }
         return '';
     }
 

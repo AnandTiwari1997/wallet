@@ -8,13 +8,7 @@ import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
 import { differenceInDays, differenceInMonths, isSameDay, isSameMonth, isSameWeek, isSameYear, subMonths } from 'date-fns';
 import DatePicker, { DateRange } from '../date-picker/date-picker';
 
-const RangePicker = ({
-    value,
-    onChange
-}: {
-    value: OnCalenderPickerChange | undefined;
-    onChange: (change: OnCalenderPickerChange, picker: string) => void;
-}) => {
+const RangePicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
     const getRangeFromValue = (value: string | undefined): DateRange => {
         switch (value) {
             case '7-days':
@@ -233,16 +227,9 @@ const RangePicker = ({
                             {/*  onChange={(item) => handleDateSelection(item)}*/}
                             {/*  showDateDisplay*/}
                             {/*/>*/}
-                            <DatePicker range={state} onSelectionChange={(dateRange) => handleDateSelection(dateRange)} />
+                            <DatePicker range={state} onSelectionChange={(dateRange) => handleDateSelection(dateRange)} enableSelection />
                             <div className="custom-date-range-apply-button-container">
-                                <button
-                                    className="custom-date-range-apply-button"
-                                    tabIndex={-1}
-                                    type="button"
-                                    role="tab"
-                                    aria-selected="false"
-                                    onClick={handleCustomDateRangeApply}
-                                >
+                                <button className="custom-date-range-apply-button" tabIndex={-1} type="button" role="tab" aria-selected="false" onClick={handleCustomDateRangeApply}>
                                     Apply
                                     <span className="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"></span>
                                 </button>

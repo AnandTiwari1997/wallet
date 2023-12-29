@@ -10,6 +10,8 @@ import { MaharashtraStateElectricityDistributionProcessor } from './maharastra-s
 import { DematAccount } from '../../database/models/demat-account.js';
 import { NextBillionContractNoteProcessor } from './nextbillion-contract-note-processor.js';
 import { ZerodhaContractNoteProcessor } from './zerodha-contract-note-processor.js';
+import { Bill } from '../../database/models/bill.js';
+import { AxisBankCreditCardBillProcessor } from './axis-bank-credit-card-bill-processor.js';
 
 export interface BankProcessor {
     process: (parsedMail: ParsedMail, account: Account) => Transaction | undefined;
@@ -72,6 +74,21 @@ export class ContractNoteProcessorFactory {
                 return new NextBillionContractNoteProcessor();
             case 'no-reply-contract-notes@reportsmailer.zerodha.net':
                 return new ZerodhaContractNoteProcessor();
+            default:
+                return;
+        }
+    };
+}
+
+export interface CreditCardBillProcessor {
+    process: (parsedMail: ParsedMail, bill: Bill) => Bill | undefined;
+}
+
+export class CreditCardBillProcessorFactory {
+    static getProcessor = (vendorName: string): CreditCardBillProcessor | undefined => {
+        switch (vendorName) {
+            case 'cc.statements@axisbank.com':
+                return new AxisBankCreditCardBillProcessor();
             default:
                 return;
         }

@@ -1,15 +1,20 @@
 import './select.css';
-import { ChangeEventHandler } from 'react';
+import React from 'react';
 
 export interface SelectOption {
     value: any;
     label: string;
 }
 
-const Select = ({ options, onChange, selectedOption }: { options: SelectOption[]; onChange: ChangeEventHandler<HTMLSelectElement> | undefined; selectedOption?: any }) => {
+type SelectProps = {
+    options: SelectOption[];
+    selectedOption: any;
+} & React.ComponentPropsWithoutRef<'select'>;
+
+const Select: React.FC<SelectProps> = ({ options, selectedOption, ...props }) => {
     return (
         <div className="select">
-            <select onChange={onChange} value={selectedOption}>
+            <select onChange={props['onChange']} value={selectedOption}>
                 {options.map((option) => (
                     <option value={option.value}>{option.label}</option>
                 ))}

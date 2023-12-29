@@ -61,7 +61,8 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                             { value: 'ELECTRICITY_BILL', label: 'Electricity' },
                             { value: 'MUTUAL_FUND_BILL', label: 'Mutual Fund' },
                             { value: 'MONTHLY_INSTALLMENT_BILL', label: 'EMI' },
-                            { value: 'RENT', label: 'Rent' }
+                            { value: 'RENT', label: 'Rent' },
+                            { value: 'CREDIT_CARD_BILL', label: 'Credit Card' }
                         ]}
                         onChange={(event) => {
                             if (event.target.value === 'ELECTRICITY_BILL') {
@@ -93,7 +94,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                     <p style={{ margin: '0.5em 0' }}>Bill Name</p>
                     <TextBox setValue={setBillName} value={billName} placeholder={'Enter Bill Name'} />
 
-                    {billCategory !== 'ELECTRICITY_BILL' && billCategory !== 'INTERNET_BILL' && (
+                    {billCategory !== 'ELECTRICITY_BILL' && billCategory !== 'INTERNET_BILL' && billCategory !== 'CREDIT_CARD_BILL' && (
                         <>
                             <p style={{ margin: '0.5em 0' }}>Billing Date</p>
                             <Select
@@ -108,7 +109,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                         </>
                     )}
 
-                    {billCategory !== 'ELECTRICITY_BILL' && billCategory !== 'INTERNET_BILL' && (
+                    {billCategory !== 'ELECTRICITY_BILL' && billCategory !== 'INTERNET_BILL' && billCategory !== 'CREDIT_CARD_BILL' && (
                         <>
                             <p style={{ margin: '0.5em 0' }}>Bill Amount</p>
                             <TextBox setValue={setBillAmount} value={billAmount} type={'number'} placeholder={'Enter Bill Amount'} />
@@ -123,7 +124,7 @@ const AddBill = ({ bill, onSubmit }: { bill?: Bill; onSubmit: (success: boolean,
                                 let date = new Date(new Date().setDate(day));
                                 if (day < new Date().getDate()) date = addMonths(date, 1);
                                 let auto_sync = false;
-                                if (billCategory === 'ELECTRICITY_BILL' || billCategory !== 'INTERNET_BILL') {
+                                if (billCategory === 'ELECTRICITY_BILL' || billCategory === 'INTERNET_BILL' || billCategory === 'CREDIT_CARD_BILL') {
                                     date = new Date();
                                     setBillAmount(0.0);
                                     auto_sync = true;
