@@ -1,18 +1,16 @@
 import './badge.css';
 import React from 'react';
 
-const Badge = ({
-    children,
-    badgeContent,
-    anchorOrigin
-}: {
-    children: any;
+export interface BadgeProp {
     badgeContent: any;
-    anchorOrigin?: {
+    anchorOrigin: {
         vertical: string;
         horizontal: string;
     };
-}) => {
+    children: any;
+}
+
+const Badge = ({ children, badgeContent, anchorOrigin }: BadgeProp) => {
     return (
         <>
             <span className={'badge-root'}>

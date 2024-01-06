@@ -1,36 +1,17 @@
 import { Doughnut } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
-import { getAccounts } from '../../../modules/backend/BackendApi';
-import { ArrayUtil } from '../../../data/transaction-data';
-import { useGlobalLoadingState } from '../../../index';
+import { Account } from '../../../data/models';
 
-const LoanAccountBalancePerAccountChart = () => {
-    const [state, dispatch] = useGlobalLoadingState();
-    const [liabilityAccount, setLiabilityAccount] = useState<{ [key: string]: number }>({});
+const LoanAccountBalancePerAccountChart = ({ data }: { data: Account[] }) => {
     const [loanAccountChartData, setLoanAccountChartData] = useState<{ key: string; value: number }[]>([]);
 
     useEffect(() => {
-        getAccounts(dispatch).then((response) => {
-            let loanAccounts = response.results.filter((value) => value.account_type === 'LOAN');
-            liabilityAccount['LOAN'] = -1 * ArrayUtil.sum(loanAccounts, (item) => item.account_balance);
-            let loanAccountChartData = loanAccounts.map((value) => {
-                return { key: value.account_name, value: value.account_balance };
-            });
-            let creditCardAccounts = response.results.filter((value) => value.account_type === 'CREDIT_CARD');
-            liabilityAccount['CREDIT_CARD'] =
-                -1 *
-                ArrayUtil.sum(
-                    response.results.filter((value) => value.account_type === 'CREDIT_CARD'),
-                    (item) => item.account_balance
-                );
-            let creditCardAccountChartData = creditCardAccounts.map((value) => {
-                return { key: value.account_name, value: value.account_balance };
-            });
-
-            setLiabilityAccount(liabilityAccount);
-            setLoanAccountChartData(loanAccountChartData);
+        let loanAccounts = data.filter((value) => value.account_type === 'LOAN');
+        let loanAccountChartData = loanAccounts.map((value) => {
+            return { key: value.account_name, value: value.account_balance };
         });
-    }, []);
+        setLoanAccountChartData(loanAccountChartData);
+    }, [data]);
 
     return (
         <>

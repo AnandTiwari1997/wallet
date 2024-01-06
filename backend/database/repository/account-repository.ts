@@ -20,7 +20,7 @@ class AccountRepository implements Repository<Account, number> {
             let queryResult = await sqlDatabaseProvider.execute<Account>(
                 'INSERT INTO account(account_id, account_name, account_balance, account_number, account_type, bank, start_date, last_synced_on, search_text) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *;',
                 [
-                    item.account_id,
+                    AccountRepository.rowCount++,
                     item.account_name,
                     item.account_balance,
                     item.account_number,

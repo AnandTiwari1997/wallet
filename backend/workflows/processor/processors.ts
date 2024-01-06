@@ -12,6 +12,7 @@ import { NextBillionContractNoteProcessor } from './nextbillion-contract-note-pr
 import { ZerodhaContractNoteProcessor } from './zerodha-contract-note-processor.js';
 import { Bill } from '../../database/models/bill.js';
 import { AxisBankCreditCardBillProcessor } from './axis-bank-credit-card-bill-processor.js';
+import { SbiBankProcessor } from './sbi-bank-processor.js';
 
 export interface BankProcessor {
     process: (parsedMail: ParsedMail, account: Account) => Transaction | undefined;
@@ -31,6 +32,8 @@ export class BankProcessorFactory {
                 return new LicHflBankProcessor();
             case 'pnbealert@punjabnationalbank.in':
                 return new PnbBankProcessor();
+            case 'alerts@sbibank.com':
+                return new SbiBankProcessor();
             default:
                 return;
         }

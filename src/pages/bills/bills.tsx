@@ -191,7 +191,6 @@ const BillsPage = () => {
         let body: ApiRequestBody<Bill> = { criteria: criteria };
         getBills(body, dispatch).then((value) => {
             setDueBillsCount(value.num_found);
-            setDueBillsCount(value.num_found);
         });
     };
 

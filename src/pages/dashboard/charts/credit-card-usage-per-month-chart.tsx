@@ -65,7 +65,6 @@ const CreditCardUsagePerMonthChart = ({ range }: { range: { from: Date; to: Date
                 };
                 dataSets.push(dSet);
             }
-            console.log(label);
             setLables(label);
             setDataset(dataSets);
         });

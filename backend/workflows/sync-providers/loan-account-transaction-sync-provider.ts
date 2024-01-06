@@ -66,6 +66,7 @@ export class LoanAccountTransactionSyncProvider implements SyncProvider<Account>
     manualSync(accounts: Account[], deltaSync: boolean): void {
         (async () => {
             accounts.forEach((account) => {
+                logger.info(account.account_name);
                 if (account.account_type !== 'LOAN') return;
                 if (!account.bank) return;
                 bankRepository.find(account.bank?.bank_id).then((bank) => {
@@ -94,7 +95,6 @@ export class LoanAccountTransactionSyncProvider implements SyncProvider<Account>
                                         }
                                         if (!parsedMail.text && !parsedMail.html) return;
                                         if (!parsedMail.from?.value[0].address) return;
-
                                         const bankProcessor: BankProcessor | undefined = BankProcessorFactory.getProcessor(bank.alert_email_id);
                                         if (!bankProcessor) return;
                                         const transaction = bankProcessor.process(parsedMail, account);

@@ -108,7 +108,7 @@ class BillsSyncProvider implements SyncProvider<Bill> {
                 if (!billProcessor) continue;
                 let driver = await getFirefoxWebDriver('', true);
                 let result = await billProcessor.process(bill.bill_consumer_no, driver);
-                logger.info(`Received following for consumer`, bill.bill_consumer_no, ':', result?.billAmount, result?.billDueDate);
+                // logger.info(`Received following for consumer`, bill.bill_consumer_no, ':', result?.billAmount, result?.billDueDate);
                 if (result) {
                     if (isAfter(result.billDueDate, bill.previous_bill_date)) {
                         bill.bill_amount = result.billAmount;

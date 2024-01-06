@@ -52,6 +52,8 @@ const TransactionPage = () => {
     const [category, setCategory] = useState<string>('');
     const [categoryUpdateRow, setCategoryUpdateRow] = useState<Transaction | undefined>(undefined);
 
+    const [selectedCategory, setSelectedCategory] = useState('');
+
     const _getCriteria = (start: Date, end: Date, offset: number, limit: number) => {
         let criteria: ApiCriteria = {
             groupBy: [{ key: 'dated' }],
@@ -74,6 +76,9 @@ const TransactionPage = () => {
         }
         if (transactionType !== '') {
             filters.push({ key: 'transaction_type', value: transactionType });
+        }
+        if (selectedCategory !== '') {
+            filters.push({ key: 'category', value: selectedCategory });
         }
         criteria.filters = filters;
         return criteria;
@@ -296,28 +301,6 @@ const TransactionPage = () => {
         {
             key: 'labels',
             label: 'Labels',
-            // groupByRender: (row: Transaction[]) => {
-            //     return (
-            //         <div style={{ display: 'block' }}>
-            //             <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Labels Used:`}</div>
-            //             <div
-            //                 style={{
-            //                     width: '100%',
-            //                     textAlign: 'left',
-            //                     fontWeight: '700'
-            //                 }}
-            //             >
-            //                 {row[0].labels.map((value) => {
-            //                     return (
-            //                         <>
-            //                             <Chip label={value} variant={''} />
-            //                         </>
-            //                     );
-            //                 })}
-            //             </div>
-            //         </div>
-            //     );
-            // },
             customRender: (row: Transaction) => {
                 return (
                     <>
@@ -419,6 +402,22 @@ const TransactionPage = () => {
                                 setTransactionType(event.target.value);
                             }}
                             options={[{ value: '', label: 'All' }, TransactionType.INCOME, TransactionType.EXPENSE]}
+                        ></Select>
+                    </div>
+                    <div
+                        style={{
+                            margin: '10px 5px',
+                            width: '300px'
+                        }}
+                    >
+                        <p style={{ height: '20px', margin: '0' }}>Category Type: </p>
+                        <Select
+                            selectedOption={selectedCategory}
+                            onChange={(event) => {
+                                setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
+                                setSelectedCategory(event.target.value);
+                            }}
+                            options={[{ value: '', label: 'All' }, ...Category.get()]}
                         ></Select>
                     </div>
                     <div

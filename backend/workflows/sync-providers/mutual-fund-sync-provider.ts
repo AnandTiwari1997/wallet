@@ -4,7 +4,7 @@ import { rootDirectoryPath } from '../../server.js';
 import fs from 'fs';
 import { By, until } from 'selenium-webdriver';
 import { getFirefoxWebDriver } from '../web-driver-util.js';
-import { format, isAfter, startOfMonth } from 'date-fns';
+import { addHours, format, isAfter, startOfMonth } from 'date-fns';
 import { connection, eventEmitter } from '../mail-service.js';
 import { simpleParser } from 'mailparser';
 import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
@@ -25,7 +25,7 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                 }
             });
             logger.info(`Removed Reports Folder`);
-            let driver = await getFirefoxWebDriver(downloadDirectory, false);
+            let driver = await getFirefoxWebDriver(downloadDirectory);
             try {
                 let id = new Date().getTime().toString();
                 await driver.get('https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement');
@@ -113,10 +113,11 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                             connection.search(
                                 [
                                     ['FROM', 'donotreply@camsonline.com'],
-                                    ['ON', date],
+                                    ['ON', addHours(date, 11)],
                                     ['SUBJECT', 'Consolidated Account Statement - CAMS Mailback Request']
                                 ],
                                 (error, mailIds) => {
+                                    logger.info(mailIds.length);
                                     if (mailIds.length === 0) return;
                                     mailIds = mailIds.sort((a, b) => b - a);
                                     const iFetch = connection.fetch(mailIds[0], { bodies: '' });
@@ -144,11 +145,16 @@ export class MutualFundSyncProvider implements SyncProvider<any> {
                                                                 const parsedData: {
                                                                     [key: string]: string;
                                                                 }[] = JSON.parse(newData);
+                                                                await mutualFundRepository.deleteAll();
                                                                 for (let parseData of parsedData) {
                                                                     let mutualFund = MutualFundTransactionBuilder.build(parseData);
                                                                     let mfTransaction = await mutualFundRepository.find(mutualFundRepository.generateId(mutualFund));
                                                                     if (!mfTransaction) {
                                                                         await mutualFundRepository.add(mutualFund);
+                                                                    } else {
+                                                                        mfTransaction.amount = mfTransaction.amount + mutualFund.amount;
+                                                                        mfTransaction.units = mfTransaction.units + mutualFund.units;
+                                                                        await mutualFundRepository.update(mfTransaction);
                                                                     }
                                                                 }
                                                                 const syncTracker = syncTrackerStorage.get('mutual_fund');

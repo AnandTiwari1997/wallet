@@ -76,7 +76,7 @@ export class AxisBankProcessor implements BankProcessor {
             let note = {
                 transactionDate: transactionDateTime,
                 transactionAccount: account.account_type === 'BANK' ? accountNo : account.account_number,
-                transactionInfo: account.account_type === 'BANK' || account.account_type === 'CREDIT_CARD' ? transactionInfo : this.infoMap[account.account_type],
+                transactionInfo: account.account_type === 'BANK' ? transactionInfo : this.infoMap[account.account_type],
                 transactionAmount: amount
             };
             let description: string = JSON.stringify(note);

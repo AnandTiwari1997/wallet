@@ -1,11 +1,11 @@
 import CSS from 'csstype';
 import './dashboard.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Account } from '../../data/models';
+import { Account, Transaction } from '../../data/models';
 import { edit, indianRupee, plus } from '../../icons/icons';
 import CalenderPicker from '../../modules/calender-picker/calender-picker';
 import { useEffect, useState } from 'react';
-import { getAccounts } from '../../modules/backend/BackendApi';
+import { ApiCriteria, getAccounts, getAllTransactions } from '../../modules/backend/BackendApi';
 import { useGlobalLoadingState } from '../../index';
 import Dialog from '../../modules/dialog/dialog';
 import AddAccount from '../account/add-account';
@@ -65,6 +65,7 @@ const topDiv: CSS.Properties = {
 
 const DashboardPage = () => {
     const [accounts, setAccounts] = useState<Account[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [state, dispatch] = useGlobalLoadingState();
     const [showAddAccount, setShowAddAccount] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
@@ -73,9 +74,35 @@ const DashboardPage = () => {
         to: new Date()
     });
 
+    const _getCriteria = (start: Date, end: Date) => {
+        let criteria: ApiCriteria = {
+            filters: [],
+            groupBy: [{ key: 'dated' }],
+            sorts: [{ key: 'dated', ascending: false }],
+            between: [
+                {
+                    key: 'transaction_date',
+                    range: {
+                        start: start.toISOString(),
+                        end: end.toISOString()
+                    }
+                }
+            ]
+        };
+        return criteria;
+    };
+
     useEffect(() => {
         getAccounts(dispatch).then((response) => {
             setAccounts(response.results);
+        });
+        getAllTransactions(
+            {
+                criteria: _getCriteria(range.from, range.to)
+            },
+            dispatch
+        ).then((response) => {
+            setTransactions(response.results);
         });
     }, [range]);
 
@@ -152,38 +179,38 @@ const DashboardPage = () => {
                 <div className="dashboard_chart_row_wrapper">
                     <div className="dashboard_chart_wrapper">
                         <div className="dashboard_chart">
-                            <ExpenseChart range={range} />
+                            <ExpenseChart data={transactions} />
                         </div>
                     </div>
                     <div className="dashboard_chart_wrapper">
                         <div className="dashboard_chart">
-                            <AmountPerTransactionTypeChart range={range} />
-                        </div>
-                    </div>
-                </div>
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <ExpensePerCategoryChart range={range} />
-                        </div>
-                    </div>
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <BalancePerAccountChart />
+                            <AmountPerTransactionTypeChart data={transactions} />
                         </div>
                     </div>
                 </div>
                 <div className="dashboard_chart_row_wrapper">
                     <div className="dashboard_chart_wrapper">
                         <div className="dashboard_chart">
-                            <LoanAccountBalancePerAccountChart />
+                            <ExpensePerCategoryChart data={transactions} />
+                        </div>
+                    </div>
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <BalancePerAccountChart data={accounts} />
                         </div>
                     </div>
                 </div>
                 <div className="dashboard_chart_row_wrapper">
                     <div className="dashboard_chart_wrapper">
                         <div className="dashboard_chart">
-                            <CreditCardBalancePerAccountChart />
+                            <LoanAccountBalancePerAccountChart data={accounts} />
+                        </div>
+                    </div>
+                </div>
+                <div className="dashboard_chart_row_wrapper">
+                    <div className="dashboard_chart_wrapper">
+                        <div className="dashboard_chart">
+                            <CreditCardBalancePerAccountChart data={accounts} />
                         </div>
                     </div>
                     <div className="dashboard_chart_wrapper">

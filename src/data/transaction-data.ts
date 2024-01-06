@@ -76,6 +76,9 @@ export class Category {
     static EMI = { label: 'EMI', value: 'EMI' };
     static DAIRY_PRODUCT = { label: 'Dairy Product', value: 'DAIRY_PRODUCT' };
     static HOUSE_CHORES = { label: 'House Chores', value: 'HOUSE_CHORES' };
+    static SHOPPING = { label: 'Shopping', value: 'SHOPPING' };
+    static TICKETS = { label: 'Ticket', value: 'TICKETS' };
+    static REFUND = { label: 'Refund', value: 'REFUND' };
 
     static categoryMap: { [key: string]: { label: string; value: string } } = {
         SALARY: Category.SALARY,
@@ -92,7 +95,10 @@ export class Category {
         GROCERY: Category.GROCERY,
         EMI: Category.EMI,
         DAIRY_PRODUCT: Category.DAIRY_PRODUCT,
-        HOUSE_CHORES: Category.HOUSE_CHORES
+        HOUSE_CHORES: Category.HOUSE_CHORES,
+        SHOPPING: Category.SHOPPING,
+        TICKETS: Category.TICKETS,
+        REFUND: Category.REFUND
     };
 
     static getLabel(value: string) {
@@ -102,6 +108,7 @@ export class Category {
     static get() {
         return [
             Category.SALARY,
+            Category.SHOPPING,
             Category.INTEREST_RECEIVED,
             Category.RENT,
             Category.SUBSCRIPTION,
@@ -115,6 +122,8 @@ export class Category {
             Category.EMI,
             Category.DAIRY_PRODUCT,
             Category.HOUSE_CHORES,
+            Category.TICKETS,
+            Category.REFUND,
             Category.OTHERS
         ];
     }

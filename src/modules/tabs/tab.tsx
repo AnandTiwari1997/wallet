@@ -1,11 +1,5 @@
 import * as React from 'react';
-
-export interface TabProp {
-    label: React.ReactNode;
-    value: string;
-    children: any;
-    classes?: string;
-}
+import { TabProp } from './tabs';
 
 const Tab = ({ label, value, children, classes }: TabProp) => {
     return <div className={'tab--content'}>{children}</div>;

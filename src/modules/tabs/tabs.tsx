@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { ReactElement, useEffect, useState } from 'react';
 import './tab.css';
-import { TabProp } from './tab';
 
 interface TabHeaderInfo {
     tabLabel: string;
@@ -10,6 +9,13 @@ interface TabHeaderInfo {
 
 interface SelectedTab {
     tabValue: string;
+}
+
+export interface TabProp {
+    label: React.ReactNode;
+    value: string;
+    children: any;
+    classes?: string;
 }
 
 const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: string; children: ReactElement[]; onTabChange?: (selectedTab: SelectedTab) => void }) => {
@@ -40,7 +46,7 @@ const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: 
     return (
         <div {...props} className={'tabs-container'}>
             <div className={'tabs--header'}>
-                {tabHeaders.map((tabHeaderInfo) => {
+                {tabHeaders.map((tabHeaderInfo: TabProp) => {
                     return (
                         <div
                             className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${tabHeaderInfo.classes ? tabHeaderInfo.classes : ''}`}
