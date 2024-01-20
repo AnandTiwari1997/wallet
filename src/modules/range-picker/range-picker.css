@@ -73,6 +73,7 @@
     margin: 5px 0;
     place-content: center;
     display: flex;
+    height: 30px;
 }
 
 .custom-date-range-apply-button {
@@ -109,6 +110,6 @@
     font-size: 0.8rem;
     font-weight: 600;
     white-space: nowrap;
-    background-color: rgb(36, 112, 208);
-    color: rgb(255, 255, 255);
+    /*background-color: rgb(36, 112, 208);*/
+    /*color: rgb(255, 255, 255);*/
 }

@@ -28,7 +28,7 @@
     cursor: pointer;
     color: #fff;
     height: 30%;
-    width: 250px;
+    width: 350px;
     -webkit-user-select: none;
     user-select: none;
     position: relative;
@@ -36,7 +36,7 @@
     margin: 0 1%;
 }
 
-.account-card:hover .pencil.icon {
+.account-card:hover .pencil {
     opacity: 0.7;
 }
 
@@ -49,45 +49,18 @@
     flex: 1;
 }
 
-.pencil.icon {
+.pencil {
     z-index: 10;
     align-self: flex-start;
-    position: absolute !important;
-    right: 0.2rem !important;
+    position: absolute;
+    right: 0.3rem;
+    top: 0.5rem;
     opacity: 0;
     transition: opacity 0.2s ease;
 }
 
-.pencil.icon:hover {
+.pencil:hover {
     opacity: 1 !important;
-}
-
-.icon-square.simple {
-    box-shadow: none;
-}
-
-.icon-square {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 34px;
-    height: 34px;
-    line-height: 1em;
-    border-radius: 5px;
-    font-size: 34px;
-    flex-shrink: 0;
-}
-
-.icon-square.simple > span {
-    font-size: 1em;
-    width: 1em;
-    height: 1em;
-}
-
-.icon-square > span {
-    font-size: 0.8em;
-    width: 0.75em;
-    height: 0.75em;
 }
 
 .account-icon {
@@ -115,8 +88,6 @@
 ._1G4RrpLL512uJptsH35-hS {
     background: rgb(255, 255, 255);
     position: -webkit-sticky;
-    position: sticky;
-    z-index: 5;
     top: 75px;
     display: flex;
     justify-content: center;
@@ -157,4 +128,19 @@
     justify-content: center;
     align-items: center;
     /*width: 80%;*/
+}
+
+.reset-account-selection {
+    background: rgb(37, 52, 60);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    border: 1px solid #e5e9ed;
+    color: white;
+    box-shadow: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.1s ease, color 0.1s ease;
+    border-radius: 10px;
+    cursor: pointer;
 }

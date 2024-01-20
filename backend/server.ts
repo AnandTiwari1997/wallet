@@ -19,7 +19,6 @@ import { environment, port } from './config.js';
 import { accountRepository } from './database/repository/account-repository.js';
 import { bankAccountTransactionSyncProvider } from './workflows/sync-providers/bank-account-transaction-sync-provider.js';
 import { loanAccountTransactionSyncProvider } from './workflows/sync-providers/loan-account-transaction-sync-provider.js';
-import { billSyncProvider } from './workflows/sync-providers/bills-sync-provider.js';
 import { creditCardSyncProvider } from './workflows/sync-providers/credit-card-sync-provider.js';
 import { holdingRepository } from './database/repository/holding-repository.js';
 import { stockLatestTradingPriceSynProvider } from './workflows/sync-providers/stock-latest-trading-price-sync-provider.js';
@@ -94,7 +93,7 @@ app.listen(port, () => {
         stockLatestTradingPriceSynProvider.manualSync(holdings, false);
         let mutualFunds = await mutualFundRepository.findAllDistinctFundByISIN();
         mutualFundNavSyncProvider.manualSync(mutualFunds, false);
-        billSyncProvider.sync();
+        // billSyncProvider.sync();
     });
 });
 

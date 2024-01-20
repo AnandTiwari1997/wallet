@@ -22,6 +22,8 @@ import ExpensePerCategoryChart from './charts/expense-per-category-chart';
 import BalancePerAccountChart from './charts/balance-per-account-chart';
 import CreditCardUsagePerMonthChart from './charts/credit-card-usage-per-month-chart';
 import CreditCardBalancePerAccountChart from './charts/credit-card-balance-per-account-chart';
+import Icon from '../../modules/icon/icon';
+import IconButton from '../../modules/icon/icon-button';
 
 Chart.register(...registerables);
 
@@ -45,6 +47,14 @@ const addAccountCardStyle: CSS.Properties = {
     display: 'flex',
     flexDirection: 'row',
     width: '15%',
+    alignItems: 'center',
+    justifyContent: 'center'
+};
+
+const resetAccountSelectionStyle: CSS.Properties = {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '5%',
     alignItems: 'center',
     justifyContent: 'center'
 };
@@ -73,10 +83,11 @@ const DashboardPage = () => {
         from: startOfMonth(new Date()),
         to: new Date()
     });
+    const [accountForDashboard, setAccountForDashboard] = useState<Account | undefined>(undefined);
 
     const _getCriteria = (start: Date, end: Date) => {
         let criteria: ApiCriteria = {
-            filters: [],
+            filters: accountForDashboard ? [{ key: 'account', value: `${accountForDashboard.account_id}` }] : [],
             groupBy: [{ key: 'dated' }],
             sorts: [{ key: 'dated', ascending: false }],
             between: [
@@ -104,28 +115,43 @@ const DashboardPage = () => {
         ).then((response) => {
             setTransactions(response.results);
         });
-    }, [range]);
+    }, [range, accountForDashboard]);
 
     const accountCards = accounts.map((account) => {
         const backgroundColor: CSS.Properties = {
-            backgroundColor: `${typeof account.bank === 'object' ? account.bank.primary_color : '#e5e9ed'}`,
+            backgroundColor: `${
+                typeof account.bank === 'object'
+                    ? accountForDashboard
+                        ? accountForDashboard.account_id === account.account_id
+                            ? account.bank.primary_color
+                            : '#ccd2db'
+                        : account.bank.primary_color
+                    : '#e5e9ed'
+            }`,
             color: `${typeof account.bank === 'object' && account.bank.primary_color ? 'rgb(255, 255, 255)' : 'black'}`,
             display: 'flex',
             alignItems: 'center'
         };
         return (
-            <div key={account.account_id} className="account-card" style={backgroundColor}>
-                <i
-                    aria-hidden="true"
-                    className="pencil alternate icon"
-                    onClick={() => {
-                        setShowAddAccount(true);
-                        setSelectedAccount(account);
-                    }}
-                >
-                    <FontAwesomeIcon aria-hidden="true" className="icon pencil" icon={edit} />
-                </i>
-
+            <div
+                key={account.account_id}
+                className="account-card"
+                style={backgroundColor}
+                onClick={(event) => {
+                    setAccountForDashboard(account);
+                }}
+            >
+                <div className={'pencil'}>
+                    <IconButton
+                        icon={edit}
+                        className={'alternate'}
+                        onClick={(event) => {
+                            setShowAddAccount(true);
+                            setSelectedAccount(account);
+                            event.stopPropagation();
+                        }}
+                    />
+                </div>
                 <div className="account-icon-container">{account.bank && <i className="account-icon" dangerouslySetInnerHTML={{ __html: account.bank.icon }}></i>}</div>
                 <div className="account-details-container">
                     <div className="account-name">
@@ -135,9 +161,7 @@ const DashboardPage = () => {
                     </div>
                     <div className="account-balance">
                         <span className="">
-                            <i className="icon custom-font-size">
-                                <FontAwesomeIcon icon={indianRupee} />
-                            </i>
+                            <Icon icon={indianRupee} className={'custom-font-size'} />
                             {account.account_balance.toFixed(2)}
                         </span>
                     </div>
@@ -163,6 +187,18 @@ const DashboardPage = () => {
                         <span>Add Account</span>
                     </button>
                 </div>
+                {accountForDashboard && (
+                    <div style={resetAccountSelectionStyle}>
+                        <button
+                            className="reset-account-selection"
+                            onClick={() => {
+                                setAccountForDashboard(undefined);
+                            }}
+                        >
+                            Reset
+                        </button>
+                    </div>
+                )}
                 <div style={scrollableDiv}>
                     <div style={cardWrapperStyle}>{accountCards}</div>
                 </div>

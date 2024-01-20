@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { arrowLeft, arrowRight, expandAll } from '../../icons/icons';
+import { arrowLeft, arrowRight, expandAll, hide, show } from '../../icons/icons';
 import { ArrayUtil } from '../../data/transaction-data';
 import './table.css';
 import CSS from 'csstype';
@@ -9,6 +9,8 @@ import SortColumn, { SortedColumn } from './sort-column';
 import GroupByRows from './group-by-rows';
 import GroupByRow from './group-by-row';
 import { useGlobalLoadingState } from '../../index';
+import IconButton from '../icon/icon-button';
+import Select from '../select/select';
 
 export interface TableColumn {
     key: string;
@@ -19,6 +21,7 @@ export interface TableColumn {
     customRender?: (row: any) => any;
     groupByKey?: (row: any) => string;
     columnFooter?: (rows: TableData<any>[]) => any;
+    hidden?: boolean;
 }
 
 export interface TableData<T> {
@@ -96,6 +99,7 @@ const Table = ({
     // Table Pagination State
     const [currentPageSize, setCurrentPageSize] = useState<number>(25);
     const [currentPageNumber, setCurrentPageNumber] = useState<number>(0);
+    const [hidden, setHidden] = useState<{ [key: string]: boolean | undefined }>({});
 
     // Table Loading state
     const [state, dispatch] = useGlobalLoadingState();
@@ -131,7 +135,11 @@ const Table = ({
             setTableData(newData);
         }
         dispatch(false);
-    }, [rows]);
+        columns.forEach((value) => {
+            hidden[value.key] = value.hidden;
+        });
+        setHidden({ ...hidden });
+    }, [rows, columns]);
 
     const _columns = (): TableColumn[] => {
         if (!groupByColumn || groupByColumn.length == 0) return columns;
@@ -233,6 +241,22 @@ const Table = ({
                                     </SortColumn>
                                 )}
                                 {!column.sortable && <span className={`${index === _columns().length - 1 ? '' : 'td-span'}`}>{column.label}</span>}
+                                {hidden[column.key] !== undefined ? (
+                                    <IconButton
+                                        style={{
+                                            marginLeft: '10px'
+                                        }}
+                                        icon={hidden[column.key] ? show : hide}
+                                        onClick={() => {
+                                            hidden[column.key] = !hidden[column.key];
+                                            column.hidden = hidden[column.key];
+                                            setHidden({ ...hidden });
+                                            setTableData([...tableData]);
+                                        }}
+                                    />
+                                ) : (
+                                    ''
+                                )}
                             </td>
                         );
                     })}
@@ -342,8 +366,9 @@ const Table = ({
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div className="td-footer-page-size-container">
                                 <div className="td-footer-page-size-title">Rows per Page</div>
-                                <select
+                                <Select
                                     className="td-select"
+                                    selectedOption={currentPageSize}
                                     onChange={(event) => {
                                         if (!onPagination) return;
                                         let newPageSize = Number.parseInt(event.target.value);
@@ -354,17 +379,17 @@ const Table = ({
                                             pageNumber: 0
                                         });
                                     }}
-                                >
-                                    <option value={25}>25</option>
-                                    <option value={50}>50</option>
-                                    <option value={75}>75</option>
-                                    <option value={100}>100</option>
-                                </select>
+                                    options={[
+                                        { value: 25, label: '25' },
+                                        { value: 50, label: '50' },
+                                        { value: 75, label: '75' },
+                                        { value: 100, label: '100' }
+                                    ]}
+                                ></Select>
                             </div>
                             <div className="td-footer-page-update">
-                                <button
-                                    className="td-icon-button"
-                                    disabled={currentPageNumber === 0}
+                                <IconButton
+                                    icon={arrowLeft}
                                     onClick={() => {
                                         if (!onPagination) return;
                                         let newPageNumber = currentPageNumber - 1;
@@ -372,15 +397,12 @@ const Table = ({
                                         setCurrentPageNumber(newPageNumber);
                                         onPagination({ pageSize: currentPageSize, pageNumber: newPageNumber });
                                     }}
-                                >
-                                    <FontAwesomeIcon icon={arrowLeft} />
-                                </button>
+                                />
                                 <div className="td-footer-page-details">
                                     <div>{_paginationPageDetails()}</div>
                                 </div>
-                                <button
-                                    className="td-icon-button"
-                                    disabled={currentPageNumber + 1 > count / currentPageSize}
+                                <IconButton
+                                    icon={arrowRight}
                                     onClick={() => {
                                         if (!onPagination) return;
                                         let newPageNumber = currentPageNumber + 1;
@@ -388,9 +410,7 @@ const Table = ({
                                         setCurrentPageNumber(newPageNumber);
                                         onPagination({ pageSize: currentPageSize, pageNumber: newPageNumber });
                                     }}
-                                >
-                                    <FontAwesomeIcon icon={arrowRight} />
-                                </button>
+                                />
                             </div>
                         </div>
                     </td>

@@ -2,7 +2,7 @@ import { Account, Bank, Bill, Broker, DematAccount, Holding, MutualFundTransacti
 import axios from 'axios';
 import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
 
-const API_PORT = 8001;
+const API_PORT = 8000;
 const API_URL = 'localhost';
 
 export interface ApiResponse<T> {

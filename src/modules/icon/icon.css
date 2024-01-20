@@ -1,0 +1,36 @@
+i.icon,
+i.icons {
+    font-size: 1em;
+}
+
+i.icon {
+    display: inline-block;
+    opacity: 1;
+    margin: 0 0.25rem 0 0;
+    width: 1.18em;
+    font-family: Icons;
+    font-style: normal;
+    font-weight: 400;
+    text-decoration: inherit;
+    text-align: center;
+    speak: none;
+    font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.icon-button {
+    padding: 0;
+    margin: 0;
+    background: none;
+    outline: none;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+}
+
+.icon-button:focus {
+    color: black;
+}

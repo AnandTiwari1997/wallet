@@ -46,7 +46,7 @@ const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: 
     return (
         <div {...props} className={'tabs-container'}>
             <div className={'tabs--header'}>
-                {tabHeaders.map((tabHeaderInfo: TabProp) => {
+                {tabHeaders.map((tabHeaderInfo: TabProp, index: number) => {
                     return (
                         <div
                             className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${tabHeaderInfo.classes ? tabHeaderInfo.classes : ''}`}
@@ -58,7 +58,7 @@ const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: 
                                     });
                             }}
                         >
-                            <button className={'tab--label'}>{tabHeaderInfo.label}</button>
+                            <button className={`tab--label ${index < tabHeaders.length - 1 ? 'tab--label-separator' : ''}`}>{tabHeaderInfo.label}</button>
                             <div className={'tab--scroller'}></div>
                         </div>
                     );

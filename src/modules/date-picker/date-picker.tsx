@@ -1,8 +1,8 @@
 import './date-picker.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { arrowLeft, arrowRight } from '../../icons/icons';
 import { useState } from 'react';
 import { addDays, addMonths, endOfMonth, endOfWeek, format, isAfter, isBefore, isSameDay, parse, startOfMonth, startOfWeek, subDays, subMonths } from 'date-fns/esm';
+import IconButton from '../icon/icon-button';
 
 export interface DateRange {
     startDate: Date;
@@ -330,9 +330,7 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
     return (
         <div className="render-date-picker" id="date-picker">
             <div className="render-header">
-                <i aria-hidden="true" className="calender-picker-icon icon arrow-container left" onClick={() => handleDate(false)}>
-                    <FontAwesomeIcon icon={arrowLeft} />
-                </i>
+                <IconButton icon={arrowLeft} className={'arrow-container'} style={{ color: 'rgb(37, 52, 60)' }} onClick={() => handleDate(false)} />
                 <span className="render-header-month-year">
                     <span>
                         <select value={month} onChange={(evt) => setMonth(parseInt(evt.currentTarget.value))}>
@@ -361,9 +359,7 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
                         </select>
                     </span>
                 </span>
-                <i aria-hidden="true" className="calender-picker-icon icon arrow-container" onClick={() => handleDate(true)}>
-                    <FontAwesomeIcon icon={arrowRight} />
-                </i>
+                <IconButton icon={arrowRight} className={'arrow-container'} style={{ color: 'rgb(37, 52, 60)' }} onClick={() => handleDate(true)} />
             </div>
             <div className="render-weekdays">
                 <span className="render-weekday">Sun</span>

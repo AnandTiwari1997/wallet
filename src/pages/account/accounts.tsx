@@ -12,6 +12,7 @@ import MenuOption from '../../modules/menu/menu-option';
 import AddAccount from './add-account';
 import { ArrayUtil } from '../../data/transaction-data';
 import Button from '../../modules/button/button';
+import IconButton from '../../modules/icon/icon-button';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -126,19 +127,15 @@ const AccountPage = () => {
             customRender: (row: Account) => {
                 return (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-                        <button
-                            className="icon-button"
+                        <IconButton
                             id={`account-menu-${row.account_id}`}
+                            icon={menu}
                             onClick={() => {
                                 setAccountMenuOptionFor(row.account_id);
                                 setShowAccountMenu(true);
                                 setSelectedAccount(row);
                             }}
-                        >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={menu} />
-                            </i>
-                        </button>
+                        />
                         <Menu
                             open={showAccountMenu}
                             onClose={() => {

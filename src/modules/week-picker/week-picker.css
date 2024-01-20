@@ -13,7 +13,7 @@
 .title-week {
     padding: 0 0.8rem;
     display: flex;
-    width: fit-content;
+    width: 100%;
     height: 35px;
     justify-content: space-between;
     align-items: center;
@@ -37,7 +37,7 @@
 
 .selected-week {
     color: white;
-    background-color: rgb(36, 112, 208) !important;
+    background-color: rgb(37, 52, 60) !important;
 }
 
 .selected-week-start {
@@ -62,8 +62,8 @@
 
 .arrow-container {
     cursor: pointer;
-    width: 25px !important;
-    height: 25px !important;
+    width: 23px !important;
+    height: 23px !important;
     transition: 0.2s ease-in;
     display: flex !important;
     justify-content: center;
@@ -73,15 +73,6 @@
 
 .left {
     left: 0;
-}
-
-.arrow-container svg {
-    stroke: #454545;
-}
-
-.arrow-container:hover {
-    background-color: #ff9900;
-    border-radius: 15%;
 }
 
 .arrow-container:hover svg {
@@ -118,7 +109,7 @@
 }
 
 .week:hover {
-    background-color: rgb(222, 233, 248) !important;
+    background-color: rgb(187 194 198) !important;
     border-radius: 1.042em;
 }
 

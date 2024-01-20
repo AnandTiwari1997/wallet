@@ -1,11 +1,10 @@
 import CSS from 'csstype';
 import './calender-picker.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { caretDown, caretLeft, caretRight } from '../../icons/icons';
 import { Fragment, useRef, useState } from 'react';
 import Overlay from '../overlay/overlay';
 import WeekPicker from '../week-picker/week-picker';
-import { Tab, Tabs } from '@mui/material';
+// import { Tab, Tabs } from '@mui/material';
 import MonthPicker from '../month-picker/month-picker';
 import YearPicker from '../year-picker/year-picker';
 import RangePicker from '../range-picker/range-picker';
@@ -26,6 +25,10 @@ import {
     startOfYear,
     subDays
 } from 'date-fns/esm';
+import Tabs from '../tabs/tabs';
+import Tab from '../tabs/tab';
+import IconButton from '../icon/icon-button';
+import Icon from '../icon/icon';
 
 const calenerPickerBoxStyle: CSS.Properties = {
     width: '100%',
@@ -41,6 +44,13 @@ export interface OnCalenderPickerChange {
 export interface PickerData {
     activePicker: string;
     values: { [key: string]: OnCalenderPickerChange | undefined };
+}
+
+class CalenderPickerTab {
+    static RANGE = { label: 'Range', value: 'range' };
+    static WEEKS = { label: 'Weeks', value: 'week' };
+    static MONTHS = { label: 'Months', value: 'month' };
+    static YEARS = { label: 'Years', value: 'year' };
 }
 
 const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: OnCalenderPickerChange) => void; range?: { from: Date; to: Date } }) => {
@@ -90,44 +100,6 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
         });
         setValue(value);
         handleOpenPicker(false);
-    };
-
-    const renderTabContent = () => {
-        switch (selectedTab) {
-            case 'week':
-                return <WeekPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />;
-            case 'month':
-                return <MonthPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />;
-            case 'year':
-                return <YearPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />;
-            default:
-                return <RangePicker onChange={onPickerUpdate} value={value.values[selectedTab]} />;
-        }
-    };
-
-    const tabs: { label: string; value: string }[] = [
-        { label: 'Range', value: 'range' },
-        { label: 'Weeks', value: 'week' },
-        { label: 'Months', value: 'month' },
-        { label: 'Years', value: 'year' }
-    ];
-
-    const renderTabs = () => {
-        return tabs.map((tab, index) => {
-            let rootClasses: string = 'tab-root';
-            if (index !== tabs.length - 1) rootClasses += ' tab-root-after';
-            return (
-                <Tab
-                    key={index}
-                    label={tab.label}
-                    value={tab.value}
-                    classes={{
-                        root: rootClasses,
-                        selected: 'tab-selected'
-                    }}
-                />
-            );
-        });
     };
 
     const months: string[] = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -223,39 +195,35 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
 
     return (
         <div className="date-range-picker">
-            <i aria-hidden="true" className="icon" onClick={renderPreviousRange}>
-                <FontAwesomeIcon icon={caretLeft} />
-            </i>
+            <IconButton icon={caretLeft} onClick={renderPreviousRange} />
             <div className="css-wi57kk-GridEmotionStyles--headerRowItem-Header--headerRowItemNoPadding" onClick={() => handleOpenPicker(false)} id="selector" ref={ref}>
                 <div className="css-1h182y4-TimeSelect--selectContainer-TimeSelect--styles-TimeSelect--render">
                     <div className="select-classes">
                         <div style={calenerPickerBoxStyle}>
-                            <input value={getShownLabel()} disabled={true} className="calender-picker-disabled-text-field" />
+                            <label className="calender-picker-disabled-text-field">{getShownLabel()}</label>
                         </div>
-                        <i aria-hidden="true" className="calender-picker-icon icon">
-                            <FontAwesomeIcon icon={caretDown} />
-                        </i>
+                        <Icon icon={caretDown} style={{ cursor: 'pointer' }} />
                     </div>
                 </div>
             </div>
-            <i aria-hidden="true" className="icon" onClick={renderNextRange}>
-                <FontAwesomeIcon icon={caretRight} />
-            </i>
-            <Overlay open={openPicker} onBackdrop={() => handleOpenPicker(true)} triggerBy="selector">
+            <IconButton icon={caretRight} onClick={renderNextRange} />
+            <Overlay open={openPicker} onBackdrop={() => handleOpenPicker(true)} triggerBy="selector" noShadow noMargin>
                 <div className="picker-body">
                     <Fragment>
-                        <Tabs
-                            onChange={switchTabs}
-                            value={selectedTab}
-                            classes={{
-                                scroller: 'tab-scroller',
-                                root: 'tabs-root',
-                                indicator: 'tab-indicator'
-                            }}
-                        >
-                            {renderTabs()}
+                        <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
+                            <Tab label={CalenderPickerTab.RANGE.label} value={CalenderPickerTab.RANGE.value} classes={'tab--width'}>
+                                <RangePicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                            </Tab>
+                            <Tab label={CalenderPickerTab.WEEKS.label} value={CalenderPickerTab.WEEKS.value} classes={'tab--width'}>
+                                <WeekPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                            </Tab>
+                            <Tab label={CalenderPickerTab.MONTHS.label} value={CalenderPickerTab.MONTHS.value} classes={'tab--width'}>
+                                <MonthPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                            </Tab>
+                            <Tab label={CalenderPickerTab.YEARS.label} value={CalenderPickerTab.YEARS.value} classes={'tab--width'}>
+                                <YearPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                            </Tab>
                         </Tabs>
-                        <div className="tab-content">{renderTabContent()}</div>
                     </Fragment>
                 </div>
             </Overlay>

@@ -11,7 +11,8 @@ const iconStyle: CSS.Properties = {
     width: '1em',
     height: '1em',
     padding: '0.125em',
-    lineHeight: 'inherit'
+    lineHeight: 'inherit',
+    color: 'rgb(34, 52, 60)'
 };
 
 const uncheckedIcon = <FontAwesomeIcon icon={faSquare} style={iconStyle} className="icon" />;
@@ -23,18 +24,7 @@ const checkedIcon = <FontAwesomeIcon icon={faCheckSquare} style={iconStyle} clas
  **
  * See MD docs for full api - [FormControlLabel](https://material-ui.com/api/form-control-label/) | [Checkbox](https://material-ui.com/api/checkbox/)
  */
-const Checkbox = ({
-    ariaLabel,
-    ariaLabelledby,
-    indeterminate,
-    label,
-    customStyles,
-    customLabelStyles,
-    labelPlacement,
-    ...baseProps
-}: {
-    [key: string]: any;
-}): JSX.Element => {
+const Checkbox = ({ ariaLabel, ariaLabelledby, indeterminate, label, customStyles, customLabelStyles, labelPlacement, ...baseProps }: { [key: string]: any }): JSX.Element => {
     return label ? (
         <FormControlLabel
             control={<MuiCheckbox className={customStyles} {...baseProps} checkedIcon={checkedIcon} icon={uncheckedIcon} />}

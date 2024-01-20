@@ -68,9 +68,11 @@ export class PnbBankProcessor implements BankProcessor {
             };
 
             if (accountNo.includes('XX')) {
-                let startIndex = account.account_number.length - 8;
+                let groups = accountNo.match(new RegExp('\\d+'));
+                if (!groups) return;
+                let startIndex = account.account_number.length - groups[0].length;
                 let actualAccountNumber = account.account_number.substring(startIndex);
-                if (actualAccountNumber !== accountNo.replace(new RegExp('X+'), '')) return;
+                if (actualAccountNumber !== groups[0]) return;
             }
 
             let description: string = JSON.stringify(note);

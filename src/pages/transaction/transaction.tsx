@@ -3,7 +3,7 @@ import CSS from 'csstype';
 import './transaction.css';
 import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
 import { useEffect, useState } from 'react';
-import { edit, indianRupee, save, view } from '../../icons/icons';
+import { edit, indianRupee, save, show } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ApiCriteria, getAccounts, getAllTransactions, updateAccountTransaction } from '../../modules/backend/BackendApi';
 import Table, { TableColumn, TablePagination } from '../../modules/table/table';
@@ -293,7 +293,7 @@ const TransactionPage = () => {
                         }}
                         style={{ cursor: 'pointer' }}
                     >
-                        <FontAwesomeIcon icon={view} />
+                        <FontAwesomeIcon icon={show} />
                     </i>
                 );
             }
@@ -412,6 +412,7 @@ const TransactionPage = () => {
                     >
                         <p style={{ height: '20px', margin: '0' }}>Category Type: </p>
                         <Select
+                            // style={{ 'minWidth': '200px' }}
                             selectedOption={selectedCategory}
                             onChange={(event) => {
                                 setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });

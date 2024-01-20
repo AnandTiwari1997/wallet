@@ -17,6 +17,7 @@ import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import Button from '../../modules/button/button';
 import { ArrayUtil } from '../../data/transaction-data';
 import Badge from '../../modules/badge/badge';
+import IconButton from '../../modules/icon/icon-button';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -112,19 +113,15 @@ const BillsPage = () => {
         customRender: (row: Bill) => {
             return (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
-                    <button
-                        className="icon-button"
+                    <IconButton
                         id={`account-menu-${row.bill_id}`}
+                        icon={menu}
                         onClick={() => {
                             setBillMenuOptionFor(row.bill_id);
                             setSelectedBill(row);
                             setShowBillActionMenu(true);
                         }}
-                    >
-                        <i className="icon">
-                            <FontAwesomeIcon icon={menu} />
-                        </i>
-                    </button>
+                    />
                     <Menu
                         open={showBillActionMenu}
                         onClose={() => {

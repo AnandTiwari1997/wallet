@@ -7,6 +7,7 @@ import { calender } from '../../icons/icons';
 import ReactDOM from 'react-dom';
 import './date-input.css';
 import { format } from 'date-fns';
+import Button from '../button/button';
 
 const DateInput = ({ value, setValue, ...props }: { value: any; [key: string]: any }) => {
     const getRange = (value: OnCalenderPickerChange | undefined) => {
@@ -52,8 +53,7 @@ const DateInput = ({ value, setValue, ...props }: { value: any; [key: string]: a
                             <div className="date-picker-container">
                                 <DatePicker range={state} onSelectionChange={(dateRange) => setState(dateRange)} enableSelection={false} />
                                 <div className="custom-date-range-apply-button-container">
-                                    <button
-                                        className="custom-date-range-apply-button"
+                                    <Button
                                         tabIndex={-1}
                                         type="button"
                                         role="tab"
@@ -65,7 +65,7 @@ const DateInput = ({ value, setValue, ...props }: { value: any; [key: string]: a
                                     >
                                         Apply
                                         <span className="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"></span>
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </div>

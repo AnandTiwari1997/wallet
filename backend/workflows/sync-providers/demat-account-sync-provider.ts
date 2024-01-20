@@ -83,7 +83,6 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                             return;
                                         }
                                         files[fileName] = true;
-                                        logger.debug(`${fileNo}. ${fileName}.pdf`);
                                         fs.writeFileSync(path.resolve(rootDirectoryPath, 'reports', brokerUniqueDirName, `${fileName}.pdf`), buffer);
                                         let data: any = fileProcessorSync(brokerUniqueDirName, `${fileName}.pdf`, `${fileName}.json`, `${mfParam.panNo.toUpperCase()}`);
                                         let newData = data.replaceAll("'", '"');
@@ -154,7 +153,6 @@ class DematAccountSyncProvider implements SyncProvider<DematAccount> {
                                     let fileName = attachment.filename ? attachment.filename.replace(' ', '_').replace(' ', '_') : 'contract_note.pdf';
                                     const names: string[] = fileName.split('.');
                                     fileName = names[0] + '_' + format(tradeDate, 'dd-MM-yyyy');
-                                    logger.debug(`${fileName}.pdf`);
                                     fs.writeFileSync(path.resolve(rootDirectoryPath, 'reports', brokerUniqueDirName, `${fileName}.pdf`), buffer);
                                     let data: any = fileProcessorSync(brokerUniqueDirName, `${fileName}.pdf`, `${fileName}.json`, `${mfParam.panNo.toUpperCase()}`);
                                     let newData = data.replaceAll("'", '"');
@@ -193,10 +191,11 @@ eventEmitter.on('stock', async (data: any[]) => {
         allStockData = ArrayUtil.sort(allStockData, (item) => parse(item['transaction_date'], 'dd-MMM-yyyy HH:mm:ss', new Date()), true);
         for (let parseData of allStockData) {
             let exchange = parseData['order_no'].length == 16 ? 'NSE' : 'BSE';
+            logger.info(`${parseData['stock_isin'].trim()}`);
             const stockInfo = ALL_STOCKS.find((value) => value.EXCHANGE === exchange && value.ISIN_NUMBER === parseData['stock_isin'].trim());
-            if (!stockInfo) return;
+            if (!stockInfo) continue;
             let holdingId = stockInfo.SYMBOL + '_' + dematAccount.account_bo_id;
-            logger.debug(`${holdingId} - ${parseData['transaction_date']} - ${parseData['stock_quantity']} - ${parseData['amount']}`);
+            logger.info(`${holdingId} - ${parseData['transaction_date']} - ${parseData['stock_quantity']} - ${parseData['amount']}`);
             let holding = await holdingRepository.find(holdingId);
             if (!holding || holding.current_price === 0) {
                 let url: string = `https://www.groww.in/v1/api/stocks_data/v1/tr_live_prices/exchange/${exchange}/segment/CASH/${stockInfo?.SYMBOL_CODE || ''}/latest`;

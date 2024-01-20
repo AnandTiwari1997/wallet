@@ -100,6 +100,13 @@ export const ALL_STOCKS = [
     },
     {
         EXCHANGE: 'NSE',
+        SYMBOL_CODE: 'IREDA',
+        SYMBOL: 'IREDA',
+        NAME_OF_COMPANY: 'Indian Renewable Energy Development Agency',
+        ISIN_NUMBER: 'INE202E01016'
+    },
+    {
+        EXCHANGE: 'NSE',
         SYMBOL_CODE: '3MINDIA',
         SYMBOL: '3MINDIA',
         NAME_OF_COMPANY: '3M India Limited',

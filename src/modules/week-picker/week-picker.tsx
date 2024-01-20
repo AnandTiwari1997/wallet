@@ -1,41 +1,12 @@
 import './week-picker.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { arrowLeft, arrowRight } from '../../icons/icons';
 import { useState } from 'react';
 import { addMonths, endOfDay, endOfWeek, startOfDay, startOfWeek, subMonths } from 'date-fns';
 import { getDaysInMonth } from 'date-fns/esm';
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
+import IconButton from '../icon/icon-button';
 
 const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
-    /** Parse */
-    const parseToDate = (value: string, index: number) => {
-        const dates: string[] = value.trim().split('-');
-        const startDate: string = dates[index].trim();
-        const dateArray: string[] = startDate.split('.');
-        let currentDate = new Date();
-        currentDate.setDate(parseInt(dateArray[0]));
-        currentDate.setMonth(parseInt(dateArray[1]) - 1);
-        currentDate.setFullYear(parseInt(dateArray[2]));
-        return currentDate;
-    };
-
-    const parse = (
-        value: any,
-        index: number,
-        weekFunc: (
-            date: Date | number,
-            options?: {
-                locale?: Locale;
-                weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-            }
-        ) => Date
-    ) => {
-        if (!value) return;
-        const label = value.label;
-        if (label === 'This Week') return weekFunc(new Date(), { weekStartsOn: 1 });
-        return parseToDate(label, index);
-    };
-
     const [week, setWeek] = useState({
         firstDay: value ? value.rangeStart : undefined,
         lastDay: value ? value.rangeEnd : undefined
@@ -90,12 +61,7 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
             let currentDate = new Date(date).setDate(i);
 
             let cName = 'single-number';
-            if (
-                week.firstDay &&
-                new Date(week.firstDay).getTime() <= new Date(currentDate).getTime() &&
-                week.lastDay &&
-                new Date(currentDate).getTime() <= new Date(week.lastDay).getTime()
-            ) {
+            if (week.firstDay && new Date(week.firstDay).getTime() <= new Date(currentDate).getTime() && week.lastDay && new Date(currentDate).getTime() <= new Date(week.lastDay).getTime()) {
                 cName += ' selected-week';
                 if (startOfDay(new Date(week.firstDay)).getTime() === startOfDay(new Date(currentDate)).getTime()) {
                     cName += ' selected-week-start';
@@ -195,13 +161,9 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
     return (
         <div className="week-picker-options" id="week-selector">
             <div className="title-week">
-                <i aria-hidden="true" className="calender-picker-icon icon arrow-container left" onClick={() => handleDate(false)}>
-                    <FontAwesomeIcon icon={arrowLeft} />
-                </i>
+                <IconButton icon={arrowLeft} className={'arrow-container'} onClick={() => handleDate(false)} />
                 {`${months[date.getMonth()]} ${date.getFullYear()}`}
-                <i aria-hidden="true" className="calender-picker-icon icon arrow-container" onClick={() => handleDate(true)}>
-                    <FontAwesomeIcon icon={arrowRight} />
-                </i>
+                <IconButton icon={arrowRight} className={'arrow-container'} onClick={() => handleDate(true)} />
             </div>
             <div className="rdrWeekDays">
                 <span className="rdrWeekDay">Sun</span>

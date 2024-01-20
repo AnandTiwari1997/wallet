@@ -17,6 +17,7 @@ import {
     faCoins,
     faEllipsisVertical,
     faEye,
+    faEyeSlash,
     faIndianRupee,
     faMoneyBill,
     faPencil,
@@ -51,8 +52,9 @@ export const caretDown = faCaretDown;
 export const refresh = faRefresh;
 export const sortUp = faArrowUp;
 export const sortDown = faArrowDown;
-export const view = faEye;
+export const show = faEye;
 export const close = faClose;
 export const menu = faEllipsisVertical;
 export const calender = faCalendar;
 export const save = faSave;
+export const hide = faEyeSlash;

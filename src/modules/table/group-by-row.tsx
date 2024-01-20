@@ -1,8 +1,9 @@
 import { Checkbox } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { right } from '../../icons/icons';
+import { hide, right, show } from '../../icons/icons';
 import { TableColumn } from './table';
 import { useEffect, useState } from 'react';
+import IconButton from '../icon/icon-button';
 
 const GroupByRow = ({
     groupingKey,
@@ -20,10 +21,16 @@ const GroupByRow = ({
     onRowSelectionChange: (item: any) => void | any;
 }) => {
     const [isSelected, setSelected] = useState<boolean>(false);
+    const [hidden, setHidden] = useState<{ [key: string]: boolean | undefined }>({});
 
     useEffect(() => {
         if (selected !== undefined) setSelected(selected);
-    }, [selected]);
+        columns.forEach((value) => {
+            hidden[value.key] = value.hidden;
+        });
+        setHidden({ ...hidden });
+        console.log(columns);
+    }, [selected, columns]);
 
     const _columnAlignment = (column: string) => {
         return typeof row[column] === 'number' || row[column] instanceof Date ? 'end' : 'start';
@@ -65,7 +72,21 @@ const GroupByRow = ({
             {columns.map((column) => {
                 return (
                     <td className={`td-body td-content-align-${_columnAlignment(column.key)}`} style={{ width: `${_columnWidth()}%` }}>
-                        {column.customRender ? column.customRender(row) : row[column.key]}
+                        {hidden[column.key] ? '********' : column.customRender ? column.customRender(row) : row[column.key]}
+                        {hidden[column.key] !== undefined ? (
+                            <IconButton
+                                style={{
+                                    marginLeft: '10px'
+                                }}
+                                icon={hidden[column.key] ? show : hide}
+                                onClick={() => {
+                                    hidden[column.key] = !hidden[column.key];
+                                    setHidden({ ...hidden });
+                                }}
+                            />
+                        ) : (
+                            ''
+                        )}
                     </td>
                 );
             })}

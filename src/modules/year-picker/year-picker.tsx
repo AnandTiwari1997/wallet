@@ -1,10 +1,10 @@
 import './year-picker.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { arrowLeft, arrowRight } from '../../icons/icons';
 import React, { useState } from 'react';
 import { addYears, startOfYear, subYears } from 'date-fns/esm';
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
 import { endOfYear } from 'date-fns';
+import IconButton from '../icon/icon-button';
 
 const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
     const parse = (value: any) => {
@@ -103,13 +103,9 @@ const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
     return (
         <div className="year-picker-container">
             <div className="year-picker-header">
-                <i aria-hidden="true" className="calender-picker-icon icon arrow-container left" onClick={() => handleYears(false)}>
-                    <FontAwesomeIcon icon={arrowLeft} />
-                </i>
+                <IconButton icon={arrowLeft} className={'arrow-container'} onClick={() => handleYears(false)} />
                 {`${years.startYear}-${years.endYear}`}
-                <i aria-hidden="true" className="calender-picker-icon icon arrow-container" onClick={() => handleYears(true)}>
-                    <FontAwesomeIcon icon={arrowRight} />
-                </i>
+                <IconButton icon={arrowRight} className={'arrow-container'} onClick={() => handleYears(true)} />
             </div>
             <div className="year-picker-body">{renderMonths()}</div>
         </div>

@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
 import { differenceInDays, differenceInMonths, isSameDay, isSameMonth, isSameWeek, isSameYear, subMonths } from 'date-fns';
 import DatePicker, { DateRange } from '../date-picker/date-picker';
+import Button from '../button/button';
 
 const RangePicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
     const getRangeFromValue = (value: string | undefined): DateRange => {
@@ -219,20 +220,9 @@ const RangePicker = ({ value, onChange }: { value: OnCalenderPickerChange | unde
                 <div className="range-picker-custom-range">
                     {
                         <div style={{ width: '100%' }}>
-                            {/*<DateRange*/}
-                            {/*  dateDisplayFormat="dd-MM-yyyy"*/}
-                            {/*  months={1}*/}
-                            {/*  direction="vertical"*/}
-                            {/*  ranges={[state]}*/}
-                            {/*  onChange={(item) => handleDateSelection(item)}*/}
-                            {/*  showDateDisplay*/}
-                            {/*/>*/}
                             <DatePicker range={state} onSelectionChange={(dateRange) => handleDateSelection(dateRange)} enableSelection />
                             <div className="custom-date-range-apply-button-container">
-                                <button className="custom-date-range-apply-button" tabIndex={-1} type="button" role="tab" aria-selected="false" onClick={handleCustomDateRangeApply}>
-                                    Apply
-                                    <span className="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"></span>
-                                </button>
+                                <Button onClick={handleCustomDateRangeApply}>Apply</Button>
                             </div>
                         </div>
                     }

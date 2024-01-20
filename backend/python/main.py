@@ -1,20 +1,23 @@
+import json
 import os
 import re
 import sys
 import uuid
-from datetime import datetime
-from typing import Dict
-import json
+from datetime import datetime, timedelta
 
 import camelot
 import pandas as pd
 import pdfplumber
+import pytesseract
+from PIL.Image import Image
+from camelot.core import TableList
 from pandas import DataFrame
-from pdfminer.high_level import extract_pages
-from pdfminer.layout import LTTextBox, LTFigure, LAParams
-from py_pdf_parser import tables
-from py_pdf_parser.components import PDFDocument
-from py_pdf_parser.loaders import load_file, Page, logger
+from py_pdf_parser.loaders import load_file
+import table_ocr
+
+import cv2
+import numpy as np
+from pdf2image import convert_from_path
 
 
 class FundProcessor:
@@ -120,34 +123,6 @@ class ProvidentFundProcessor(FundProcessor):
                        "transactionId"]
         self.data = None
 
-#     def process(self, file_path, password):
-#         la_param = {
-#             "word_margin": 0.15,
-#             "char_margin": 0.5
-#         }
-#         document = load_file(file_path, la_params=la_param)
-#
-#         element_wage_month = document.elements.filter_by_text_contains("Wage Month").extract_single_element()
-#         first_row_in_section = document.elements.below(element_wage_month)[0]
-#         last_row_in_section = document.elements.filter_by_text_contains("Total Contributions for the year"
-#                                                                         ).extract_single_element()
-#         element_financial_year = document.elements.filter_by_regex(r".+([0-9]{4}-[0-9]{4}).+")[0]
-#         financial_year = re.compile(r".+([0-9]{4}-[0-9]{4}).+").match(element_financial_year.text()).group(1)
-#         table_header_section = document.sectioning.create_section("Table_Header", first_row_in_section,
-#                                                                   last_row_in_section, include_last_element=False)
-#         output_table = tables.extract_table(table_header_section.elements, as_text=True,
-#                                             fix_element_in_multiple_rows=True, fix_element_in_multiple_cols=True)
-#
-#         self.data = output_table[1:]
-#         for row in self.data:
-#             row[3] = re.sub(r'\([^()]*\)', '', row[3])
-#             row.append(financial_year)
-#             row.append(str(uuid.uuid4()))
-#
-#         self.header = ["wageMonth", "transactionDate", "transactionType", "description", "epfAmount", "epsAmount",
-#                        "employeeContribution", "employerContribution", "pensionAmount", "financialYear",
-#                        "transactionId"]
-
     def process(self, file_path, password):
         self.data = []
         document = load_file(file_path)
@@ -207,10 +182,123 @@ class ProvidentFundProcessor(FundProcessor):
             save_to_csv(df, file_path)
 
 
+def cell_in_same_row(c1, c2):
+    c1_center = c1[1] + c1[3] - c1[3] / 2
+    c2_bottom = c2[1] + c2[3]
+    c2_top = c2[1]
+    return c2_top < c1_center < c2_bottom
+
+
+# Sort rows by average height of their center.
+def avg_height_of_center(row):
+    centers = [y + h - h / 2 for x, y, w, h in row]
+    return sum(centers) / len(centers)
+
+
+def get_mask(image, scale):
+    blur_kernel_size = (17, 17)
+    std_dev_x_direction = 0
+    std_dev_y_direction = 0
+    blurred = cv2.GaussianBlur(image, blur_kernel_size, std_dev_x_direction, std_dev_y_direction)
+    max_color_val = 255
+    block_size = 15
+    subtract_from_mean = -2
+    img_bin = cv2.adaptiveThreshold(
+        ~blurred,
+        max_color_val,
+        cv2.ADAPTIVE_THRESH_MEAN_C,
+        cv2.THRESH_BINARY,
+        block_size,
+        subtract_from_mean,
+    )
+    vertical = horizontal = img_bin.copy()
+    image_width, image_height = horizontal.shape
+    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (int(image_width // scale), 1))
+    horizontally_opened = cv2.morphologyEx(img_bin, cv2.MORPH_OPEN, horizontal_kernel)
+    vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, int(image_height // scale)))
+    vertically_opened = cv2.morphologyEx(img_bin, cv2.MORPH_OPEN, vertical_kernel)
+    horizontally_dilated = cv2.dilate(horizontally_opened, horizontal_kernel)
+    vertically_dilated = cv2.dilate(vertically_opened, vertical_kernel)
+    return horizontally_dilated + vertically_dilated
+
+
+def get_tables(image, scale, min_table_area):
+    mask = get_mask(image, scale)
+    contours, heirarchy = cv2.findContours(
+        mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE,
+    )
+    contours = [c for c in contours if cv2.contourArea(c) > min_table_area]
+    perimeter_lengths = [cv2.arcLength(c, True) for c in contours]
+    epsilons = [0.1 * p for p in perimeter_lengths]
+    approx_polys = [cv2.approxPolyDP(c, e, True) for c, e in zip(contours, epsilons)]
+    bounding_rects = [cv2.boundingRect(a) for a in approx_polys]
+    return [image[y:y + h, x:x + w] for x, y, w, h in bounding_rects]
+
+
+def get_cells(image, scale, min_rect_width, min_rect_height):
+    mask = get_mask(image, scale)
+    contours, heirarchy = cv2.findContours(
+        mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE,
+    )
+    perimeter_lengths = [cv2.arcLength(c, True) for c in contours]
+    epsilons = [0.05 * p for p in perimeter_lengths]
+    approx_polys = [cv2.approxPolyDP(c, e, True) for c, e in zip(contours, epsilons)]
+    bounding_rects = [cv2.boundingRect(a) for a in approx_polys]
+    # Filter out rectangles that are too narrow or too short.
+    bounding_rects = [
+        r for r in bounding_rects if min_rect_width < r[2] and min_rect_height < r[3]
+    ]
+    # The largest bounding rectangle is assumed to be the entire table.
+    # Remove it from the list. We don't want to accidentally try to OCR
+    # the entire table.
+    largest_rect = max(bounding_rects, key=lambda r: r[2] * r[3])
+    bounding_rects = [b for b in bounding_rects if b is not largest_rect]
+    cells = [c for c in bounding_rects]
+    rows = []
+    while cells:
+        first = cells[0]
+        rest = cells[1:]
+        cells_in_same_row = sorted(
+            [
+                c for c in rest
+                if cell_in_same_row(c, first)
+            ],
+            key=lambda c: c[0]
+        )
+        row_cells = sorted([first] + cells_in_same_row, key=lambda c: c[0])
+        rows.append(row_cells)
+        cells = [
+            c for c in rest
+            if not cell_in_same_row(c, first)
+        ]
+    rows.sort(key=avg_height_of_center)
+    cell_images_rows = []
+    for row in rows:
+        cell_images_row = []
+        for x, y, w, h in row:
+            cell_images_row.append(image[y:y + h, x:x + w])
+        cell_images_rows.append(cell_images_row)
+    return cell_images_rows
+
+
+def get_text(cell):
+    d = os.path.dirname(sys.modules["table_ocr"].__file__)
+    tessdata_dir = os.path.join(d, "tessdata")
+    tess_args = ["--psm", "6", "--tessdata-dir", tessdata_dir]
+    return pytesseract.image_to_string(
+        cell,
+        config=" ".join(tess_args)
+    )
+
+
+def get_cv2_image(pillow_image):
+    return cv2.cvtColor(np.asarray(pillow_image), cv2.COLOR_RGB2GRAY)
+
+
 class StockProcessor(FundProcessor):
     def __init__(self, broker_dp_id):
-        self.header = ["order_no", "stock_isin", "transaction_date", "transaction_type",
-                       "stock_quantity", "stock_transaction_price", "amount"]
+        self.header = ["order_no", "stock_isin", "transaction_type",
+                       "stock_quantity", "stock_transaction_price", "amount", "transaction_date"]
         self.data = []
         self.broker_impl_map = {
             '12081600': ZerodhaBrokingStockProcessor(),
@@ -219,44 +307,18 @@ class StockProcessor(FundProcessor):
         self.broker_impl = self.broker_impl_map[broker_dp_id]
 
     def process(self, file_path, password):
-        la_params = {
-            "boxes_flow": None,
-            "word_margin": 0.15,
-            "char_margin": 0.5
-        }
-
-        pages: Dict[int, Page] = {}
-        with open(file_path, "rb") as pdf_file:
-            for page in extract_pages(pdf_file, password=password, laparams=LAParams(**la_params)):
-                elements = [element for element in page if isinstance(element, LTTextBox)]
-
-                # If all_texts=True then we may get some text from inside figures
-                if la_params.get("all_texts"):
-                    figures = (element for element in page if isinstance(element, LTFigure))
-                    for figure in figures:
-                        elements += [
-                            element for element in figure if isinstance(element, LTTextBox)
-                        ]
-                if not elements:
-                    logger.warning(
-                        f"No elements detected on page {page.pageid}, skipping this page."
-                    )
-                    continue
-                pages[page.pageid] = Page(
-                    width=page.width, height=page.height, elements=elements
-                )
-
-        pdf_document = PDFDocument(pages=pages, pdf_file_path=file_path)
-        self.data = self.broker_impl.process(file_path, password, pdf_document)
+        images = convert_from_path(file_path, userpw=password)
+        self.data = self.broker_impl.process(images)
 
     def save(self, file_format="json", file_path=None):
         df = DataFrame(self.data, columns=self.header)
+        print(self.data)
 
         clean_txt(df.stock_quantity)
         clean_txt(df.stock_transaction_price)
         clean_txt(df.amount)
 
-        df.transaction_date = pd.to_datetime(df.transaction_date, dayfirst=True)
+        df.transaction_date = pd.to_datetime(df.transaction_date, dayfirst=True, format="%d/%m/%Y %H:%M:%S")
         df.transaction_date = df.transaction_date.dt.strftime('%d-%b-%Y %H:%M:%S')
         df.stock_quantity = df.stock_quantity.astype('float')
         df.stock_transaction_price = df.stock_transaction_price.astype('float')
@@ -267,229 +329,93 @@ class StockProcessor(FundProcessor):
         else:
             save_to_csv(df, file_path)
 
+
 class NextBillionStockProcessor:
 
-    def process(self, file_path: str, password: str, pdf_document: PDFDocument):
-        data = []
-        for page in pdf_document.pages:
-            is_new_format = len(page.elements.filter_by_text_contains('EQUITY')) > 0
-            all_first_column = page.elements.filter_by_text_contains('Order')
-            for first_column in all_first_column:
-                if 'order no.' not in ' '.join(first_column.text().replace('\n', ' ').lower().split()):
-                    continue
-                first_row = page.elements.below(first_column)[0]
-                skip_row = page.elements.filter_by_text_contains('LCM')
-                all_total_elements = page.elements.filter_by_text_contains('Symbol')
-                if len(all_total_elements) == 0:
-                    all_total_elements = page.elements.filter_by_text_contains('Total')[1:]
-                if len(all_total_elements) == 0:
-                    break
-                if len(all_total_elements) == 1:
-                    if 'Net Total' == all_total_elements[0].text():
-                        break
-                all_trade_date = page.elements.filter_by_text_contains('Trade Date')
-                before_date_element = ''
-                if len(all_trade_date) > 0:
-                    before_date_element = all_trade_date[0]
-                if len(all_trade_date) == 0:
-                    all_trade_date = page.elements.filter_by_text_contains('Trade date')
-                    before_date_element = all_trade_date[0]
-                    text = page.elements.after(all_trade_date[0])[0].text()
-                    if text == 'Client GSTIN:':
-                        for e in page.elements.after(all_trade_date[0]):
-                            if re.compile(r'\d{10}').match(e.text()):
-                                before_date_element = e
-                                break
-                if before_date_element:
-                    date = page.elements.after(before_date_element)[0]
-                index = 0
-                for total_element in all_total_elements:
-                    if index < len(skip_row) and first_row.text() == skip_row[index].text():
-                        order_no = page.elements.below(first_row)[0]
-                        if "\n" in order_no.text():
-                            first_row = page.elements.after(first_row)[0]
-                        else:
-                            first_row = order_no
-                        index = index + 1
-                    below_elements = page.elements.below(total_element)
-                    include_last_element = False
-                    if len(below_elements) > 0:
-                        last_row = below_elements[0]
-                    else:
-                        last_row = page.elements.after(total_element)[-1]
-                        include_last_element = True
-                    if not is_new_format and not last_row.text().startswith('Total'):
-                        ele = page.elements.before(last_row)
-                        for i in reversed(range(len(ele))):
-                            e = ele[i]
-                            if e.text().startswith('Total Buy'):
-                                last_row = e
-                                break
-                    table_section = pdf_document.sectioning.create_section("table", first_row,
-                                                                           last_row, include_last_element=include_last_element)
-                    output_table = tables.extract_table(table_section.elements, as_text=True,
-                                                        fix_element_in_multiple_rows=True,
-                                                        fix_element_in_multiple_cols=True,
-                                                        tolerance=20.0)
-                    rows = output_table[:-1]
-                    last = output_table[-1]
-                    if last[0] == 'Total Buy :':
-                        rows = output_table[:-2]
-                        last = output_table[-2]
-                        if len(output_table[-2][0]) == 0:
-                            last = output_table[-2][1:]
-                    elif len(last[0]) == 0:
-                        last = output_table[-2]
+    def __init__(self):
+        self.all_data = []
+        self.table_scale = 60
 
-                    for row in rows:
-                        try:
-                            if row[0] == 'Total':
-                                continue
-                            transaction_type = row[5]
-                            stock_quantity = row[6]
-                            isin = str(last[0])
+    def get_table_data(self, trade_date, table):
+        data_for_same_isin = []
+        rows = get_cells(table, 60, 40, 40)
+        for i, row in enumerate(rows):
+            order_no = get_text(row[0]).strip()
+            if len(order_no.strip()) > 0:
+                order_no = str(order_no).replace('\n', '')
+                if len(order_no) == 16 or len(order_no) == 19:
+                    inner_data = {
+                        'order_no': order_no.strip(),
+                        'transaction_type': get_text(row[6]).strip().upper(),
+                        'stock_quantity': get_text(row[7]).strip(),
+                        'stock_transaction_price': get_text(row[10]).strip(),
+                        'amount': get_text(row[12]).strip(),
+                        'transaction_date': trade_date + " " + get_text(row[1]).strip()
+                    }
+                    data_for_same_isin.append(inner_data)
+                else:
+                    if len(row) < 14:
+                        for stock_data in data_for_same_isin:
+                            stock_data['stock_isin'] = get_text(row[1]).strip()
+                            self.all_data.append(stock_data)
+                        data_for_same_isin = []
 
-                            if len(transaction_type) == 0:
-                                if stock_quantity == 'S' or stock_quantity == 'B':
-                                    stock_quantity = row[7]
-                                if len(stock_quantity) > 0:
-                                    if int(stock_quantity) > 0:
-                                        transaction_type = 'B'
-                                    else:
-                                        transaction_type = 'S'
-
-                            if transaction_type == 'NSE' or transaction_type == 'BSE':
-                                transaction_type = row[6]
-                                stock_quantity = row[7]
-                                isin = last[4]
-
-                            if len(isin.split(' ISIN : ')) == 2:
-                                isin = isin.split(' ISIN : ')[1].replace('Net', '').strip()
-
-                            order_time = ''
-                            for col in row:
-                                if ':' in col:
-                                    order_time = col
-                                    break
-
-                            inner_data = {
-                                'order_no': row[0],
-                                'stock_isin': isin,
-                                'transaction_type': transaction_type,
-                                'stock_quantity': stock_quantity,
-                                'stock_transaction_price': row[-2],
-                                'amount': row[-1],
-                                'transaction_date': date.text(True).split("\n")[-1] + ' ' + order_time
-                            }
-                            print(inner_data)
-                            if (len(row[0]) > 0 and len(transaction_type) > 0 and len(stock_quantity) > 0
-                                    and len(row[-2]) > 0 and len(isin) > 0 and len(row[-1]) > 0):
-                                data.append(inner_data)
-                        except Exception as e:
-                            print(e)
-
-                    if not is_new_format:
-                        elements = page.elements.below(last_row)
-                        if len(elements) > 0:
-                            first_row = elements[0]
-                        else:
-                            break
-                    else:
-                        first_row = last_row
-                    if first_row.text() == 'Net Total':
-                        break
-        return data
+    def process(self, images: list[Image]):
+        tables = get_tables(get_cv2_image(images[0]), self.table_scale, 1e4)
+        rows = get_cells(tables[1], 60, 40, 40)
+        trade_date = get_text(rows[1][1]).strip()
+        self.get_table_data(trade_date, tables[0])
+        for image in images[1:-1]:
+            for table in get_tables(get_cv2_image(image), self.table_scale, 1e5):
+                self.get_table_data(trade_date, table)
+        return self.all_data
 
 
 class ZerodhaBrokingStockProcessor:
 
-    def process(self, file_name: str, password: str, pdf_document: PDFDocument):
-        data = []
-        all_trade_date = pdf_document.elements.filter_by_text_contains('Trade date')
-        if len(all_trade_date) > 0:
-            search_result = re.search(r"\d{2}\/\d{2}\/\d{4}", all_trade_date[0].text(True))
-        else:
-            all_trade_date = pdf_document.elements.filter_by_text_contains('TRADE DATE')
-            trade_date = pdf_document.elements.after(all_trade_date[0])[0]
-            search_result = re.search(r"\d{2}\/\d{2}\/\d{4}", trade_date.text(True))
-        date = None
-        if search_result:
-            date = search_result.group()
-        if date is None:
-            date = pdf_document.elements.after(all_trade_date[0])[0].text(True)
-        tables_: TableList = camelot.read_pdf(file_name, pages='all', password="AWDPT2993E")
-        tables_to_process = []
-        for table_ in tables_:
-            if 'Order' in table_.data[0][0]:
-                tables_to_process.append(table_)
-            for row in table_.data[1:]:
-                temp_row = row
-                row = []
-                for i, item in enumerate(temp_row):
-                    if i == 0:
-                        if len(item) != 16 and len(item) != 19:
-                            tokens = item.split('\n')
-                            for token in tokens:
-                                row.append(token)
-                        else:
-                            if len(item) > 0:
-                                row.append(item)
+    def __init__(self):
+        self.all_data = []
+        self.table_scale = 60
+
+    def process(self, images: list[Image]):
+        text = get_text(get_cv2_image(images[0]))
+        group = re.search(r'trade date: (.*)\n', text.lower()).group()
+        trade_date = re.search(r"\d+/\d+/\d+", group.strip()).group()
+
+        for image in images[1:-2]:
+            for table in get_tables(get_cv2_image(image), self.table_scale, 1e5):
+                data_for_same_isin = []
+                rows = get_cells(table, 60, 40 ,20)
+                for row in rows:
+                    order_no = get_text(row[0]).strip()
+                    if len(order_no) == 16 or len(order_no) == 19:
+                        isin = get_text(row[4]).strip().split("/")[1]
+                        transaction_type = get_text(row[5]).strip().upper()
+                        stock_quantity = re.search(r'\d+', get_text(row[7])).group().strip()
+                        amount = get_text(row[12]).strip().replace('(', '').replace(')', '')
+                        stock_transaction_price = str(float(amount) / int(stock_quantity))
+                        if transaction_type == 'S':
+                            stock_quantity = '-' + stock_quantity
+                        if transaction_type == 'B':
+                            amount = '-' + amount
+                        trade_time = re.search(r'\d+:\d+:\d+', get_text(row[1])).group().strip()
+                        inner_data = {
+                            'order_no': order_no.strip(),
+                            'stock_isin': isin,
+                            'transaction_type': transaction_type,
+                            'stock_quantity': stock_quantity,
+                            'stock_transaction_price': stock_transaction_price,
+                            'amount': amount,
+                            'transaction_date': trade_date + " " + trade_time
+                        }
+                        data_for_same_isin.append(inner_data)
                     else:
-                        if len(item) > 0:
-                            row.append(item)
-                if len(row) < 11:
-                    continue
-                processed_row = []
-                stock_isin = ''
-                for item in row:
-                    try:
-                        int(item)
-                        processed_row.append(item)
-                        continue
-                    except:
-                        pass
-                    try:
-                        float(str(item).replace('(', '').replace(')', ''))
-                        processed_row.append(str(item).replace('(', '').replace(')', ''))
-                        continue
-                    except:
-                        pass
-                    if ':' in item:
-                        processed_row.append(item)
-                        continue
-                    if item == 'S' or item == 'B' or item == 'BSE' or item == 'NSE':
-                        processed_row.append(item)
-                        continue
-                    groups = re.search(r'INE[0-9]{3}\w[0-9]{5}', item.strip())
-                    if groups:
-                        stock_isin = groups.group()
-
-                if len(processed_row) != 10 or len(stock_isin) == 0:
-                    continue
-                stock_quantity = processed_row[6]
-                if processed_row[4] == 'S':
-                    stock_quantity = '-' + stock_quantity
-                amount: str = processed_row[-1]
-                if processed_row[4] == 'B':
-                    amount = '-' + amount
-
-                inner_data = {
-                    'order_no': processed_row[0],
-                    'stock_isin': stock_isin,
-                    'transaction_type': processed_row[4],
-                    'stock_quantity': stock_quantity,
-                    'stock_transaction_price': processed_row[-2],
-                    'amount': amount,
-                    'transaction_date': date + ' ' + processed_row[1]
-                }
-                if (len(inner_data['order_no']) > 0 and
-                        len(inner_data['stock_isin']) > 0 and
-                        len(inner_data['transaction_type']) > 0 and
-                        len(inner_data['stock_quantity']) > 0 and
-                        len(inner_data['stock_transaction_price']) > 0 and
-                        len(inner_data['amount']) > 0):
-                    data.append(inner_data)
-        return data
+                        exchange = re.search(r'([a-zA-Z\s]+)', get_text(row[6])).group().strip()
+                        if len(exchange) > 0 and exchange.lower() == 'sub total':
+                            for stock_data in data_for_same_isin:
+                                self.all_data.append(stock_data)
+                            data_for_same_isin = []
+        return self.all_data
 
 
 def save_to_json(df, file_path=None):

@@ -66,6 +66,7 @@ export class Category {
     static FUEL = { label: 'Fuel', value: 'FUEL' };
     static PHONE_RECHARGE = { label: 'Phone Recharge', value: 'PHONE_RECHARGE' };
     static BROADBAND_RECHARGE = { label: 'Broadband Recharge', value: 'BROADBAND_RECHARGE' };
+    static DTH_RECHARGE = { label: 'DTH Recharge', value: 'DTH_RECHARGE' };
     static DIVIDEND = { label: 'Dividend', value: 'DIVIDEND' };
     static INTEREST_RECEIVED = { label: 'Interest Received', value: 'INTEREST_RECEIVED' };
     static OTHERS = { label: 'Others', value: 'OTHER' };
@@ -79,6 +80,11 @@ export class Category {
     static SHOPPING = { label: 'Shopping', value: 'SHOPPING' };
     static TICKETS = { label: 'Ticket', value: 'TICKETS' };
     static REFUND = { label: 'Refund', value: 'REFUND' };
+    static SCHOOL_FEE = { label: 'School Fee', value: 'SCHOOL_FEE' };
+    static ATM_DEPOSIT = { label: 'ATM Deposit', value: 'ATM_DEPOSIT' };
+    static ATM_WITHDRAWAL = { label: 'ATM Withdrawal', value: 'ATM_WITHDRAWAL' };
+    static SENT_SELF = { label: 'Sent to Self', value: 'SENT_SELF' };
+    static RECEIVED_SELF = { label: 'Received from Self', value: 'RECEIVED_SELF' };
 
     static categoryMap: { [key: string]: { label: string; value: string } } = {
         SALARY: Category.SALARY,
@@ -86,6 +92,7 @@ export class Category {
         FUEL: Category.FUEL,
         PHONE_RECHARGE: Category.PHONE_RECHARGE,
         BROADBAND_RECHARGE: Category.BROADBAND_RECHARGE,
+        DTH_RECHARGE: Category.DTH_RECHARGE,
         DIVIDEND: Category.DIVIDEND,
         INTEREST_RECEIVED: Category.INTEREST_RECEIVED,
         OTHER: Category.OTHERS,
@@ -98,7 +105,12 @@ export class Category {
         HOUSE_CHORES: Category.HOUSE_CHORES,
         SHOPPING: Category.SHOPPING,
         TICKETS: Category.TICKETS,
-        REFUND: Category.REFUND
+        REFUND: Category.REFUND,
+        SCHOOL_FEE: Category.SCHOOL_FEE,
+        ATM_DEPOSIT: Category.ATM_DEPOSIT,
+        ATM_WITHDRAWAL: Category.ATM_WITHDRAWAL,
+        SENT_SELF: Category.SENT_SELF,
+        RECEIVED_SELF: Category.RECEIVED_SELF
     };
 
     static getLabel(value: string) {
@@ -119,11 +131,17 @@ export class Category {
             Category.FOOD,
             Category.BROADBAND_RECHARGE,
             Category.PHONE_RECHARGE,
+            Category.DTH_RECHARGE,
             Category.EMI,
             Category.DAIRY_PRODUCT,
             Category.HOUSE_CHORES,
             Category.TICKETS,
             Category.REFUND,
+            Category.ATM_DEPOSIT,
+            Category.ATM_WITHDRAWAL,
+            Category.SCHOOL_FEE,
+            Category.SENT_SELF,
+            Category.RECEIVED_SELF,
             Category.OTHERS
         ];
     }

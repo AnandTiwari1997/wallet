@@ -89,15 +89,11 @@ export class AxisBankProcessor implements BankProcessor {
             }
 
             if (account.account_type === 'BANK') {
-                if (accountNo.includes('XX')) {
-                    let startIndex = account.account_number.length - 4;
-                    let actualAccountNumber = 'XX' + account.account_number.substring(startIndex);
-                    if (actualAccountNumber !== accountNo) return;
-                } else {
-                    let startIndex = account.account_number.length - 6;
-                    let actualAccountNumber = account.account_number.substring(startIndex);
-                    if (actualAccountNumber !== accountNo) return;
-                }
+                let groups = accountNo.match(new RegExp('\\d+'));
+                if (!groups) return;
+                let startIndex = account.account_number.length - groups[0].length;
+                let actualAccountNumber = account.account_number.substring(startIndex);
+                if (actualAccountNumber !== groups[0]) return;
             }
             let date: Date = parse(transactionDateTime, 'dd-MM-yy HH:mm:ss', new Date());
             if (isNaN(date.getTime())) {

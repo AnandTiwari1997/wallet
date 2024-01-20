@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { computePosition } from '@floating-ui/dom';
 
-const Overlay = ({ open, close, children, onBackdrop, triggerBy, zIndex, placement }: { [key: string]: any }) => {
+const Overlay = ({ open, close, children, onBackdrop, triggerBy, zIndex, placement, noShadow, noMargin }: { [key: string]: any }) => {
     useEffect(() => {
         if (!open) return;
         const popover = document.getElementById('overlay-container')!;
@@ -17,8 +17,8 @@ const Overlay = ({ open, close, children, onBackdrop, triggerBy, zIndex, placeme
                 top: `${y}px`,
                 position: 'absolute',
                 background: 'white',
-                boxShadow: 'rgba(0, 0, 0, 0.2) 0px 5px 5px -3px, rgba(0, 0, 0, 0.14) 0px 8px 10px 1px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px',
-                marginTop: '5px',
+                boxShadow: noShadow ? '' : 'rgba(0, 0, 0, 0.2) 0px 5px 5px -3px, rgba(0, 0, 0, 0.14) 0px 8px 10px 1px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px',
+                marginTop: noMargin ? '0px' : '5px',
                 zIndex: zIndex ? zIndex : '1001'
             });
         });
