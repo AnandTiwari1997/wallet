@@ -1,14 +1,21 @@
+import { format, parse } from 'date-fns';
 import React, { useEffect, useState } from 'react';
+
 import { Account, Transaction } from '../../data/models';
+import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
+import { addTransaction } from '../../modules/backend/BackendApi';
+import Button from '../../modules/button/button';
+import DateInput from '../../modules/date-input/date-input';
 import Select from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
-import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
-import Button from '../../modules/button/button';
-import { addTransaction } from '../../modules/backend/BackendApi';
-import { format, parse } from 'date-fns';
-import DateInput from '../../modules/date-input/date-input';
 
-const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit: (success: boolean, data: Transaction | undefined) => any }) => {
+const AddTransaction = ({
+    accounts,
+    onSubmit
+}: {
+    accounts: Account[];
+    onSubmit: (success: boolean, data: Transaction | undefined) => any;
+}) => {
     const [account, setAccount] = useState<Account>(accounts[0]);
     const [amount, setAmount] = useState(0);
     const [category, setCategory] = useState(Category.OTHERS.value);
@@ -43,16 +50,32 @@ const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit:
                     />
 
                     <p style={{ margin: '0.5em 0' }}>Category</p>
-                    <Select selectedOption={category} options={Category.get()} onChange={(event) => setCategory(event.target.value)} />
+                    <Select
+                        selectedOption={category}
+                        options={Category.get()}
+                        onChange={(event) => setCategory(event.target.value)}
+                    />
 
                     <p style={{ margin: '0.5em 0' }}>Status</p>
-                    <Select selectedOption={status} options={TransactionStatus.get()} onChange={(event) => setStatus(event.target.value)} />
+                    <Select
+                        selectedOption={status}
+                        options={TransactionStatus.get()}
+                        onChange={(event) => setStatus(event.target.value)}
+                    />
 
                     <p style={{ margin: '0.5em 0' }}>Payment Mode</p>
-                    <Select selectedOption={paymentMode} options={PaymentMode.get()} onChange={(event) => setPaymentMode(event.target.value)} />
+                    <Select
+                        selectedOption={paymentMode}
+                        options={PaymentMode.get()}
+                        onChange={(event) => setPaymentMode(event.target.value)}
+                    />
 
                     <p style={{ margin: '0.5em 0' }}>Type</p>
-                    <Select selectedOption={type} options={TransactionType.get()} onChange={(event) => setType(event.target.value)} />
+                    <Select
+                        selectedOption={type}
+                        options={TransactionType.get()}
+                        onChange={(event) => setType(event.target.value)}
+                    />
 
                     <p style={{ margin: '0.5em 0' }}>Amount</p>
                     <TextBox setValue={setAmount} value={amount} placeholder={'Enter Transaction Amount'} />
@@ -66,7 +89,7 @@ const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit:
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <Button
                             onClick={() => {
-                                let transaction: Transaction = {
+                                const transaction: Transaction = {
                                     amount: amount,
                                     account: account,
                                     transaction_date: parse(transactionDate, 'dd-MM-yyyy', new Date()),
@@ -86,7 +109,10 @@ const AddTransaction = ({ accounts, onSubmit }: { accounts: Account[]; onSubmit:
                                     transaction_id: ''
                                 };
                                 addTransaction(transaction).then((apiResponse) => {
-                                    onSubmit(apiResponse && apiResponse.num_found === 1, apiResponse.results ? apiResponse.results[0] : undefined);
+                                    onSubmit(
+                                        apiResponse && apiResponse.num_found === 1,
+                                        apiResponse.results ? apiResponse.results[0] : undefined
+                                    );
                                     console.log('Saved Object', apiResponse.results);
                                 });
                             }}

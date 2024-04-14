@@ -10,8 +10,7 @@
     color: #7f8fa4;
     box-shadow: none;
     -webkit-tap-highlight-color: transparent;
-    transition: border-color 0.1s ease,
-    color 0.1s ease;
+    transition: border-color 0.1s ease, color 0.1s ease;
     border-radius: 6px;
     cursor: pointer;
 }
@@ -95,8 +94,7 @@
     padding: 1.1rem 2rem;
     text-align: center;
     margin: 0 1% 1% 1%;
-    box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px,
-    rgba(128, 135, 148, 0.56) 2px 2px 5px;
+    box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px, rgba(128, 135, 148, 0.56) 2px 2px 5px;
 }
 
 .custom-font-size {

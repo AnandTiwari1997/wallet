@@ -1,84 +1,36 @@
-import { Repository } from './repository.js';
-import { Holding, HoldingBuilder } from '../models/holding.js';
-import { addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
-import { sqlDatabaseProvider } from '../initialize-database.js';
 import { Logger } from '../../core/logger.js';
+import { DataSource, Repository } from 'typeorm';
+import { Holding } from '../models/holding.js';
+import { databaseProvider } from '../database-provider.js';
+import { FindManyOptionsExtended } from '../find-options/FindManyOptionsExtended.js';
+import { SelectQueryBuilderExtended } from '../query-builder/SelectQueryBuilderExtended.js';
+import { DriverUtils } from 'typeorm/driver/DriverUtils.js';
 
 const logger: Logger = new Logger('HoldingRepository');
 
-class HoldingRepository implements Repository<Holding, string> {
-    async add(item: Holding): Promise<Holding | undefined> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute<Holding>(
-                'INSERT INTO holding(holding_id, stock_name, stock_isin, stock_symbol_code, stock_symbol, stock_exchange, current_price, total_shares, invested_amount, account_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (holding_id) DO UPDATE SET current_price=$7 RETURNING *;',
-                [
-                    item.holding_id,
-                    item.stock_name,
-                    item.stock_isin,
-                    item.stock_symbol_code,
-                    item.stock_symbol,
-                    item.stock_exchange,
-                    item.current_price,
-                    item.total_shares,
-                    item.invested_amount,
-                    item.account_id
-                ],
-                true
-            );
-            return await this.find(queryResult.rows[0].holding_id);
-        } catch (error) {
-            logger.error(`[add] - Error On Add ${error}`);
-            return;
+class HoldingRepository extends Repository<Holding> {
+    private readonly dataSource: DataSource;
+
+    constructor(dataSource: DataSource) {
+        super(Holding, dataSource.manager, dataSource.createQueryRunner());
+        this.dataSource = dataSource;
+    }
+
+    createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<Holding> {
+        let selectQueryBuilderExtended = new SelectQueryBuilderExtended<Holding>(this.dataSource, this.queryRunner);
+        if (alias) {
+            let alias_ = DriverUtils.buildAlias(this.dataSource.driver, undefined, alias);
+            selectQueryBuilderExtended.select(alias_).from(this.metadata.target, alias_);
+            return selectQueryBuilderExtended;
+        } else {
+            return selectQueryBuilderExtended;
         }
     }
 
-    delete(id: string): Promise<boolean> {
-        return Promise.resolve(false);
-    }
-
-    deleteAll(): Promise<boolean> {
-        return Promise.resolve(false);
-    }
-
-    async find(id: string): Promise<Holding | undefined> {
-        try {
-            let findSQL = 'SELECT * FROM holding WHERE holding_id = $1';
-            let queryResult = await sqlDatabaseProvider.execute<Holding>(findSQL, [id], false);
-            return HoldingBuilder.buildFromEntity(queryResult.rows[0]);
-        } catch (error) {
-            logger.error(`[find] - Error On Find ${error}`);
-            return undefined;
-        }
-    }
-
-    async findAll(criteria: Criteria): Promise<Holding[]> {
-        try {
-            let findSQL = 'SELECT * FROM holding';
-            let where = addWhereClause(findSQL, criteria);
-            findSQL = where.sql;
-            findSQL = addOrderByClause(findSQL, criteria);
-            findSQL = addLimitAndOffset(findSQL, criteria);
-            let queryResult = await sqlDatabaseProvider.execute<Holding>(findSQL, where.whereClauses, false);
-            return queryResult.rows.map((holding) => HoldingBuilder.buildFromEntity(holding));
-        } catch (error) {
-            logger.error(`[find] - Error On Find ${error}`);
-            return [];
-        }
-    }
-
-    async update(item: Holding): Promise<Holding | undefined> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute<Holding>(
-                'UPDATE holding SET current_price=$1, total_shares=$2, invested_amount=$3, stock_exchange=$4 WHERE holding_id=$5 RETURNING *',
-                [item.current_price, item.total_shares, item.invested_amount, item.stock_exchange, item.holding_id],
-                true
-            );
-            return await this.find(queryResult.rows[0].holding_id);
-        } catch (error) {
-            logger.error(`[Update] - Error On Update ${error}`);
-            return;
-        }
+    async findWithGroupBy(options: FindManyOptionsExtended<Holding>): Promise<Holding[]> {
+        let queryBuilder = this.createExtendedQueryBuilder(this.metadata.targetName).setFindOptionsExtended(options);
+        return await queryBuilder.getMany();
     }
 }
 
-export const holdingRepository = new HoldingRepository();
+export const holdingRepository = new HoldingRepository(databaseProvider.database);

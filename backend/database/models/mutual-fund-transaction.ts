@@ -1,65 +1,63 @@
-import { parse } from 'date-fns';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
-export interface MutualFundTransaction {
+@Entity('mutual_fund')
+export class MutualFundTransaction {
+    @PrimaryColumn()
     transaction_id: string;
+
+    @Column()
     fund_name: string;
+
+    @Column()
     portfolio_number: string;
+
+    @CreateDateColumn()
     transaction_date: Date;
+
+    @Column()
     description: string;
+
+    @Column()
     amount: number;
+
+    @Column()
     is_credit: boolean;
+
+    @Column()
     nav: number;
+
+    @Column()
     units: number;
+
+    @Column()
     latest_nav: number;
+
+    @Column()
     isin: string;
-}
 
-export interface IMutualFundTransaction {
-    transaction_id: string;
-    fund_name: string;
-    portfolio_number: string;
-    transaction_date: string;
-    description: string;
-    amount: number;
-    is_credit: boolean;
-    nav: number;
-    units: number;
-    latest_nav: number;
-    isin: string;
-}
-
-export class MutualFundTransactionBuilder {
-    static build = (item: { [key: string]: any }): MutualFundTransaction => {
-        return {
-            transaction_id: item.transactionId,
-            portfolio_number: item.portfolioNumber,
-            fund_name: item.fundName,
-            transaction_date: parse(item.transactionDate, 'dd-MMM-yyyy', new Date(), {
-                weekStartsOn: 0
-            }),
-            description: item.description,
-            amount: item.amount,
-            nav: item.nav,
-            units: item.units,
-            latest_nav: item.latestNav,
-            is_credit: item.amount > 0,
-            isin: item.isin
-        };
-    };
-
-    static buildFromEntity = (item: IMutualFundTransaction): MutualFundTransaction => {
-        return {
-            transaction_id: item.transaction_id,
-            portfolio_number: item.portfolio_number,
-            fund_name: item.fund_name,
-            transaction_date: new Date(item.transaction_date),
-            description: item.description,
-            amount: item.amount,
-            nav: item.nav,
-            units: item.units,
-            latest_nav: item.latest_nav,
-            is_credit: item.is_credit,
-            isin: item.isin
-        };
-    };
+    constructor(
+        transaction_id: string,
+        fund_name: string,
+        portfolio_number: string,
+        transaction_date: Date,
+        description: string,
+        amount: number,
+        is_credit: boolean,
+        nav: number,
+        units: number,
+        latest_nav: number,
+        isin: string
+    ) {
+        this.transaction_id = transaction_id;
+        this.fund_name = fund_name;
+        this.portfolio_number = portfolio_number;
+        this.transaction_date = transaction_date;
+        this.description = description;
+        this.amount = amount;
+        this.is_credit = is_credit;
+        this.nav = nav;
+        this.units = units;
+        this.latest_nav = latest_nav;
+        this.isin = isin;
+    }
 }

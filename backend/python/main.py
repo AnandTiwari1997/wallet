@@ -5,14 +5,11 @@ import sys
 import uuid
 from datetime import datetime, timedelta
 
-import camelot
 import pandas as pd
 import pdfplumber
 import pytesseract
 from PIL.Image import Image
-from camelot.core import TableList
 from pandas import DataFrame
-from py_pdf_parser.loaders import load_file
 import table_ocr
 
 import cv2
@@ -125,38 +122,32 @@ class ProvidentFundProcessor(FundProcessor):
 
     def process(self, file_path, password):
         self.data = []
-        document = load_file(file_path)
-        element_financial_year = document.elements.filter_by_regex(r".+([0-9]{4}-[0-9]{4}).+")[0]
-        financial_year = re.compile(r".+([0-9]{4}-[0-9]{4}).+").match(element_financial_year.text()).group(1)
+        images = convert_from_path(file_path)
+        tables = get_tables(get_cv2_image(images[0]), 60, 1e4)
+        rows = get_cells(tables[0], 60, 40, 20)
+        date = re.search(r'\d+/\d+/\d+', get_text(rows[1][0])).group()
+        date = datetime.strptime(date, '%d/%m/%Y')
+        financial_year = str(date.year) + "-" + str(date.year + 1)
+        for row in rows[5:-5]:
+            data_row = []
+            for cell in row:
+                text = get_text(cell).strip()
+                text = re.sub(r'\([^()]*\)', '', text)
+                text = re.sub(r'\n', ' ', text)
+                data_row.append(text)
+            data_row.append(financial_year)
+            data_row.append(str(uuid.uuid4()))
+            self.data.append(data_row)
 
-        tables_: TableList = camelot.read_pdf(file_path, pages='1')
-        for table_ in tables_:
-            for row in table_.data[4:-5]:
-                if len(row[0]) == 0:
-                    tokens = row[1].split(' ')
-                    row[0] = tokens[0]
-                    row[1] = tokens[1]
-                row[3] = re.sub(r'\([^()]*\)', '', row[3])
-                row[3] = re.sub(r'\n', ' ', row[3])
-                row.append(financial_year)
-                row.append(str(uuid.uuid4()))
-                self.data.append(row)
-
-            # Interest Received Row
-            row = table_.data[-2]
-            if len(row) > 0:
-                date = re.search(r'\d+/\d+/\d+', row[0])
-                if date:
-                    temp = row[0]
-                    row[0] = 'Mar-' + financial_year.split("-")[1]
-                    row[1] = date.group().replace('/', '-')
-                    row[2] = 'CR'
-                    row[3] = temp
-                    row[4] = 0
-                    row[5] = 0
-                    row.append(financial_year)
-                    row.append(str(uuid.uuid4()))
-                    self.data.append(row)
+        date = re.search(r'\d+/\d+/\d+', get_text(rows[-2][0]))
+        if date:
+            date = date.group().strip()
+            date = datetime.strptime(date, '%d/%m/%Y')
+            data_row = [date.strftime('%b-%Y'), date.strftime('%d-%m-%Y'), 'CR',
+                        f'Interest Received for {financial_year}', 0, 0, get_text(rows[-2][-3]), get_text(rows[-2][-2]),
+                        get_text(rows[-2][-1]), financial_year, str(uuid.uuid4())]
+            self.data.append(data_row)
+        return self.data
 
     def save(self, file_format="json", file_path=None):
         df = DataFrame(self.data, columns=self.header)
@@ -167,7 +158,7 @@ class ProvidentFundProcessor(FundProcessor):
         clean_txt(df.employerContribution)
         clean_txt(df.pensionAmount)
 
-        df.transactionDate = pd.to_datetime(df.transactionDate, dayfirst=True)
+        df.transactionDate = pd.to_datetime(df.transactionDate, dayfirst=True, format="%d-%m-%Y")
         df.transactionDate = df.transactionDate.dt.strftime('%d-%b-%Y')
         df.epfAmount = df.epfAmount.astype('float')
         df.epsAmount = df.epsAmount.astype('float')
@@ -318,7 +309,7 @@ class StockProcessor(FundProcessor):
         clean_txt(df.stock_transaction_price)
         clean_txt(df.amount)
 
-        df.transaction_date = pd.to_datetime(df.transaction_date, dayfirst=True, format="%d/%m/%Y %H:%M:%S")
+        df.transaction_date = pd.to_datetime(df.transaction_date, dayfirst=True, format="%d-%m-%Y %H:%M:%S")
         df.transaction_date = df.transaction_date.dt.strftime('%d-%b-%Y %H:%M:%S')
         df.stock_quantity = df.stock_quantity.astype('float')
         df.stock_transaction_price = df.stock_transaction_price.astype('float')
@@ -381,6 +372,7 @@ class ZerodhaBrokingStockProcessor:
         text = get_text(get_cv2_image(images[0]))
         group = re.search(r'trade date: (.*)\n', text.lower()).group()
         trade_date = re.search(r"\d+/\d+/\d+", group.strip()).group()
+        trade_date = datetime.strptime(trade_date, '%d/%m/%Y').strftime('%d-%m-%Y')
 
         for image in images[1:-2]:
             for table in get_tables(get_cv2_image(image), self.table_scale, 1e5):
@@ -444,8 +436,8 @@ def save_to_csv(df, file_path=None):
 
 def clean_txt(x):
     x.replace(r",", "", inplace=True, regex=True)
-    x.replace("\(", "-", regex=True, inplace=True)
-    x.replace("\)", " ", regex=True, inplace=True)
+    x.replace("\\(", "-", regex=True, inplace=True)
+    x.replace("\\)", " ", regex=True, inplace=True)
     return x
 
 

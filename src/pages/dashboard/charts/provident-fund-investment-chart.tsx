@@ -1,12 +1,11 @@
-import { Bar } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
-import { ApiResponse, getInvestmentsTransaction } from '../../../modules/backend/BackendApi';
+import { Bar } from 'react-chartjs-2';
+
 import { ProvidentFundTransaction } from '../../../data/models';
 import { ArrayUtil } from '../../../data/transaction-data';
-import { useGlobalLoadingState } from '../../../index';
+import { ApiResponse, getInvestmentsTransaction } from '../../../modules/backend/BackendApi';
 
 const ProvidentFundInvestmentChart = () => {
-    const [state, dispatch] = useGlobalLoadingState();
     const [employeeContributionChartData, setEmployeeContributionChartData] = useState<
         {
             key: string;
@@ -21,24 +20,24 @@ const ProvidentFundInvestmentChart = () => {
     >([]);
 
     useEffect(() => {
-        getInvestmentsTransaction('provident_fund', {}, dispatch).then((apiResponse: ApiResponse<ProvidentFundTransaction>) => {
+        getInvestmentsTransaction('provident_fund', {}).then((apiResponse: ApiResponse<ProvidentFundTransaction>) => {
             const groupedEmployerContribution: { [key: string]: number[] } = {};
             apiResponse.results.forEach((transaction) => {
-                let key = transaction.financial_year;
-                let array = groupedEmployerContribution[key] || [];
+                const key = transaction.financial_year;
+                const array = groupedEmployerContribution[key] || [];
                 array.push(transaction.employer_contribution);
                 groupedEmployerContribution[key] = array;
             });
             const groupedEmployeeContribution: { [key: string]: number[] } = {};
             apiResponse.results.forEach((transaction) => {
-                let key = transaction.financial_year;
-                let array = groupedEmployeeContribution[key] || [];
+                const key = transaction.financial_year;
+                const array = groupedEmployeeContribution[key] || [];
                 array.push(transaction.employee_contribution);
                 groupedEmployeeContribution[key] = array;
             });
             const employee: { key: string; value: number }[] = [];
             const employer: { key: string; value: number }[] = [];
-            for (let key in groupedEmployeeContribution) {
+            for (const key in groupedEmployeeContribution) {
                 employee.push({
                     key: key,
                     value: ArrayUtil.sum<number>(groupedEmployeeContribution[key], (item) => item)

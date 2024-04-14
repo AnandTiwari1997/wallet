@@ -1,5 +1,5 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconDefinition } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './icon.css';
 
 const Icon = ({ icon, className, style }: { icon: IconDefinition; className?: string; style?: any }) => {

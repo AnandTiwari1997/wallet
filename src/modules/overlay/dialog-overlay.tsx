@@ -1,5 +1,5 @@
-import ReactDOM from 'react-dom';
 import CSS from 'csstype';
+import ReactDOM from 'react-dom';
 
 const containerStyle: CSS.Properties = {
     outline: '0',

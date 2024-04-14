@@ -134,5 +134,10 @@ export const migrations: {
              CONSTRAINT stock_transaction_id_pk PRIMARY KEY (transaction_id),
              CONSTRAINT holding_fk FOREIGN KEY (holding) REFERENCES holding (holding_id),
              CONSTRAINT demat_account_fk FOREIGN KEY (demat_account) REFERENCES demat_account (account_bo_id)
-         );`
+         );`,
+    V11: `ALTER TABLE IF EXISTS account RENAME COLUMN bank TO bank_id;`,
+    V12: `ALTER TABLE IF EXISTS account_transaction RENAME COLUMN account TO account_id;`,
+    V13: `ALTER TABLE IF EXISTS demat_account RENAME COLUMN broker TO broker_id;`,
+    V14: `ALTER TABLE IF EXISTS stock RENAME COLUMN holding TO holding_id;`,
+    V15: `ALTER TABLE IF EXISTS stock RENAME COLUMN demat_account TO demat_account_id;`
 };

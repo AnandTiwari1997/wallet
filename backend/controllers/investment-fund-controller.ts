@@ -1,22 +1,25 @@
-import { MUTUAL_FUND, PROVIDENT_FUND, STOCK } from '../constant.js';
+import express, { Request, Response } from 'express';
+import { AsyncApiHandler } from '../core/async-handler.js';
+import { ApiRequestPathParam } from '../types/api-request-path-param.js';
+import { ApiResponseBody } from '../types/api-response-body.js';
+import { ApiRequestBody } from '../types/api-request-body.js';
+import { SuccessResponse } from '../core/api-response.js';
+import { MUTUAL_FUND } from '../constant.js';
 import { mutualFundRepository } from '../database/repository/mutual-fund-repository.js';
 import { providentFundRepository } from '../database/repository/provident-fund-repository.js';
 import { syncTrackerStorage } from '../database/repository/sync-tracker-storage.js';
-import { dataChannel } from '../workflows/data-channel.js';
-import { syncProviderHelper } from '../workflows/sync-providers/sync-provider.js';
-import { captchaStorage } from '../database/repository/captcha-storage.js';
-import express, { Request, Response } from 'express';
-import AsyncHandler from '../core/async-handler.js';
-import { ApiResponseBody } from '../types/api-response-body.js';
-import { ApiRequestBody } from '../types/api-request-body.js';
+import { dataChannel } from '../utils/data-channel-util.js';
 import { MutualFundTransaction } from '../database/models/mutual-fund-transaction.js';
 import { ProvidentFundTransaction } from '../database/models/provident-fund-transaction.js';
-import { ApiRequestPathParam } from '../types/api-request-path-param.js';
-import { SuccessResponse } from '../core/api-response.js';
-import { stockTransactionRepository } from '../database/repository/stock-transaction-repository.js';
 import { StockTransaction } from '../database/models/stock-transaction.js';
+import { captchaStorage } from '../database/repository/captcha-storage.js';
+import { RepositoryUtils } from '../database/util/repository-utils.js';
+import { MutualFundSyncHandler } from '../sync-handlers/mutual-fund-sync-handler.js';
+import { ProvidentFundSyncHandler } from '../sync-handlers/provident-fund-sync-handler.js';
+import { HttpRequestLogger } from '../core/api-middleware.js';
 
 const router = express.Router();
+router.use(HttpRequestLogger);
 
 interface Captcha {
     id: string;
@@ -27,10 +30,17 @@ const getFundStorage = (type: string) => {
     switch (type) {
         case MUTUAL_FUND:
             return mutualFundRepository;
-        case PROVIDENT_FUND:
+        default:
             return providentFundRepository;
-        case STOCK:
-            return stockTransactionRepository;
+    }
+};
+
+const getSyncHandler = (type: string) => {
+    switch (type) {
+        case MUTUAL_FUND:
+            return new MutualFundSyncHandler();
+        default:
+            return new ProvidentFundSyncHandler();
     }
 };
 export const _syncInvestment = (req: any, res: any) => {
@@ -56,7 +66,7 @@ export const _syncInvestment = (req: any, res: any) => {
         );
         if (req.params.investmentType === MUTUAL_FUND) res.end();
         else dataChannel.register('sync', res);
-        syncProviderHelper(req.params.investmentType);
+        getSyncHandler(req.params.investmentType).sync();
         syncTrackerStorage.add({
             syncType: req.params.investmentType,
             startTime: new Date(),
@@ -67,7 +77,7 @@ export const _syncInvestment = (req: any, res: any) => {
 router.get('/:investmentType/sync', _syncInvestment);
 router.post(
     '/:investmentType/transaction',
-    AsyncHandler(
+    AsyncApiHandler(
         async (
             req: Request<
                 ApiRequestPathParam,
@@ -76,20 +86,35 @@ router.post(
             >,
             res: Response<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction>>
         ) => {
-            let fundStorage: any = getFundStorage(req.params.investmentType);
-            let result = await fundStorage.findAllUsingGroupBy(req.body.criteria || {});
-            let count = await fundStorage.count(req.body.criteria || {});
+            let fundStorage = getFundStorage(req.params.investmentType);
+            if (!fundStorage) return;
+            let where = RepositoryUtils.getWhereClause(req.body.criteria);
+            let sort = RepositoryUtils.getSortClause(req.body.criteria);
+            let groupBy = RepositoryUtils.getGroupByClause(req.body.criteria);
+            let result = await fundStorage.findWithGroupBy({
+                where: where,
+                order: sort,
+                groupBy: groupBy,
+                limit: req.body.criteria?.limit,
+                offset: RepositoryUtils.getOffset(req.body.criteria)
+            });
+            let count = await fundStorage.countWithGroupBy({
+                where: where,
+                order: sort
+            });
             let apiResponse: ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction> = {
                 num_found: count,
                 results: result
             };
-            return new SuccessResponse<ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction | StockTransaction>>(apiResponse).send(res);
+            return new SuccessResponse<
+                ApiResponseBody<MutualFundTransaction | ProvidentFundTransaction | StockTransaction>
+            >(apiResponse).send(res);
         }
     )
 );
 router.post(
     '/:investmentType/sync/captcha',
-    AsyncHandler(
+    AsyncApiHandler(
         async (
             req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<Captcha>>,
             res: Response<{

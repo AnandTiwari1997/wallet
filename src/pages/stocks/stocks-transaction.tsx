@@ -1,14 +1,16 @@
-import CSS from 'csstype';
-import { useEffect, useState } from 'react';
-import { indianRupee } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ApiCriteria, getStockTransaction } from '../../modules/backend/BackendApi';
-import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
+import CSS from 'csstype';
 import { format } from 'date-fns';
-import { useGlobalLoadingState } from '../../index';
+import { useEffect, useState } from 'react';
+
+import { darkGreen, darkRed } from '../../App';
 import { DematAccount, StockTransaction } from '../../data/models';
 import { ArrayUtil } from '../../data/transaction-data';
-import { darkGreen, darkRed } from '../../App';
+import { indianRupee } from '../../icons/icons';
+import { ApiCriteria, ApiResponse, getStockTransaction } from '../../modules/backend/BackendApi';
+import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
+import useAPI from '../../hooks/app-hooks';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -33,12 +35,10 @@ export const expandedStyle: CSS.Properties = {
 
 export const expenseStyle: CSS.Properties = {
     color: '#e75757'
-    // border: "1px solid #ff7f7f",
 };
 
 export const incomeStyle: CSS.Properties = {
     color: '#2e7d32'
-    //   border: "1px solid #7fff7f",
 };
 
 export const intermediateExpandStyle: CSS.Properties = {
@@ -76,33 +76,39 @@ const StockTransactionPage = ({
         pageSize: 25,
         pageNumber: 0
     });
-    const [state, dispatch] = useGlobalLoadingState();
+    const [getData, loading] = useAPI<ApiRequestBody<StockTransaction>, ApiResponse<StockTransaction>>(
+        getStockTransaction
+    );
 
     const _getCriteria = (offset: number, limit: number) => {
-        let criteria: ApiCriteria = {
-            groupBy: [{ key: 'holding' }],
-            sorts: [{ key: 'holding', ascending: true }],
+        const criteria: ApiCriteria = {
+            groupBy: [{ key: 'holding_id' }],
+            sorts: [{ key: 'holding_id', ascending: true }],
             offset: offset,
             limit: limit
         };
-        let filters = [];
+        const filters = [];
         if (filterByAccount !== '') {
-            filters.push({ key: 'demat_account', value: filterByAccount });
+            filters.push({ key: 'demat_account', value: [filterByAccount] });
         }
         if (filterByTransactionType !== '') {
-            filters.push({ key: 'transaction_type', value: filterByTransactionType });
+            filters.push({ key: 'transaction_type', value: [filterByTransactionType] });
         }
         criteria.filters = filters;
         return criteria;
     };
 
     useEffect(() => {
-        console.log(dematAccounts);
-        getStockTransaction({ criteria: _getCriteria(tablePagination.pageNumber, tablePagination.pageSize) }, dispatch).then((apiResponse) => {
-            setCount(apiResponse.num_found);
-            const sortedTransactions = ArrayUtil.sort(apiResponse.results, (item: StockTransaction) => item.transaction_date);
-            setInitialData(sortedTransactions);
-        });
+        getData({ criteria: _getCriteria(tablePagination.pageNumber, tablePagination.pageSize) }).then(
+            (apiResponse) => {
+                setCount(apiResponse.num_found);
+                const sortedTransactions = ArrayUtil.sort(
+                    apiResponse.results,
+                    (item: StockTransaction) => item.transaction_date
+                );
+                setInitialData(sortedTransactions);
+            }
+        );
     }, [tablePagination, filterByAccount, filterByTransactionType]);
 
     const columns: TableColumn[] = [
@@ -132,7 +138,12 @@ const StockTransactionPage = ({
                                 fontWeight: '700'
                             }}
                         >
-                            {format(new Date(rows.find((value) => value.transaction_type === 'B')?.transaction_date || new Date()), 'dd MMMM yyy')}
+                            {format(
+                                new Date(
+                                    rows.find((value) => value.transaction_type === 'B')?.transaction_date || new Date()
+                                ),
+                                'dd MMMM yyy'
+                            )}
                         </div>
                     </div>
                 );
@@ -142,7 +153,23 @@ const StockTransactionPage = ({
         {
             key: 'transaction_type',
             label: 'Transaction Type',
-            customRender: (row: StockTransaction) => (row.transaction_type === 'B' ? 'Buy' : 'Sell')
+            customRender: (row: StockTransaction) => (row.transaction_type === 'B' ? 'Buy' : 'Sell'),
+            groupByRender: (rows: StockTransaction[]) => {
+                return (
+                    <div style={{ display: 'block' }}>
+                        <div style={{ width: '100%', textAlign: 'left' }}>{`Last Transaction:`}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700'
+                            }}
+                        >
+                            {rows[0].transaction_type === 'B' ? 'Buy' : 'Sell'}
+                        </div>
+                    </div>
+                );
+            }
         },
         {
             key: 'stock_quantity',
@@ -249,7 +276,9 @@ const StockTransactionPage = ({
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (item) => Number.parseFloat(item.data[0].holding.invested_amount)).toFixed(2)}
+                            {ArrayUtil.sum(rows, (item) =>
+                                Number.parseFloat(item.data[0].holding.invested_amount)
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -267,7 +296,11 @@ const StockTransactionPage = ({
                                 width: '100%',
                                 textAlign: 'left',
                                 fontWeight: '700',
-                                color: rows[0].amount < Number.parseInt(rows[0].holding.total_shares) * rows[0].holding.current_price ? `${darkGreen}` : `${darkRed}`
+                                color:
+                                    rows[0].amount <
+                                    Number.parseInt(rows[0].holding.total_shares) * rows[0].holding.current_price
+                                        ? `${darkGreen}`
+                                        : `${darkRed}`
                             }}
                         >
                             <i className="icon">
@@ -299,7 +332,12 @@ const StockTransactionPage = ({
                                 fontWeight: '700',
                                 color:
                                     ArrayUtil.sum(rows, (item) => item.data[0].amount) <
-                                    ArrayUtil.sum(rows, (item) => Number.parseInt(item.data[0].holding.total_shares) * item.data[0].holding.current_price)
+                                    ArrayUtil.sum(
+                                        rows,
+                                        (item) =>
+                                            Number.parseInt(item.data[0].holding.total_shares) *
+                                            item.data[0].holding.current_price
+                                    )
                                         ? `${darkGreen}`
                                         : `${darkRed}`
                             }}
@@ -307,7 +345,12 @@ const StockTransactionPage = ({
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (item) => Number.parseInt(item.data[0].holding.total_shares) * item.data[0].holding.current_price).toFixed(2)}
+                            {ArrayUtil.sum(
+                                rows,
+                                (item) =>
+                                    Number.parseInt(item.data[0].holding.total_shares) *
+                                    item.data[0].holding.current_price
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -322,6 +365,7 @@ const StockTransactionPage = ({
             groupByColumn={[columns[0], columns[1]]}
             selectable={true}
             count={count}
+            isLoading={loading}
             onPagination={(tablePagination: TablePagination) => {
                 setTablePagination(tablePagination);
             }}

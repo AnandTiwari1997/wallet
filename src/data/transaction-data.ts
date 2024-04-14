@@ -64,6 +64,7 @@ export class Category {
     static SALARY = { label: 'Salary', value: 'SALARY' };
     static FOOD = { label: 'Food', value: 'FOOD' };
     static FUEL = { label: 'Fuel', value: 'FUEL' };
+    static CREDIT_CARD_PAYMENT: { label: 'Credit Card Payment'; value: 'CREDIT_CARD_PAYMENT' };
     static PHONE_RECHARGE = { label: 'Phone Recharge', value: 'PHONE_RECHARGE' };
     static BROADBAND_RECHARGE = { label: 'Broadband Recharge', value: 'BROADBAND_RECHARGE' };
     static DTH_RECHARGE = { label: 'DTH Recharge', value: 'DTH_RECHARGE' };
@@ -85,11 +86,15 @@ export class Category {
     static ATM_WITHDRAWAL = { label: 'ATM Withdrawal', value: 'ATM_WITHDRAWAL' };
     static SENT_SELF = { label: 'Sent to Self', value: 'SENT_SELF' };
     static RECEIVED_SELF = { label: 'Received from Self', value: 'RECEIVED_SELF' };
+    static SENT_OTHER = { label: 'Sent to Other', value: 'SENT_OTHER' };
+    static RECEIVED_OTHER = { label: 'Received from Other', value: 'RECEIVED_OTHER' };
+    static PHARMACY = { label: 'Pharmacy', value: 'PHARMACY' };
 
     static categoryMap: { [key: string]: { label: string; value: string } } = {
         SALARY: Category.SALARY,
         FOOD: Category.FOOD,
         FUEL: Category.FUEL,
+        CREDIT_CARD_PAYMENT: Category.CREDIT_CARD_PAYMENT,
         PHONE_RECHARGE: Category.PHONE_RECHARGE,
         BROADBAND_RECHARGE: Category.BROADBAND_RECHARGE,
         DTH_RECHARGE: Category.DTH_RECHARGE,
@@ -110,7 +115,10 @@ export class Category {
         ATM_DEPOSIT: Category.ATM_DEPOSIT,
         ATM_WITHDRAWAL: Category.ATM_WITHDRAWAL,
         SENT_SELF: Category.SENT_SELF,
-        RECEIVED_SELF: Category.RECEIVED_SELF
+        RECEIVED_SELF: Category.RECEIVED_SELF,
+        SENT_OTHER: Category.SENT_OTHER,
+        RECEIVED_OTHER: Category.RECEIVED_OTHER,
+        PHARMACY: Category.PHARMACY
     };
 
     static getLabel(value: string) {
@@ -129,6 +137,7 @@ export class Category {
             Category.DIVIDEND,
             Category.FUEL,
             Category.FOOD,
+            Category.CREDIT_CARD_PAYMENT,
             Category.BROADBAND_RECHARGE,
             Category.PHONE_RECHARGE,
             Category.DTH_RECHARGE,
@@ -142,6 +151,9 @@ export class Category {
             Category.SCHOOL_FEE,
             Category.SENT_SELF,
             Category.RECEIVED_SELF,
+            Category.SENT_OTHER,
+            Category.RECEIVED_OTHER,
+            Category.PHARMACY,
             Category.OTHERS
         ];
     }
@@ -221,7 +233,16 @@ export class MutualFundTransaction {
     units: number;
     latestNav: number;
 
-    constructor(portfolioNumber: string, fundName: string, transactionDate: Date, transactionId: string, amount: number, nav: number, units: number, latestNav: number) {
+    constructor(
+        portfolioNumber: string,
+        fundName: string,
+        transactionDate: Date,
+        transactionId: string,
+        amount: number,
+        nav: number,
+        units: number,
+        latestNav: number
+    ) {
         this.transactionId = transactionId;
         this.fundName = fundName;
         this.portfolioNumber = portfolioNumber;
@@ -235,7 +256,16 @@ export class MutualFundTransaction {
 
     static build = (item: any) => {
         const date = new Date(item.transactionDate);
-        return new MutualFundTransaction(item.portfolioNumber, item.fundName, date, item.transactionId, item.amount, item.nav, item.units, item.latestNav);
+        return new MutualFundTransaction(
+            item.portfolioNumber,
+            item.fundName,
+            date,
+            item.transactionId,
+            item.amount,
+            item.nav,
+            item.units,
+            item.latestNav
+        );
     };
 
     static parseDate = (strDate: string) => {
@@ -268,8 +298,12 @@ export class ArrayUtil {
 
     static sort<T>(arr: T[], fn: (item: T) => any): T[] {
         return arr.sort((a: T, b: T) => {
-            if (fn(a) > fn(b)) return -1;
-            if (fn(a) < fn(b)) return 1;
+            if (fn(a) > fn(b)) {
+                return -1;
+            }
+            if (fn(a) < fn(b)) {
+                return 1;
+            }
             return 0;
         });
     }

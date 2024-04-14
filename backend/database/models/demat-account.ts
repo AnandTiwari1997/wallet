@@ -1,57 +1,49 @@
-import { Broker, BrokerBuilder } from './broker.js';
+import { Broker } from './broker.js';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Holding } from './holding.js';
 
-export interface DematAccount {
+@Entity('demat_account')
+export class DematAccount {
+    @PrimaryColumn()
     account_bo_id: string;
+
+    @Column()
     account_client_id: string;
+
+    @Column()
     account_name: string;
+
+    @Column()
+    broker_id: string;
+
+    @ManyToOne(() => Broker, {
+        eager: true
+    })
+    @JoinColumn({ name: 'broker_id' })
     broker: Broker;
-    account_type: string;
+
+    @CreateDateColumn()
     start_date: Date;
+
+    @CreateDateColumn()
     last_synced_on: Date;
-}
 
-export interface DematAccountDto {
-    account_bo_id: string;
-    account_client_id: string;
-    account_name: string;
-    broker: Broker;
-    account_type: string;
-    start_date: Date;
-}
-
-export class DematAccountBuilder {
-    static buildFromEntity(iDematAccount: DematAccount & Broker): DematAccount {
-        return {
-            account_bo_id: iDematAccount.account_bo_id,
-            account_client_id: iDematAccount.account_client_id,
-            account_name: iDematAccount.account_name,
-            broker: BrokerBuilder.buildFromEntity(iDematAccount),
-            account_type: iDematAccount.account_type,
-            start_date: new Date(iDematAccount.start_date),
-            last_synced_on: new Date(iDematAccount.last_synced_on)
-        };
-    }
-
-    static toDematAccountDto(item: DematAccount): DematAccountDto {
-        return {
-            account_bo_id: item.account_bo_id,
-            account_client_id: item.account_client_id,
-            account_name: item.account_name,
-            broker: item.broker,
-            account_type: item.account_type,
-            start_date: new Date(item.start_date)
-        };
-    }
-
-    static toDematAccount(item: DematAccountDto): DematAccount {
-        return {
-            account_bo_id: item.account_bo_id,
-            account_client_id: item.account_client_id,
-            account_name: item.account_name,
-            broker: item.broker,
-            account_type: item.account_type,
-            start_date: new Date(item.start_date),
-            last_synced_on: new Date()
-        };
+    constructor(
+        account_bo_id: string,
+        account_client_id: string,
+        account_name: string,
+        broker_id: string,
+        broker: Broker,
+        start_date: Date,
+        last_synced_on: Date,
+        holdings: Holding[]
+    ) {
+        this.account_bo_id = account_bo_id;
+        this.account_client_id = account_client_id;
+        this.account_name = account_name;
+        this.broker_id = broker_id;
+        this.broker = broker;
+        this.start_date = start_date;
+        this.last_synced_on = last_synced_on;
     }
 }

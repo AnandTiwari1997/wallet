@@ -1,25 +1,51 @@
 import './month-picker.css';
-import { arrowLeft, arrowRight } from '../../icons/icons';
-import React, { useState } from 'react';
 import { addYears, endOfMonth, startOfMonth, subYears } from 'date-fns/esm';
+import React, { useState } from 'react';
+
+import { arrowLeft, arrowRight } from '../../icons/icons';
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
 import IconButton from '../icon/icon-button';
 
-const MonthPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
+const MonthPicker = ({
+    value,
+    onChange
+}: {
+    value: OnCalenderPickerChange | undefined;
+    onChange: (change: OnCalenderPickerChange, picker: string) => void;
+}) => {
     const parse = (value: any, index: number) => {
-        if (!value) return undefined;
+        if (!value) {
+            return undefined;
+        }
         const label = value.label;
-        if (label === 'This Month') return index === 0 ? new Date().getMonth() : new Date().getFullYear();
+        if (label === 'This Month') {
+            return index === 0 ? new Date().getMonth() : new Date().getFullYear();
+        }
         const dates: string[] = label.trim().split(' ');
         if (index === 0) {
             const month: string = dates[index].trim();
             return months.indexOf(month);
         }
-        if (dates.length === 1) return new Date().getFullYear();
+        if (dates.length === 1) {
+            return new Date().getFullYear();
+        }
         return parseInt(dates[index].trim());
     };
 
-    const months: string[] = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const months: string[] = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ];
 
     const [month, setMonth] = useState({
         month: value ? value.rangeStart.getMonth() : undefined,
@@ -28,7 +54,7 @@ const MonthPicker = ({ value, onChange }: { value: OnCalenderPickerChange | unde
     const [year, setYear] = useState(month.year ? month.year : new Date().getFullYear());
 
     const handleClick = (e: any) => {
-        let date = new Date();
+        const date = new Date();
         date.setMonth(parseInt(e.target.id));
         date.setFullYear(year);
         onChange(

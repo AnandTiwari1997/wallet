@@ -1,9 +1,17 @@
-import { Account, Bank, Bill, Broker, DematAccount, Holding, MutualFundTransaction, ProvidentFundTransaction, StockTransaction, Transaction } from '../../data/models';
+import {
+    Account,
+    Bank,
+    Bill,
+    Broker,
+    DematAccount,
+    Holding,
+    MutualFundTransaction,
+    ProvidentFundTransaction,
+    StockTransaction,
+    Transaction
+} from '../../data/models';
 import axios from 'axios';
 import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
-
-const API_PORT = 8000;
-const API_URL = 'localhost';
 
 export interface ApiResponse<T> {
     results: T[];
@@ -13,7 +21,7 @@ export interface ApiResponse<T> {
 export interface ApiCriteria {
     filters?: {
         key: string;
-        value: string;
+        value: string[];
     }[];
     sorts?: {
         key: string;
@@ -39,12 +47,18 @@ export interface ApiRequestBody<T> {
 }
 
 export const getBanks = async (apiRequestBody: ApiRequestBody<Bank> = {}): Promise<any> => {
-    return await axios.post<ApiResponse<Bank>>(`http://${API_URL}:${API_PORT}/wallet/bank/_search`, {}).then((value) => value.data);
+    return await axios
+        .post<ApiResponse<Bank>>(`/wallet/bank/_search`, {})
+        .then((value) => value.data);
 };
 
-export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transaction>, dispatch: any): Promise<ApiResponse<Transaction>> => {
-    dispatch(true);
-    const response = await axios.post<ApiResponse<Transaction>>(`http://${API_URL}:${API_PORT}/wallet/transaction/_search`, apiRequestBody);
+export const getAllTransactions = async (
+    apiRequestBody: ApiRequestBody<Transaction>
+): Promise<ApiResponse<Transaction>> => {
+    const response = await axios.post<ApiResponse<Transaction>>(
+        `/wallet/transaction/_search`,
+        apiRequestBody
+    );
     let data = response.data.results.map<Transaction>((transaction) => {
         return {
             transaction_id: transaction.transaction_id,
@@ -66,7 +80,7 @@ export const getAllTransactions = async (apiRequestBody: ApiRequestBody<Transact
 
 export const addTransaction = async (transaction: Transaction): Promise<ApiResponse<Transaction>> => {
     return await axios.post<any, ApiResponse<Transaction>, any>(
-        `http://${API_URL}:${API_PORT}/wallet/transaction`,
+        `/wallet/transaction`,
         { data: transaction },
         {
             headers: {
@@ -76,15 +90,16 @@ export const addTransaction = async (transaction: Transaction): Promise<ApiRespo
     );
 };
 
-export const getAccounts = async (dispatch: any, apiRequestBody: ApiRequestBody<Transaction> = {}): Promise<ApiResponse<Account>> => {
-    dispatch(true);
-    const response = await axios.post(`http://${API_URL}:${API_PORT}/wallet/account/_search`, apiRequestBody);
+export const getAccounts = async (
+    apiRequestBody: ApiRequestBody<Transaction> = {}
+): Promise<ApiResponse<Account>> => {
+    const response = await axios.post(`/wallet/account/_search`, apiRequestBody);
     return { results: response.data.results, num_found: response.data.num_found };
 };
 
 export const addAccount = async (account: Account): Promise<ApiResponse<Account>> => {
     return await axios.post<any, ApiResponse<Account>, any>(
-        `http://${API_URL}:${API_PORT}/wallet/account`,
+        `/wallet/account`,
         { data: account },
         {
             headers: {
@@ -96,7 +111,7 @@ export const addAccount = async (account: Account): Promise<ApiResponse<Account>
 
 export const updateAccount = async (account: Account): Promise<ApiResponse<Account>> => {
     return await axios.put<any, ApiResponse<Account>, any>(
-        `http://${API_URL}:${API_PORT}/wallet/account`,
+        `/wallet/account`,
         { data: account },
         {
             headers: {
@@ -117,7 +132,7 @@ export const syncAccount = async (
             message: string;
         },
         any
-    >(`http://${API_URL}:${API_PORT}/wallet/account/sync`, apiRequest, {
+    >(`/wallet/account/sync`, apiRequest, {
         headers: {
             'Content-Type': 'application/json'
         }
@@ -133,11 +148,11 @@ export const syncAccounts = async (): Promise<{
             message: string;
         },
         any
-    >(`http://${API_URL}:${API_PORT}/wallet/account/sync`);
+    >(`/wallet/account/sync`);
 };
 
 export const syncInvestmentAccount = (type: string): EventSource => {
-    return new EventSource(`http://${API_URL}:${API_PORT}/wallet/investment/${type}/sync`);
+    return new EventSource(`/wallet/investment/${type}/sync`);
 };
 
 export const syncInvestmentAccountCaptcha = async (
@@ -146,22 +161,32 @@ export const syncInvestmentAccountCaptcha = async (
         [key: string]: string;
     }>
 ): Promise<any> => {
-    return await axios.post(`http://${API_URL}:${API_PORT}/wallet/investment/${type}/sync/captcha`, captcha, {
+    return await axios.post(`/wallet/investment/${type}/sync/captcha`, captcha, {
         headers: {
             'Content-Type': 'application/json'
         }
     });
 };
 
-export const getInvestmentsTransaction = async (type: string, requestBody: ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction> = {}, dispatch: any): Promise<any> => {
-    dispatch(true);
-    let response = await axios.post<ApiResponse<MutualFundTransaction | ProvidentFundTransaction>>(`http://${API_URL}:${API_PORT}/wallet/investment/${type}/transaction`, requestBody, {
-        headers: {
-            'Content-Type': 'application/json'
+export const getInvestmentsTransaction = async (
+    type: string,
+    requestBody: ApiRequestBody<MutualFundTransaction | ProvidentFundTransaction> = {}
+): Promise<any> => {
+    let response = await axios.post<ApiResponse<MutualFundTransaction | ProvidentFundTransaction>>(
+        `/wallet/investment/${type}/transaction`,
+        requestBody,
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
         }
-    });
-    let data: (MutualFundTransaction | ProvidentFundTransaction)[] = response.data.results.map<MutualFundTransaction | ProvidentFundTransaction>(
-        (transaction: MutualFundTransaction | ProvidentFundTransaction): MutualFundTransaction | ProvidentFundTransaction => {
+    );
+    let data: (MutualFundTransaction | ProvidentFundTransaction)[] = response.data.results.map<
+        MutualFundTransaction | ProvidentFundTransaction
+    >(
+        (
+            transaction: MutualFundTransaction | ProvidentFundTransaction
+        ): MutualFundTransaction | ProvidentFundTransaction => {
             if (type === 'mutual_fund') {
                 transaction = transaction as MutualFundTransaction;
                 return {
@@ -199,10 +224,9 @@ export const getInvestmentsTransaction = async (type: string, requestBody: ApiRe
     return { results: data, num_found: response.data.num_found };
 };
 
-export const getBills = async (requestBody: ApiRequestBody<any> = {}, dispatch: any): Promise<ApiResponse<Bill>> => {
-    dispatch(true);
+export const getBills = async (requestBody: ApiRequestBody<any> = {}): Promise<ApiResponse<Bill>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/bill/_search`, requestBody, {
+        .post(`/wallet/bill/_search`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -212,7 +236,7 @@ export const getBills = async (requestBody: ApiRequestBody<any> = {}, dispatch: 
 
 export const addBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<ApiResponse<Bill>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/bill`, requestBody, {
+        .post(`/wallet/bill`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -222,7 +246,7 @@ export const addBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<A
 
 export const updateBill = async (requestBody: ApiRequestBody<Bill> = {}): Promise<ApiResponse<Bill>> => {
     return await axios
-        .put(`http://${API_URL}:${API_PORT}/wallet/bill`, requestBody, {
+        .put(`/wallet/bill`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -233,7 +257,7 @@ export const updateBill = async (requestBody: ApiRequestBody<Bill> = {}): Promis
 export const getBroker = async (requestBody: ApiRequestBody<Broker> = {}): Promise<ApiResponse<Broker>> => {
     // dispatch(true);
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/stock/broker/_search`, requestBody, {
+        .post(`/wallet/stock/broker/_search`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -241,10 +265,11 @@ export const getBroker = async (requestBody: ApiRequestBody<Broker> = {}): Promi
         .then((value) => value.data);
 };
 
-export const getStockAccount = async (requestBody: ApiRequestBody<DematAccount> = {}, dispatch: any): Promise<ApiResponse<DematAccount>> => {
-    dispatch(true);
+export const getStockAccount = async (
+    requestBody: ApiRequestBody<DematAccount> = {}
+): Promise<ApiResponse<DematAccount>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/stock/account/_search`, requestBody, {
+        .post(`/wallet/stock/account/_search`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -252,9 +277,11 @@ export const getStockAccount = async (requestBody: ApiRequestBody<DematAccount> 
         .then((value) => value.data);
 };
 
-export const addStockAccount = async (requestBody: ApiRequestBody<DematAccount> = {}): Promise<ApiResponse<DematAccount>> => {
+export const addStockAccount = async (
+    requestBody: ApiRequestBody<DematAccount> = {}
+): Promise<ApiResponse<DematAccount>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/stock/account`, requestBody, {
+        .post(`/wallet/stock/account`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -262,10 +289,11 @@ export const addStockAccount = async (requestBody: ApiRequestBody<DematAccount> 
         .then((value) => value.data);
 };
 
-export const getStockTransaction = async (requestBody: ApiRequestBody<StockTransaction> = {}, dispatch: any): Promise<ApiResponse<StockTransaction>> => {
-    dispatch(true);
+export const getStockTransaction = async (
+    requestBody: ApiRequestBody<StockTransaction> = {}
+): Promise<ApiResponse<StockTransaction>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/stock/transaction/_search`, requestBody, {
+        .post(`/wallet/stock/transaction/_search`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -280,7 +308,7 @@ export const getElectricityVendors = async (): Promise<
     }>
 > => {
     return await axios
-        .get(`http://${API_URL}:${API_PORT}/wallet/bill/electricity/vendors`, {
+        .get(`/wallet/bill/electricity/vendors`, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -290,7 +318,7 @@ export const getElectricityVendors = async (): Promise<
 
 export const getStockHolding = async (requestBody: ApiRequestBody<Holding> = {}): Promise<ApiResponse<Holding>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/stock/holding/_search`, requestBody, {
+        .post(`/wallet/stock/holding/_search`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -298,9 +326,11 @@ export const getStockHolding = async (requestBody: ApiRequestBody<Holding> = {})
         .then((value) => value.data);
 };
 
-export const addStockTransaction = async (requestBody: ApiRequestBody<StockTransaction> = {}): Promise<ApiResponse<StockTransaction>> => {
+export const addStockTransaction = async (
+    requestBody: ApiRequestBody<StockTransaction> = {}
+): Promise<ApiResponse<StockTransaction>> => {
     return await axios
-        .post(`http://${API_URL}:${API_PORT}/wallet/stock/transaction`, requestBody, {
+        .post(`/wallet/stock/transaction`, requestBody, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -308,12 +338,18 @@ export const addStockTransaction = async (requestBody: ApiRequestBody<StockTrans
         .then((value) => value.data);
 };
 
-export const updateAccountTransaction = async (requestBody: ApiRequestBody<Transaction> = {}): Promise<ApiResponse<Transaction>> => {
-    let response = await axios.put<ApiResponse<Transaction>>(`http://${API_URL}:${API_PORT}/wallet/transaction`, requestBody, {
-        headers: {
-            'Content-Type': 'application/json'
+export const updateAccountTransaction = async (
+    requestBody: ApiRequestBody<Transaction> = {}
+): Promise<ApiResponse<Transaction>> => {
+    let response = await axios.put<ApiResponse<Transaction>>(
+        `/wallet/transaction`,
+        requestBody,
+        {
+            headers: {
+                'Content-Type': 'application/json'
+            }
         }
-    });
+    );
     let data = response.data.results.map<Transaction>((transaction) => {
         return {
             transaction_id: transaction.transaction_id,

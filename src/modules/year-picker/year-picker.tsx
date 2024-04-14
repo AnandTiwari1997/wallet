@@ -1,21 +1,33 @@
 import './year-picker.css';
-import { arrowLeft, arrowRight } from '../../icons/icons';
+import { addYears, startOfYear, subYears, endOfYear } from 'date-fns/esm';
 import React, { useState } from 'react';
-import { addYears, startOfYear, subYears } from 'date-fns/esm';
+
+import { arrowLeft, arrowRight } from '../../icons/icons';
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
-import { endOfYear } from 'date-fns';
 import IconButton from '../icon/icon-button';
 
-const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
+const YearPicker = ({
+    value,
+    onChange
+}: {
+    value: OnCalenderPickerChange | undefined;
+    onChange: (change: OnCalenderPickerChange, picker: string) => void;
+}) => {
     const parse = (value: any) => {
-        if (!value) return undefined;
+        if (!value) {
+            return undefined;
+        }
         const label = value.label;
-        if (label === 'This Year') return new Date().getFullYear();
+        if (label === 'This Year') {
+            return new Date().getFullYear();
+        }
         return parseInt(label);
     };
 
     const getStartYear = (value: number | undefined) => {
-        if (!value) return new Date().getFullYear() - 11;
+        if (!value) {
+            return new Date().getFullYear() - 11;
+        }
         let loopThrough: boolean = true;
         let startYear = new Date().getFullYear() - 11;
         let endYear = new Date().getFullYear();
@@ -25,13 +37,17 @@ const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
             }
             endYear = startYear - 1;
             startYear = endYear - 11;
-            if (startYear < 0) loopThrough = false;
+            if (startYear < 0) {
+                loopThrough = false;
+            }
         } while (loopThrough);
         return undefined;
     };
 
     const getEndYear = (value: number | undefined) => {
-        if (!value) return new Date().getFullYear();
+        if (!value) {
+            return new Date().getFullYear();
+        }
         let loopThrough: boolean = true;
         let startYear = new Date().getFullYear() - 11;
         let endYear = new Date().getFullYear();
@@ -41,7 +57,9 @@ const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
             }
             endYear = startYear - 1;
             startYear = endYear - 11;
-            if (startYear < 0) loopThrough = false;
+            if (startYear < 0) {
+                loopThrough = false;
+            }
         } while (loopThrough);
         return undefined;
     };
@@ -68,7 +86,7 @@ const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
     };
 
     const handleClick = (e: React.MouseEvent) => {
-        let date = new Date();
+        const date = new Date();
         date.setFullYear(parseInt(e.currentTarget.id));
         onChange(
             {
@@ -82,7 +100,7 @@ const YearPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
     };
 
     const renderMonths = () => {
-        let calculatedYears: any[] = [];
+        const calculatedYears: any[] = [];
         for (let index = years.startYear; index! <= years.endYear!; index!++) {
             let className = 'single-year';
             if (index === new Date().getFullYear()) {

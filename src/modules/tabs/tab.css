@@ -40,7 +40,8 @@
     user-select: none;
 }
 
-.tab--label:focus, .tab--label:active {
+.tab--label:focus,
+.tab--label:active {
     font-weight: 500;
     color: inherit;
 }

@@ -1,6 +1,7 @@
-import { SortableColumn, TableColumn } from './table';
-import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useState } from 'react';
+
+import { SortableColumn, TableColumn } from './table';
 import { sortDown, sortUp } from '../../icons/icons';
 
 export interface SortedColumn {
@@ -34,7 +35,9 @@ const SortColumn = ({
     const _sort = (column: TableColumn) => {
         setShowHover(false);
         setHovered(false);
-        if (!column?.sortable && !hovered) return;
+        if (!column?.sortable && !hovered) {
+            return;
+        }
         if (sortOption.active && !sortOption.ascending) {
             sortOption.active = false;
             onSort(undefined);

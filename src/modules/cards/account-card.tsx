@@ -1,5 +1,5 @@
-import * as React from 'react';
 import CSS from 'csstype';
+import * as React from 'react';
 
 const accountCardDivStyle: CSS.Properties = {
     display: 'flex',

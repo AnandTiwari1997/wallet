@@ -1,29 +1,29 @@
 import CSS from 'csstype';
 import './dashboard.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Account, Transaction } from '../../data/models';
-import { edit, indianRupee, plus } from '../../icons/icons';
-import CalenderPicker from '../../modules/calender-picker/calender-picker';
-import { useEffect, useState } from 'react';
-import { ApiCriteria, getAccounts, getAllTransactions } from '../../modules/backend/BackendApi';
-import { useGlobalLoadingState } from '../../index';
-import Dialog from '../../modules/dialog/dialog';
-import AddAccount from '../account/add-account';
 import { Chart, registerables } from 'chart.js';
 import { startOfMonth } from 'date-fns';
+import { useEffect, useState } from 'react';
+
+import AmountPerTransactionTypeChart from './charts/ammount-per-transaction-type-chart';
+import BalancePerAccountChart from './charts/balance-per-account-chart';
+import CreditCardBalancePerAccountChart from './charts/credit-card-balance-per-account-chart';
+import CreditCardUsagePerMonthChart from './charts/credit-card-usage-per-month-chart';
 import ExpenseChart from './charts/expense-chart';
+import ExpensePerCategoryChart from './charts/expense-per-category-chart';
 import LoanAccountBalancePerAccountChart from './charts/loan-account-balance-per-account-chart';
 import MutualFundInvestmentChart from './charts/mutual-fund-investment-chart';
 import ProvidentFundInvestmentChart from './charts/provident-fund-investment-chart';
-import StocksInvestmentChart from './charts/stocks-investment-chart';
 import StockInvestmentChart from './charts/stock-investment-chart';
-import AmountPerTransactionTypeChart from './charts/ammount-per-transaction-type-chart';
-import ExpensePerCategoryChart from './charts/expense-per-category-chart';
-import BalancePerAccountChart from './charts/balance-per-account-chart';
-import CreditCardUsagePerMonthChart from './charts/credit-card-usage-per-month-chart';
-import CreditCardBalancePerAccountChart from './charts/credit-card-balance-per-account-chart';
+import StocksInvestmentChart from './charts/stocks-investment-chart';
+import { Account, Transaction } from '../../data/models';
+import { edit, indianRupee, plus } from '../../icons/icons';
+import { ApiCriteria, getAccounts, getAllTransactions } from '../../modules/backend/BackendApi';
+import CalenderPicker from '../../modules/calender-picker/calender-picker';
+import Dialog from '../../modules/dialog/dialog';
 import Icon from '../../modules/icon/icon';
 import IconButton from '../../modules/icon/icon-button';
+import AddAccount from '../account/add-account';
 
 Chart.register(...registerables);
 
@@ -76,7 +76,6 @@ const topDiv: CSS.Properties = {
 const DashboardPage = () => {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [state, dispatch] = useGlobalLoadingState();
     const [showAddAccount, setShowAddAccount] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
     const [range, setRange] = useState<{ from: Date; to: Date }>({
@@ -86,8 +85,8 @@ const DashboardPage = () => {
     const [accountForDashboard, setAccountForDashboard] = useState<Account | undefined>(undefined);
 
     const _getCriteria = (start: Date, end: Date) => {
-        let criteria: ApiCriteria = {
-            filters: accountForDashboard ? [{ key: 'account', value: `${accountForDashboard.account_id}` }] : [],
+        const criteria: ApiCriteria = {
+            filters: accountForDashboard ? [{ key: 'account', value: [`${accountForDashboard.account_id}`] }] : [],
             groupBy: [{ key: 'dated' }],
             sorts: [{ key: 'dated', ascending: false }],
             between: [
@@ -104,15 +103,12 @@ const DashboardPage = () => {
     };
 
     useEffect(() => {
-        getAccounts(dispatch).then((response) => {
+        getAccounts().then((response) => {
             setAccounts(response.results);
         });
-        getAllTransactions(
-            {
-                criteria: _getCriteria(range.from, range.to)
-            },
-            dispatch
-        ).then((response) => {
+        getAllTransactions({
+            criteria: _getCriteria(range.from, range.to)
+        }).then((response) => {
             setTransactions(response.results);
         });
     }, [range, accountForDashboard]);
@@ -152,7 +148,11 @@ const DashboardPage = () => {
                         }}
                     />
                 </div>
-                <div className="account-icon-container">{account.bank && <i className="account-icon" dangerouslySetInnerHTML={{ __html: account.bank.icon }}></i>}</div>
+                <div className="account-icon-container">
+                    {account.bank && (
+                        <i className="account-icon" dangerouslySetInnerHTML={{ __html: account.bank.icon }}></i>
+                    )}
+                </div>
                 <div className="account-details-container">
                     <div className="account-name">
                         <span>
@@ -282,7 +282,7 @@ const DashboardPage = () => {
                     account={selectedAccount}
                     onSubmit={(success, data) => {
                         if (success) {
-                            getAccounts(dispatch).then((response) => {
+                            getAccounts().then((response) => {
                                 setAccounts(response.results);
                             });
                             console.log(`Account ${data} has been add Successfully.`);

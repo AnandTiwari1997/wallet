@@ -1,127 +1,111 @@
 import { Account } from './account.js';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
-export class TransactionType {
-    static INCOME = 'INCOME';
-    static EXPENSE = 'EXPENSE';
+export enum TransactionType {
+    INCOME = 'INCOME',
+    EXPENSE = 'EXPENSE'
 }
 
-export class PaymentMode {
-    static CASH = 'CASH';
-    static BANK_TRANSFER = 'BANK_TRANSFER';
-    static MOBILE_TRANSFER = 'MOBILE_TRANSFER';
-    static CHEQUE = 'CHEQUE';
+export enum PaymentMode {
+    CASH = 'CASH',
+    BANK_TRANSFER = 'BANK_TRANSFER',
+    MOBILE_TRANSFER = 'MOBILE_TRANSFER',
+    CHEQUE = 'CHEQUE',
+    ATM = 'ATM'
 }
 
-export class TransactionStatus {
-    static COMPLETED = 'COMPLETED';
-    static PENDING = 'PENDING';
+export enum TransactionStatus {
+    COMPLETED = 'COMPLETED',
+    PENDING = 'PENDING'
 }
 
-export class Category {
-    static SALARY = 'SALARY';
-    static FOOD = 'FOOD';
-    static FUEL = 'FUEL';
-    static PHONE_RECHARGE = 'PHONE_RECHARGE';
-    static BROADBAND_RECHARGE = 'BROADBAND_RECHARGE';
-    static DIVIDEND = 'DIVIDEND';
-    static INTEREST_RECEIVED = 'INTEREST_RECEIVED';
-    static OTHER = 'OTHER';
-    static INVESTMENT = 'INVESTMENT';
-    static SUBSCRIPTION = 'SUBSCRIPTION';
-    static RENT = 'RENT';
-    static GROCERY = 'GROCERY';
+export enum Category {
+    SALARY = 'SALARY',
+    FOOD = 'FOOD',
+    FUEL = 'FUEL',
+    PHONE_RECHARGE = 'PHONE_RECHARGE',
+    BROADBAND_RECHARGE = 'BROADBAND_RECHARGE',
+    DIVIDEND = 'DIVIDEND',
+    INTEREST_RECEIVED = 'INTEREST_RECEIVED',
+    OTHER = 'OTHER',
+    INVESTMENT = 'INVESTMENT',
+    SUBSCRIPTION = 'SUBSCRIPTION',
+    RENT = 'RENT',
+    GROCERY = 'GROCERY',
+    EMI = 'EMI'
 }
 
-export interface Transaction {
+@Entity('account_transaction')
+export class AccountTransaction {
+    @PrimaryColumn()
     transaction_id: string;
+
+    @Column()
+    account_id: number;
+
+    @ManyToOne(() => Account, {
+        eager: false
+    })
+    @JoinColumn({ name: 'account_id' })
     account: Account;
+
+    @CreateDateColumn()
     transaction_date: Date;
+
+    @Column()
     amount: number;
+
+    @Column()
     category: Category;
+
+    @Column('text', { default: [], array: true })
     labels: string[];
+
+    @Column()
     note: string;
+
+    @Column()
     currency: string;
+
+    @Column()
     payment_mode: PaymentMode;
+
+    @Column()
     transaction_type: TransactionType;
+
+    @Column()
     transaction_state: TransactionStatus;
+
+    @CreateDateColumn()
     dated: Date;
-}
 
-export interface TransactionDto {
-    transaction_id: string;
-    account: Account;
-    transaction_date: string;
-    amount: number;
-    category: Category;
-    labels: string[];
-    note: string;
-    currency: string;
-    payment_mode: PaymentMode;
-    transaction_type: TransactionType;
-    transaction_state: TransactionStatus;
-    dated: string;
-}
-
-export class TransactionBuilder {
-    static buildFromEntity(transaction: Transaction & Account): Transaction {
-        let account: Account = {
-            account_id: transaction.account_id,
-            account_name: transaction.account_name,
-            account_type: transaction.account_type,
-            account_balance: transaction.account_balance,
-            bank: transaction.bank,
-            last_synced_on: transaction.last_synced_on,
-            start_date: transaction.start_date,
-            account_number: transaction.account_number,
-            search_text: transaction.search_text
-        };
-        return {
-            transaction_id: transaction.transaction_id,
-            account: account,
-            transaction_date: new Date(transaction.transaction_date),
-            amount: transaction.amount,
-            category: transaction.category,
-            labels: transaction.labels || [],
-            note: transaction.note || '',
-            currency: transaction.currency || 'INR',
-            payment_mode: transaction.payment_mode || PaymentMode.CASH,
-            transaction_type: transaction.transaction_type,
-            transaction_state: transaction.transaction_state || TransactionStatus.COMPLETED,
-            dated: new Date(transaction.dated)
-        };
-    }
-
-    static toTransactionDto(transaction: Transaction): TransactionDto {
-        return {
-            transaction_id: transaction.transaction_id,
-            account: transaction.account,
-            transaction_date: transaction.transaction_date.toISOString(),
-            amount: transaction.amount,
-            category: transaction.category,
-            labels: transaction.labels || [],
-            note: transaction.note || '',
-            currency: transaction.currency || 'INR',
-            payment_mode: transaction.payment_mode || PaymentMode.CASH,
-            transaction_type: transaction.transaction_type,
-            transaction_state: transaction.transaction_state || TransactionStatus.COMPLETED,
-            dated: transaction.dated.toISOString()
-        };
-    }
-
-    static toTransaction(transactionDto: TransactionDto): Transaction {
-        return {
-            transaction_id: transactionDto.transaction_id,
-            account: transactionDto.account,
-            transaction_date: new Date(transactionDto.transaction_date),
-            amount: transactionDto.amount,
-            category: transactionDto.category,
-            labels: transactionDto.labels || [],
-            note: transactionDto.note || '',
-            currency: transactionDto.currency || 'INR',
-            payment_mode: transactionDto.payment_mode || PaymentMode.CASH,
-            transaction_type: transactionDto.transaction_type,
-            transaction_state: transactionDto.transaction_state || TransactionStatus.COMPLETED,
-            dated: new Date(transactionDto.dated)
-        };
+    constructor(
+        transaction_id: string,
+        account_id: number,
+        account: Account,
+        transaction_date: Date,
+        amount: number,
+        category: Category,
+        labels: string[],
+        note: string,
+        currency: string,
+        payment_mode: PaymentMode,
+        transaction_type: TransactionType,
+        transaction_state: TransactionStatus,
+        dated: Date
+    ) {
+        this.transaction_id = transaction_id;
+        this.account_id = account_id;
+        this.account = account;
+        this.transaction_date = transaction_date;
+        this.amount = amount;
+        this.category = category;
+        this.labels = labels;
+        this.note = note;
+        this.currency = currency;
+        this.payment_mode = payment_mode;
+        this.transaction_type = transaction_type;
+        this.transaction_state = transaction_state;
+        this.dated = dated;
     }
 }

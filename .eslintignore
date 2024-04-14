@@ -1,0 +1,5 @@
+# do not exclude assets/translations/*.js
+assets/*.js
+dist
+node_modules
+backend

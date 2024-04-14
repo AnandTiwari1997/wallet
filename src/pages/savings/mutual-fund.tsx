@@ -1,21 +1,27 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { indianRupee } from '../../icons/icons';
-import { ArrayUtil } from '../../data/transaction-data';
 import { format } from 'date-fns/esm';
 import { useEffect, useState } from 'react';
+
+import { darkGreen, darkRed } from '../../App';
+import { MutualFundTransaction } from '../../data/models';
+import { ArrayUtil } from '../../data/transaction-data';
+import { indianRupee } from '../../icons/icons';
 import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
 import Table, { TableColumn, TableData } from '../../modules/table/table';
-import { darkGreen, darkRed } from '../../App';
-import { useGlobalLoadingState } from '../../index';
-import { MutualFundTransaction } from '../../data/models';
+import useAPI from '../../hooks/app-hooks';
 
 const MutualFund = () => {
     const [initialData, setInitialData] = useState<MutualFundTransaction[]>([]);
     const [count, setCount] = useState<number>(0);
-    const [state, dispatch] = useGlobalLoadingState();
+    const [getData, loading] = useAPI<ApiRequestBody<MutualFundTransaction>, ApiResponse<MutualFundTransaction>>(
+        getInvestmentsTransaction
+    );
 
     const buildCriteria = (
-        filters: { key: string; value: string }[] = [],
+        filters: {
+            key: string;
+            value: string[];
+        }[] = [],
         sorts: {
             key: string;
             ascending: boolean;
@@ -31,10 +37,13 @@ const MutualFund = () => {
     };
 
     const fetchInvestmentTransactions = (requestBody: ApiRequestBody<MutualFundTransaction>) => {
-        getInvestmentsTransaction('mutual_fund', requestBody, dispatch)
+        getData('mutual_fund', requestBody)
             .then((response: ApiResponse<any>) => {
                 setCount(response.num_found);
-                const sortedTransactions = ArrayUtil.sort(response.results, (item: MutualFundTransaction) => item.fund_name);
+                const sortedTransactions = ArrayUtil.sort(
+                    response.results,
+                    (item: MutualFundTransaction) => item.fund_name
+                );
                 setInitialData(sortedTransactions);
             })
             .catch((reason) => {
@@ -124,7 +133,9 @@ const MutualFund = () => {
                 );
             },
             customRender: (row: MutualFundTransaction) => {
-                return <span style={{ color: row.units > 0 ? `${darkGreen}` : `${darkRed}` }}>{row.units.toFixed(2)}</span>;
+                return (
+                    <span style={{ color: row.units > 0 ? `${darkGreen}` : `${darkRed}` }}>{row.units.toFixed(2)}</span>
+                );
             },
             sortable: true
         },
@@ -173,7 +184,9 @@ const MutualFund = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: TableData<MutualFundTransaction>) => ArrayUtil.sum(a.data, (b: MutualFundTransaction) => b.amount)).toFixed(2)}
+                            {ArrayUtil.sum(rows, (a: TableData<MutualFundTransaction>) =>
+                                ArrayUtil.sum(a.data, (b: MutualFundTransaction) => b.amount)
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -190,7 +203,10 @@ const MutualFund = () => {
                             <i className="table-body-column-icon icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {(ArrayUtil.sum(rows, (a: MutualFundTransaction) => a.units) * rows[rows.length - 1].latest_nav).toFixed(2)}
+                            {(
+                                ArrayUtil.sum(rows, (a: MutualFundTransaction) => a.units) *
+                                rows[rows.length - 1].latest_nav
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -229,9 +245,12 @@ const MutualFund = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: TableData<MutualFundTransaction>) => ArrayUtil.sum(a.data, (b: MutualFundTransaction) => b.units) * a.data[a.data.length - 1].latest_nav).toFixed(
-                                2
-                            )}
+                            {ArrayUtil.sum(
+                                rows,
+                                (a: TableData<MutualFundTransaction>) =>
+                                    ArrayUtil.sum(a.data, (b: MutualFundTransaction) => b.units) *
+                                    a.data[a.data.length - 1].latest_nav
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -246,12 +265,13 @@ const MutualFund = () => {
             count={count}
             rows={initialData}
             groupByColumn={[columns[0]]}
+            isLoading={loading}
             onSort={(sortedColumn) => {
-                if (!sortedColumn)
+                if (!sortedColumn) {
                     fetchInvestmentTransactions({
                         criteria: buildCriteria([], [{ key: 'transaction_date', ascending: false }])
                     });
-                else
+                } else {
                     fetchInvestmentTransactions({
                         criteria: buildCriteria(
                             [],
@@ -263,6 +283,7 @@ const MutualFund = () => {
                             ]
                         )
                     });
+                }
             }}
         />
     );

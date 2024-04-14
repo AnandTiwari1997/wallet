@@ -1,13 +1,6 @@
 import CSS from 'csstype';
+
 import './calender-picker.css';
-import { caretDown, caretLeft, caretRight } from '../../icons/icons';
-import { Fragment, useRef, useState } from 'react';
-import Overlay from '../overlay/overlay';
-import WeekPicker from '../week-picker/week-picker';
-// import { Tab, Tabs } from '@mui/material';
-import MonthPicker from '../month-picker/month-picker';
-import YearPicker from '../year-picker/year-picker';
-import RangePicker from '../range-picker/range-picker';
 import {
     addDays,
     differenceInDays,
@@ -25,10 +18,19 @@ import {
     startOfYear,
     subDays
 } from 'date-fns/esm';
-import Tabs from '../tabs/tabs';
-import Tab from '../tabs/tab';
-import IconButton from '../icon/icon-button';
+import { Fragment, useRef, useState } from 'react';
+
+import { caretDown, caretLeft, caretRight } from '../../icons/icons';
 import Icon from '../icon/icon';
+import IconButton from '../icon/icon-button';
+import MonthPicker from '../month-picker/month-picker';
+import Overlay from '../overlay/overlay';
+import RangePicker from '../range-picker/range-picker';
+import Tab from '../tabs/tab';
+import Tabs from '../tabs/tabs';
+import WeekPicker from '../week-picker/week-picker';
+// import { Tab, Tabs } from '@mui/material';
+import YearPicker from '../year-picker/year-picker';
 
 const calenerPickerBoxStyle: CSS.Properties = {
     width: '100%',
@@ -53,7 +55,13 @@ class CalenderPickerTab {
     static YEARS = { label: 'Years', value: 'year' };
 }
 
-const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: OnCalenderPickerChange) => void; range?: { from: Date; to: Date } }) => {
+const CalenderPicker = ({
+    onChange,
+    range
+}: {
+    onChange: (calenderPickerRange: OnCalenderPickerChange) => void;
+    range?: { from: Date; to: Date };
+}) => {
     const ref = useRef(null);
     const tabsValue: PickerData = {
         activePicker: 'range',
@@ -102,7 +110,20 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
         handleOpenPicker(false);
     };
 
-    const months: string[] = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const months: string[] = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'
+    ];
 
     const valueList: { diff: number; unit: string; label: string }[] = [
         { diff: 0, unit: 'day', label: 'Today' },
@@ -116,13 +137,19 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
     ];
 
     const getShownLabel = (): string => {
-        let range = value.values[value.activePicker];
-        if (!range) return '';
+        const range = value.values[value.activePicker];
+        if (!range) {
+            return '';
+        }
         const start = range.rangeStart;
         const end = range.rangeEnd;
         const unit = range.unit;
         if (unit === 'month') {
-            return isThisMonth(start) ? `This Month` : isThisYear(start) ? `${months[start.getMonth()]}` : `${months[start.getMonth()]} ${start.getFullYear()}`;
+            return isThisMonth(start)
+                ? `This Month`
+                : isThisYear(start)
+                ? `${months[start.getMonth()]}`
+                : `${months[start.getMonth()]} ${start.getFullYear()}`;
         } else if (unit === 'range') {
             if (isSameDay(end, new Date())) {
                 return (
@@ -132,13 +159,24 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
                                 return differenceInDays(end, start) === currentValue.diff;
                             case 'month':
                                 return (
-                                    (isSameMonth(end, start) && isSameDay(start, startOfMonth(new Date())) && isSameDay(end, new Date()) && isSameYear(end, start)) ||
+                                    (isSameMonth(end, start) &&
+                                        isSameDay(start, startOfMonth(new Date())) &&
+                                        isSameDay(end, new Date()) &&
+                                        isSameYear(end, start)) ||
                                     (currentValue.diff > 0 && differenceInMonths(end, start) === currentValue.diff)
                                 );
                             case 'week':
-                                return isSameWeek(end, start) && isSameDay(start, startOfWeek(new Date())) && isSameDay(end, new Date());
+                                return (
+                                    isSameWeek(end, start) &&
+                                    isSameDay(start, startOfWeek(new Date())) &&
+                                    isSameDay(end, new Date())
+                                );
                             case 'year':
-                                return isSameYear(end, start) && isSameDay(start, startOfYear(new Date())) && isSameDay(end, new Date());
+                                return (
+                                    isSameYear(end, start) &&
+                                    isSameDay(start, startOfYear(new Date())) &&
+                                    isSameDay(end, new Date())
+                                );
                         }
                     })?.label || ''
                 );
@@ -165,7 +203,9 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
 
     const renderNextRange = () => {
         const range = value.values[value.activePicker];
-        if (!range) return;
+        if (!range) {
+            return;
+        }
         const diffDays = differenceInDays(range.rangeEnd, range.rangeStart);
         const newValue = {
             rangeStart: new Date(addDays(range.rangeEnd, 1)),
@@ -180,7 +220,9 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
 
     const renderPreviousRange = () => {
         const range = value.values[value.activePicker];
-        if (!range) return;
+        if (!range) {
+            return;
+        }
         const diffDays = differenceInDays(range.rangeEnd, range.rangeStart);
         const newValue = {
             rangeStart: new Date(subDays(range.rangeStart, diffDays + 1)),
@@ -196,7 +238,12 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
     return (
         <div className="date-range-picker">
             <IconButton icon={caretLeft} onClick={renderPreviousRange} />
-            <div className="css-wi57kk-GridEmotionStyles--headerRowItem-Header--headerRowItemNoPadding" onClick={() => handleOpenPicker(false)} id="selector" ref={ref}>
+            <div
+                className="css-wi57kk-GridEmotionStyles--headerRowItem-Header--headerRowItemNoPadding"
+                onClick={() => handleOpenPicker(false)}
+                id="selector"
+                ref={ref}
+            >
                 <div className="css-1h182y4-TimeSelect--selectContainer-TimeSelect--styles-TimeSelect--render">
                     <div className="select-classes">
                         <div style={calenerPickerBoxStyle}>
@@ -210,17 +257,36 @@ const CalenderPicker = ({ onChange, range }: { onChange: (calenderPickerRange: O
             <Overlay open={openPicker} onBackdrop={() => handleOpenPicker(true)} triggerBy="selector" noShadow noMargin>
                 <div className="picker-body">
                     <Fragment>
-                        <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
-                            <Tab label={CalenderPickerTab.RANGE.label} value={CalenderPickerTab.RANGE.value} classes={'tab--width'}>
+                        <Tabs
+                            selectedTab={selectedTab}
+                            onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}
+                        >
+                            <Tab
+                                label={CalenderPickerTab.RANGE.label}
+                                value={CalenderPickerTab.RANGE.value}
+                                classes={'tab--width'}
+                            >
                                 <RangePicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
                             </Tab>
-                            <Tab label={CalenderPickerTab.WEEKS.label} value={CalenderPickerTab.WEEKS.value} classes={'tab--width'}>
+                            <Tab
+                                label={CalenderPickerTab.WEEKS.label}
+                                value={CalenderPickerTab.WEEKS.value}
+                                classes={'tab--width'}
+                            >
                                 <WeekPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
                             </Tab>
-                            <Tab label={CalenderPickerTab.MONTHS.label} value={CalenderPickerTab.MONTHS.value} classes={'tab--width'}>
+                            <Tab
+                                label={CalenderPickerTab.MONTHS.label}
+                                value={CalenderPickerTab.MONTHS.value}
+                                classes={'tab--width'}
+                            >
                                 <MonthPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
                             </Tab>
-                            <Tab label={CalenderPickerTab.YEARS.label} value={CalenderPickerTab.YEARS.value} classes={'tab--width'}>
+                            <Tab
+                                label={CalenderPickerTab.YEARS.label}
+                                value={CalenderPickerTab.YEARS.value}
+                                classes={'tab--width'}
+                            >
                                 <YearPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
                             </Tab>
                         </Tabs>

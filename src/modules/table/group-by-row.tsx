@@ -1,8 +1,9 @@
-import { Checkbox } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { hide, right, show } from '../../icons/icons';
-import { TableColumn } from './table';
+import { Checkbox } from '@mui/material';
 import { useEffect, useState } from 'react';
+
+import { TableColumn } from './table';
+import { hide, right, show } from '../../icons/icons';
 import IconButton from '../icon/icon-button';
 
 const GroupByRow = ({
@@ -24,7 +25,9 @@ const GroupByRow = ({
     const [hidden, setHidden] = useState<{ [key: string]: boolean | undefined }>({});
 
     useEffect(() => {
-        if (selected !== undefined) setSelected(selected);
+        if (selected !== undefined) {
+            setSelected(selected);
+        }
         columns.forEach((value) => {
             hidden[value.key] = value.hidden;
         });
@@ -71,8 +74,15 @@ const GroupByRow = ({
             )}
             {columns.map((column) => {
                 return (
-                    <td className={`td-body td-content-align-${_columnAlignment(column.key)}`} style={{ width: `${_columnWidth()}%` }}>
-                        {hidden[column.key] ? '********' : column.customRender ? column.customRender(row) : row[column.key]}
+                    <td
+                        className={`td-body td-content-align-${_columnAlignment(column.key)}`}
+                        style={{ width: `${_columnWidth()}%` }}
+                    >
+                        {hidden[column.key]
+                            ? '********'
+                            : column.customRender
+                            ? column.customRender(row)
+                            : row[column.key]}
                         {hidden[column.key] !== undefined ? (
                             <IconButton
                                 style={{

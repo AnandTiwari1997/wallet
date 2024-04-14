@@ -1,48 +1,68 @@
-export interface Bill {
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
+
+@Entity()
+export class Bill {
+    @PrimaryColumn()
     bill_id: string;
+
+    @Column()
     bill_name: string;
+
+    @Column()
     vendor_name: string;
+
+    @Column()
     bill_status: string;
+
+    @Column()
     label: string;
+
+    @Column()
     category: string;
+
+    @CreateDateColumn()
     previous_bill_date: Date;
+
+    @CreateDateColumn()
     next_bill_date: Date;
+
+    @CreateDateColumn()
     transaction_date: Date | undefined;
-    auto_sync: boolean;
-    bill_amount: number;
-    bill_consumer_no: string;
-}
 
-export interface IBill {
-    bill_id: string;
-    bill_name: string;
-    vendor_name: string;
-    bill_status: string;
-    label: string;
-    category: string;
-    previous_bill_date: string;
-    next_bill_date: string;
-    transaction_date: string;
+    @Column()
     auto_sync: boolean;
-    bill_amount: number;
-    bill_consumer_no: string;
-}
 
-export class BillBuilder {
-    static buildFromEntity(item: IBill): Bill {
-        return {
-            bill_id: item.bill_id,
-            bill_name: item.bill_name,
-            vendor_name: item.vendor_name,
-            bill_status: item.bill_status,
-            label: item.label,
-            category: item.category,
-            previous_bill_date: new Date(item.previous_bill_date),
-            next_bill_date: new Date(item.next_bill_date),
-            transaction_date: item.transaction_date ? new Date(item.transaction_date) : undefined,
-            auto_sync: item.auto_sync,
-            bill_amount: item.bill_amount,
-            bill_consumer_no: item.bill_consumer_no
-        };
+    @Column()
+    bill_amount: number;
+
+    @Column()
+    bill_consumer_no: string;
+
+    constructor(
+        bill_id: string,
+        bill_name: string,
+        vendor_name: string,
+        bill_status: string,
+        label: string,
+        category: string,
+        previous_bill_date: Date,
+        next_bill_date: Date,
+        transaction_date: Date | undefined,
+        auto_sync: boolean,
+        bill_amount: number,
+        bill_consumer_no: string
+    ) {
+        this.bill_id = bill_id;
+        this.bill_name = bill_name;
+        this.vendor_name = vendor_name;
+        this.bill_status = bill_status;
+        this.label = label;
+        this.category = category;
+        this.previous_bill_date = previous_bill_date;
+        this.next_bill_date = next_bill_date;
+        this.transaction_date = transaction_date;
+        this.auto_sync = auto_sync;
+        this.bill_amount = bill_amount;
+        this.bill_consumer_no = bill_consumer_no;
     }
 }

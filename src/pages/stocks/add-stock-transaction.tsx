@@ -1,12 +1,12 @@
-import TextBox from '../../modules/text-box/text-box';
-import Select, { SelectOption } from '../../modules/select/select';
 import { format, parse } from 'date-fns';
 import React, { useState } from 'react';
-import { useGlobalLoadingState } from '../../index';
+import { v4 } from 'uuid';
+
 import { DematAccount, Holding, StockTransaction } from '../../data/models';
 import { addStockTransaction, getStockHolding } from '../../modules/backend/BackendApi';
-import { v4 } from 'uuid';
 import DateInput from '../../modules/date-input/date-input';
+import Select, { SelectOption } from '../../modules/select/select';
+import TextBox from '../../modules/text-box/text-box';
 
 const AddStockTransaction = ({
     accountMap,
@@ -25,7 +25,6 @@ const AddStockTransaction = ({
     const [accountId, setAccountId] = useState<string>('');
     const [stockHoldingId, setStockHoldingId] = useState<string>('');
     const [holdingOptions, setHoldingOptions] = useState<SelectOption[]>([]);
-    const [state, dispatch] = useGlobalLoadingState();
 
     return (
         <>
@@ -36,18 +35,18 @@ const AddStockTransaction = ({
                         selectedOption={accountId}
                         options={[{ value: '', label: 'Select' }, ...accountOptions]}
                         onChange={(event) => {
-                            let accountId = event.target.value;
+                            const accountId = event.target.value;
                             getStockHolding({
                                 criteria: {
                                     filters: [
                                         {
                                             key: 'account_id',
-                                            value: accountId
+                                            value: [accountId]
                                         }
                                     ]
                                 }
                             }).then((apiResponse) => {
-                                let options: SelectOption[] = apiResponse.results.map((value) => {
+                                const options: SelectOption[] = apiResponse.results.map((value) => {
                                     stockHoldings[value.holding_id] = value;
                                     setStockHoldings({ ...stockHoldings });
                                     return { value: value.holding_id, label: value.stock_name };
@@ -82,7 +81,11 @@ const AddStockTransaction = ({
                     <p style={{ margin: '0.5em 0' }}>Quantity</p>
                     <TextBox setValue={setQuantity} value={quantity} placeholder={'Enter Account Bo Id'} />
                     <p style={{ margin: '0.5em 0' }}>Transaction Price</p>
-                    <TextBox setValue={setTransactionPrice} value={transactionPrice} placeholder={'Enter Account Name'} />
+                    <TextBox
+                        setValue={setTransactionPrice}
+                        value={transactionPrice}
+                        placeholder={'Enter Account Name'}
+                    />
 
                     <p>Transaction Date</p>
                     <DateInput setValue={setTransactionDate} value={transactionDate} />
@@ -91,9 +94,9 @@ const AddStockTransaction = ({
                         <button
                             className="button"
                             onClick={() => {
-                                let stockQuantity = Number.parseInt(quantity.toString());
-                                let price = Number.parseFloat(transactionPrice.toString());
-                                let stockTransaction: StockTransaction = {
+                                const stockQuantity = Number.parseInt(quantity.toString());
+                                const price = Number.parseFloat(transactionPrice.toString());
+                                const stockTransaction: StockTransaction = {
                                     transaction_id: v4(),
                                     holding: stockHoldings[stockHoldingId],
                                     demat_account: accountMap[accountId],

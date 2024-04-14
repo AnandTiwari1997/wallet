@@ -11,7 +11,6 @@ export class LoggerPadLength {
 
 export class Logger {
     static level: LoggerLevel = LoggerLevel.INFO;
-    static maxModuleNameLength: number;
     forName: string;
 
     constructor(forName: string) {
@@ -21,17 +20,51 @@ export class Logger {
 
     info = (...message: any[]) => {
         if (Logger.level === LoggerLevel.DEBUG || Logger.level === LoggerLevel.INFO) {
-            console.info(`\u001b[37m [${new Date().toISOString()} - INFO ] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', message);
+            let original = Error.prepareStackTrace;
+            Error.prepareStackTrace = (err, stackTraces) => {
+                return `${stackTraces[1].getFunctionName() || '<anonynous>'}:${stackTraces[1].getLineNumber()}`;
+            };
+            console.info(
+                `\u001b[37m [${new Date().toISOString()} - INFO ] [${this.forName.padStart(
+                    LoggerPadLength.maxModuleNameLength
+                )}] [${(new Error().stack || '').padStart(LoggerPadLength.maxModuleNameLength / 2)}]`,
+                ' - ',
+                message
+            );
+            Error.prepareStackTrace = original;
         }
     };
 
     debug = (...message: any[]) => {
         if (Logger.level === LoggerLevel.DEBUG) {
-            console.debug(`\u001b[33m [${new Date().toISOString()} - DEBUG] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', message);
+            let original = Error.prepareStackTrace;
+            Error.prepareStackTrace = (err, stackTraces) => {
+                return `${stackTraces[0].getFunctionName() || '<anonynous>'}:${stackTraces[0].getLineNumber()}`;
+            };
+            console.debug(
+                `\u001b[33m [${new Date().toISOString()} - DEBUG] [${this.forName.padStart(
+                    LoggerPadLength.maxModuleNameLength
+                )}] [${(new Error().stack || '').padStart(LoggerPadLength.maxModuleNameLength / 2)}]`,
+                ' - ',
+                message
+            );
+            Error.prepareStackTrace = original;
         }
     };
 
     error = (...message: any[]) => {
-        console.error(`\u001b[31m [${new Date().toISOString()} - ERROR] [${this.forName.padStart(LoggerPadLength.maxModuleNameLength)}]`, ' - ', message);
+        let original = Error.prepareStackTrace;
+        Error.prepareStackTrace = (err, stackTraces) => {
+            return `${stackTraces[1].getFunctionName() || '<anonynous>'}:${stackTraces[1].getLineNumber()}`;
+        };
+        let stackDetail = new Error().stack;
+        Error.prepareStackTrace = original;
+        console.error(
+            `\u001b[31m [${new Date().toISOString()} - ERROR] [${this.forName.padStart(
+                LoggerPadLength.maxModuleNameLength
+            )}] [${(stackDetail || '').padStart(LoggerPadLength.maxModuleNameLength / 2)}]`,
+            ' - ',
+            message
+        );
     };
 }

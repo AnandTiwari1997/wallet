@@ -1,7 +1,8 @@
-import { Doughnut } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
-import { ArrayUtil } from '../../../data/transaction-data';
+import { Doughnut } from 'react-chartjs-2';
+
 import { Transaction } from '../../../data/models';
+import { ArrayUtil } from '../../../data/transaction-data';
 
 const AmountPerTransactionTypeChart = ({ data }: { data: Transaction[] }) => {
     const [amountPerTypeChartData, setAmountPerTypeChartData] = useState<{ [key: string]: number }>({});
@@ -10,7 +11,8 @@ const AmountPerTransactionTypeChart = ({ data }: { data: Transaction[] }) => {
         const sortedTransactions = ArrayUtil.sort(data, (item: Transaction) => item.transaction_date);
         const amountPerType: { [key: string]: number } = {};
         sortedTransactions.forEach((transaction) => {
-            amountPerType[transaction.transaction_type.toString().toUpperCase()] = (amountPerType[transaction.transaction_type.toString().toUpperCase()] || 0) + transaction.amount;
+            amountPerType[transaction.transaction_type.toString().toUpperCase()] =
+                (amountPerType[transaction.transaction_type.toString().toUpperCase()] || 0) + transaction.amount;
         });
         setAmountPerTypeChartData(amountPerType);
     }, [data]);
@@ -23,7 +25,7 @@ const AmountPerTransactionTypeChart = ({ data }: { data: Transaction[] }) => {
                     datasets: [
                         {
                             label: 'Amount (Rs.)',
-                            data: [amountPerTypeChartData['INCOME'], amountPerTypeChartData['EXPENSE']],
+                            data: [amountPerTypeChartData.INCOME, amountPerTypeChartData.EXPENSE],
                             backgroundColor: ['green', 'red']
                         }
                     ]

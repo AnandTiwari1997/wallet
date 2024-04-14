@@ -1,32 +1,61 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+
 import './index.css';
+import { createHashRouter, RouterProvider } from 'react-router-dom';
+
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter } from 'react-router-dom';
+import DashboardPage from './pages/dashboard/dashboard';
+import AccountPage from './pages/account/accounts';
+import SavingsPage from './pages/savings/savings';
+import StockPage from './pages/stocks/stocks';
+import TransactionPage from './pages/transaction/transaction';
+import BillsPage from './pages/bills/bills';
 
-const globalStateContext = React.createContext(true);
-const dispatchStateContext = React.createContext<any>(undefined);
-
-const GlobalLoadingStateProvider = ({ children }: { children: any }) => {
-    const [state, dispatch] = React.useReducer((state: any, newValue: boolean) => newValue, false);
-    return (
-        <globalStateContext.Provider value={state}>
-            <dispatchStateContext.Provider value={dispatch}>{children}</dispatchStateContext.Provider>
-        </globalStateContext.Provider>
-    );
-};
-
-export const useGlobalLoadingState = () => [React.useContext(globalStateContext), React.useContext(dispatchStateContext)];
+const router = createHashRouter([
+    {
+        path: '/',
+        element: <App />,
+        children: [
+            {
+                path: '/dashboard',
+                index: true,
+                element: <DashboardPage />
+            },
+            {
+                path: '/account',
+                index: false,
+                element: <AccountPage />
+            },
+            {
+                path: '/savings',
+                index: false,
+                element: <SavingsPage />
+            },
+            {
+                path: '/stocks',
+                index: false,
+                element: <StockPage />
+            },
+            {
+                path: '/transaction',
+                index: false,
+                element: <TransactionPage />
+            },
+            {
+                path: '/bills',
+                index: false,
+                element: <BillsPage />
+            }
+        ]
+    }
+]);
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
     <React.StrictMode>
-        <BrowserRouter>
-            <GlobalLoadingStateProvider>
-                <App />
-            </GlobalLoadingStateProvider>
-        </BrowserRouter>
+        <RouterProvider router={router} />
     </React.StrictMode>
 );
 

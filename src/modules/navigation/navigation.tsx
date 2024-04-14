@@ -11,8 +11,10 @@ const Navigation = ({ activeTab, setActiveTab }: { [key: string]: any }) => {
             <ul className="css-Navigation-list">
                 <li>
                     <NavLink
+                        relative={'route'}
+                        reloadDocument={true}
                         tabIndex={0}
-                        className={({ isActive, isPending }) => `css-Navigation-Item-${isActive ? 'Active' : 'Non-Active'}`}
+                        className={activeTabClassName}
                         onClick={() => setActiveTab('Dashboard')}
                         to="/dashboard"
                     >
@@ -20,32 +22,64 @@ const Navigation = ({ activeTab, setActiveTab }: { [key: string]: any }) => {
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Account')} to="/account">
+                    <NavLink
+                        relative={'route'}
+                        tabIndex={0}
+                        reloadDocument={true}
+                        className={activeTabClassName}
+                        onClick={() => setActiveTab('Account')}
+                        to="/account"
+                    >
                         <span>Account</span>
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Transaction')} to="/transaction">
+                    <NavLink
+                        tabIndex={0}
+                        className={activeTabClassName}
+                        onClick={() => setActiveTab('Transaction')}
+                        to="/transaction"
+                    >
                         <span>Transaction</span>
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Bills')} to="/bills">
+                    <NavLink
+                        tabIndex={0}
+                        className={activeTabClassName}
+                        onClick={() => setActiveTab('Bills')}
+                        to="/bills"
+                    >
                         <span>Bills</span>
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Savings')} to="/savings">
+                    <NavLink
+                        tabIndex={0}
+                        className={activeTabClassName}
+                        onClick={() => setActiveTab('Savings')}
+                        to="/savings"
+                    >
                         <span>Savings</span>
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Stocks')} to="/stocks">
+                    <NavLink
+                        tabIndex={0}
+                        className={activeTabClassName}
+                        onClick={() => setActiveTab('Stocks')}
+                        to="/stocks"
+                    >
                         <span>Stocks</span>
                     </NavLink>
                 </li>
                 <li>
-                    <NavLink tabIndex={0} className={activeTabClassName} onClick={() => setActiveTab('Statistics')} to="/statistics">
+                    <NavLink
+                        tabIndex={0}
+                        className={activeTabClassName}
+                        onClick={() => setActiveTab('Statistics')}
+                        to="/statistics"
+                    >
                         <span>Statistics</span>
                     </NavLink>
                 </li>

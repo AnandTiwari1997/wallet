@@ -1,9 +1,8 @@
-import CSS from 'csstype';
+import { faCheckSquare, faSquare } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import MuiCheckbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
-
-import { faCheckSquare, faSquare } from '@fortawesome/free-regular-svg-icons';
+import CSS from 'csstype';
 
 // We use em because because we're matching Mui styling
 
@@ -24,10 +23,23 @@ const checkedIcon = <FontAwesomeIcon icon={faCheckSquare} style={iconStyle} clas
  **
  * See MD docs for full api - [FormControlLabel](https://material-ui.com/api/form-control-label/) | [Checkbox](https://material-ui.com/api/checkbox/)
  */
-const Checkbox = ({ ariaLabel, ariaLabelledby, indeterminate, label, customStyles, customLabelStyles, labelPlacement, ...baseProps }: { [key: string]: any }): JSX.Element => {
+const Checkbox = ({
+    ariaLabel,
+    ariaLabelledby,
+    indeterminate,
+    label,
+    customStyles,
+    customLabelStyles,
+    labelPlacement,
+    ...baseProps
+}: {
+    [key: string]: any;
+}): JSX.Element => {
     return label ? (
         <FormControlLabel
-            control={<MuiCheckbox className={customStyles} {...baseProps} checkedIcon={checkedIcon} icon={uncheckedIcon} />}
+            control={
+                <MuiCheckbox className={customStyles} {...baseProps} checkedIcon={checkedIcon} icon={uncheckedIcon} />
+            }
             className={customLabelStyles}
             label={label}
             labelPlacement={labelPlacement!}

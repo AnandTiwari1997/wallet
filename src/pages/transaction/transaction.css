@@ -6,8 +6,7 @@
     height: 3rem;
     padding: 1.1rem 2rem;
     text-align: center;
-    box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px,
-    rgba(128, 135, 148, 0.56) 2px 2px 5px;
+    box-shadow: rgba(255, 255, 255, 0.45) -3px -3px 7px, rgba(128, 135, 148, 0.56) 2px 2px 5px;
 }
 
 .table-header {

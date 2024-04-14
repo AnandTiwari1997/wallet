@@ -1,18 +1,18 @@
 import CSS from 'csstype';
 import { Fragment, useEffect, useRef, useState } from 'react';
+
 import './stocks.css';
-import { getStockAccount, syncInvestmentAccount } from '../../modules/backend/BackendApi';
-import Tabs from '../../modules/tabs/tabs';
-import Tab from '../../modules/tabs/tab';
-import StockTransactionPage from './stocks-transaction';
+import AddStockAccount from './add-stock-account';
+import AddStockTransaction from './add-stock-transaction';
 import StockAccountPage from './stock-accounts';
-import Select, { SelectOption } from '../../modules/select/select';
+import StockTransactionPage from './stocks-transaction';
+import { DematAccount, StockTransaction, Transaction } from '../../data/models';
+import { getStockAccount, syncInvestmentAccount } from '../../modules/backend/BackendApi';
 import Button from '../../modules/button/button';
 import Dialog from '../../modules/dialog/dialog';
-import AddStockAccount from './add-stock-account';
-import { DematAccount, StockTransaction } from '../../data/models';
-import { useGlobalLoadingState } from '../../index';
-import AddStockTransaction from './add-stock-transaction';
+import Select, { SelectOption } from '../../modules/select/select';
+import Tab from '../../modules/tabs/tab';
+import Tabs from '../../modules/tabs/tabs';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -41,7 +41,6 @@ const StockPage = () => {
     const [showAddDematAccount, setShowAddDematAccount] = useState<boolean>(false);
     const [selectedAccount, setSelectedAccount] = useState<DematAccount | undefined>(undefined);
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const [state, dispatch] = useGlobalLoadingState();
     const [accounts, setAccounts] = useState<DematAccount[]>([]);
     const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
     const [accountsMap, setAccountsMap] = useState<{
@@ -56,9 +55,9 @@ const StockPage = () => {
     };
 
     useEffect(() => {
-        getStockAccount({}, dispatch).then((apiResponse) => {
+        getStockAccount({}).then((apiResponse) => {
             setAccounts(apiResponse.results);
-            let options = apiResponse.results.map((account) => {
+            const options = apiResponse.results.map((account) => {
                 return {
                     value: account.account_bo_id,
                     label: account.account_name
@@ -90,8 +89,12 @@ const StockPage = () => {
         const eventSource: EventSource = syncInvestmentAccount(selectedTab);
         eventSource.onmessage = (ev: MessageEvent) => {
             const jsonData = JSON.parse(ev.data);
-            if (selectedTab === StocksTab.ACCOUNTS.value) eventSource.close();
-            if (jsonData['type'] === 'ping') return;
+            if (selectedTab === StocksTab.ACCOUNTS.value) {
+                eventSource.close();
+            }
+            if (jsonData.type === 'ping') {
+                return;
+            }
             eventSource.close();
         };
     };
@@ -108,7 +111,11 @@ const StockPage = () => {
                             }}
                         >
                             <p style={{ height: '20px', margin: '0' }}>Account: </p>
-                            <Select selectedOption={filterAccount} onChange={(event) => setFilteredAccount(event.target.value)} options={[{ value: '', label: 'All' }, ...selectOptions]}></Select>
+                            <Select
+                                selectedOption={filterAccount}
+                                onChange={(event) => setFilteredAccount(event.target.value)}
+                                options={[{ value: '', label: 'All' }, ...selectOptions]}
+                            ></Select>
                         </div>
                     )}
                     {selectedTab === StocksTab.TRANSACTION.value && (
@@ -182,12 +189,27 @@ const StockPage = () => {
                     >
                         <Fragment>
                             <div style={{ background: 'white', height: '100%' }}>
-                                <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
-                                    <Tab label={StocksTab.ACCOUNTS.label} value={StocksTab.ACCOUNTS.value} classes={'tab--width'}>
+                                <Tabs
+                                    selectedTab={selectedTab}
+                                    onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}
+                                >
+                                    <Tab
+                                        label={StocksTab.ACCOUNTS.label}
+                                        value={StocksTab.ACCOUNTS.value}
+                                        classes={'tab--width'}
+                                    >
                                         <StockAccountPage />
                                     </Tab>
-                                    <Tab label={StocksTab.TRANSACTION.label} value={StocksTab.TRANSACTION.value} classes={'tab--width'}>
-                                        <StockTransactionPage dematAccounts={accountsMap} filterByAccount={filterAccount} filterByTransactionType={filterTransactionType} />
+                                    <Tab
+                                        label={StocksTab.TRANSACTION.label}
+                                        value={StocksTab.TRANSACTION.value}
+                                        classes={'tab--width'}
+                                    >
+                                        <StockTransactionPage
+                                            dematAccounts={accountsMap}
+                                            filterByAccount={filterAccount}
+                                            filterByTransactionType={filterTransactionType}
+                                        />
                                     </Tab>
                                 </Tabs>
                             </div>

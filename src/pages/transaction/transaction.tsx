@@ -1,22 +1,32 @@
 import CalenderPicker from '../../modules/calender-picker/calender-picker';
+
 import CSS from 'csstype';
+
 import './transaction.css';
-import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
-import { useEffect, useState } from 'react';
-import { edit, indianRupee, save, show } from '../../icons/icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ApiCriteria, getAccounts, getAllTransactions, updateAccountTransaction } from '../../modules/backend/BackendApi';
-import Table, { TableColumn, TablePagination } from '../../modules/table/table';
-import { startOfYear } from 'date-fns/esm';
-import { format } from 'date-fns';
-import { darkGreen, darkRed } from '../../App';
-import Dialog from '../../modules/dialog/dialog';
-import { useGlobalLoadingState } from '../../index';
-import { Account, Transaction } from '../../data/models';
-import Select, { SelectOption } from '../../modules/select/select';
-import Button from '../../modules/button/button';
+import { format, startOfYear } from 'date-fns/esm';
+import { useEffect, useState } from 'react';
+
 import AddTransaction from './add-transaction';
+import { darkGreen, darkRed } from '../../App';
+import { Account, Transaction } from '../../data/models';
+import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
+import { edit, indianRupee, save, show } from '../../icons/icons';
+import {
+    ApiCriteria,
+    ApiResponse,
+    getAccounts,
+    getAllTransactions,
+    updateAccountTransaction
+} from '../../modules/backend/BackendApi';
+import Button from '../../modules/button/button';
 import Chip from '../../modules/chips/chip';
+import Dialog from '../../modules/dialog/dialog';
+import Select, { SelectOption } from '../../modules/select/select';
+import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
+import useAPI from '../../hooks/app-hooks';
+import { AccountTransaction } from '../../../backend/database/models/account-transaction';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -34,7 +44,10 @@ const TransactionPage = () => {
     const [openDetailedView, setOpenDetailedView] = useState(false);
     const [detailedRow, setDetailedRow] = useState<Transaction | undefined>(undefined);
     const [count, setCount] = useState<number>(0);
-    const [range, setRange] = useState<{ from: Date; to: Date }>({
+    const [range, setRange] = useState<{
+        from: Date;
+        to: Date;
+    }>({
         from: startOfYear(new Date()),
         to: new Date()
     });
@@ -47,15 +60,13 @@ const TransactionPage = () => {
     });
     const [transactionType, setTransactionType] = useState('');
     const [showAddTransaction, setShowAddTransaction] = useState(false);
-
-    const [state, dispatch] = useGlobalLoadingState();
     const [category, setCategory] = useState<string>('');
     const [categoryUpdateRow, setCategoryUpdateRow] = useState<Transaction | undefined>(undefined);
-
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [getData, loading] = useAPI<ApiRequestBody<AccountTransaction>, ApiResponse<Transaction>>(getAllTransactions);
 
     const _getCriteria = (start: Date, end: Date, offset: number, limit: number) => {
-        let criteria: ApiCriteria = {
+        const criteria: ApiCriteria = {
             groupBy: [{ key: 'dated' }],
             sorts: [{ key: 'dated', ascending: false }],
             between: [
@@ -70,34 +81,31 @@ const TransactionPage = () => {
             offset: offset,
             limit: limit
         };
-        let filters = [];
+        const filters = [];
         if (selectedAccount !== '') {
-            filters.push({ key: 'account', value: selectedAccount });
+            filters.push({ key: 'account', value: [selectedAccount] });
         }
         if (transactionType !== '') {
-            filters.push({ key: 'transaction_type', value: transactionType });
+            filters.push({ key: 'transaction_type', value: [transactionType] });
         }
         if (selectedCategory !== '') {
-            filters.push({ key: 'category', value: selectedCategory });
+            filters.push({ key: 'category', value: [selectedCategory] });
         }
         criteria.filters = filters;
         return criteria;
     };
 
     useEffect(() => {
-        getAllTransactions(
-            {
-                criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
-            },
-            dispatch
-        ).then((response) => {
+        getData({
+            criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
+        }).then((response: ApiResponse<Transaction>) => {
             setCount(response.num_found);
             const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
             setInitialData([...sortedTransactions]);
         });
-        getAccounts(dispatch).then((response) => {
+        getAccounts().then((response) => {
             setAccounts(response.results);
-            let options = response.results.map((account) => {
+            const options = response.results.map((account) => {
                 return {
                     value: account.account_id,
                     label: account.account_name
@@ -116,6 +124,12 @@ const TransactionPage = () => {
                     month: 'long',
                     day: 'numeric'
                 });
+            },
+            groupByRender: (row: Transaction[]) => {
+                return `${new Date(row[0].transaction_date).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric'
+                })} (${row.length})`;
             },
             customRender: (row: Transaction) => format(new Date(row.transaction_date), 'dd MMMM yyy')
         },
@@ -148,7 +162,9 @@ const TransactionPage = () => {
                                                     count: number;
                                                 }
                                             >(rows, (previousValue, currentValue) => {
-                                                let accountFreqMap = previousValue[currentValue.account.account_id] || {
+                                                const accountFreqMap = previousValue[
+                                                    currentValue.account.account_id
+                                                ] || {
                                                     account_id: currentValue.account.account_id,
                                                     count: 0
                                                 };
@@ -287,7 +303,6 @@ const TransactionPage = () => {
                     <i
                         className="icon"
                         onClick={() => {
-                            console.log(row);
                             setDetailedRow(row);
                             setOpenDetailedView(true);
                         }}
@@ -330,7 +345,9 @@ const TransactionPage = () => {
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
                             {ArrayUtil.sum(row, (item: Transaction) => {
-                                if (item.transaction_type === TransactionType.EXPENSE.label) return item.amount;
+                                if (item.transaction_type === TransactionType.EXPENSE.label) {
+                                    return item.amount;
+                                }
                                 return 0;
                             }).toFixed(2)}
                         </div>
@@ -349,6 +366,35 @@ const TransactionPage = () => {
                         </i>
                         {row.amount.toFixed(2)}
                     </span>
+                );
+            },
+            columnFooter: (rows: TableData<Transaction>[]) => {
+                return (
+                    <div style={{ display: 'flex' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                justifyContent: 'right'
+                            }}
+                        >{`Total Expenditure:`}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'right',
+                                fontWeight: '700'
+                            }}
+                        >
+                            <i className="icon">
+                                <FontAwesomeIcon icon={indianRupee} />
+                            </i>
+                            {ArrayUtil.sum(rows, (a: TableData<Transaction>) =>
+                                ArrayUtil.sum(a.data, (b: Transaction) =>
+                                    b.transaction_type === TransactionType.EXPENSE.label ? b.amount : 0
+                                )
+                            ).toFixed(2)}
+                        </div>
+                    </div>
                 );
             }
         }
@@ -404,23 +450,22 @@ const TransactionPage = () => {
                             options={[{ value: '', label: 'All' }, TransactionType.INCOME, TransactionType.EXPENSE]}
                         ></Select>
                     </div>
-                    <div
-                        style={{
-                            margin: '10px 5px',
-                            width: '300px'
-                        }}
-                    >
-                        <p style={{ height: '20px', margin: '0' }}>Category Type: </p>
-                        <Select
-                            // style={{ 'minWidth': '200px' }}
-                            selectedOption={selectedCategory}
-                            onChange={(event) => {
-                                setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
-                                setSelectedCategory(event.target.value);
-                            }}
-                            options={[{ value: '', label: 'All' }, ...Category.get()]}
-                        ></Select>
-                    </div>
+                    {/*<div*/}
+                    {/*    style={{*/}
+                    {/*        margin: '10px 5px',*/}
+                    {/*        width: '300px'*/}
+                    {/*    }}*/}
+                    {/*>*/}
+                    {/*    <p style={{ height: '20px', margin: '0' }}>Category Type: </p>*/}
+                    {/*    <Select*/}
+                    {/*        selectedOption={selectedCategory}*/}
+                    {/*        onChange={(event) => {*/}
+                    {/*            setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });*/}
+                    {/*            setSelectedCategory(event.target.value);*/}
+                    {/*        }}*/}
+                    {/*        options={Category.get()}*/}
+                    {/*    ></Select>*/}
+                    {/*</div>*/}
                     <div
                         style={{
                             height: 'calc(3rem - 10px)',
@@ -457,11 +502,16 @@ const TransactionPage = () => {
                         onPagination={(tablePagination: TablePagination) => {
                             setTablePagination(tablePagination);
                         }}
+                        isLoading={loading}
                     />
                 </div>
                 <Dialog
                     open={openDetailedView}
-                    header={detailedRow?.transaction_type === TransactionType.EXPENSE.label ? TransactionType.EXPENSE.label : TransactionType.INCOME.label}
+                    header={
+                        detailedRow?.transaction_type === TransactionType.EXPENSE.label
+                            ? TransactionType.EXPENSE.label
+                            : TransactionType.INCOME.label
+                    }
                     onClose={() => {
                         setOpenDetailedView(false);
                         setDetailedRow(undefined);
@@ -473,22 +523,30 @@ const TransactionPage = () => {
                                 <tr>
                                     <td style={{ padding: '10px' }}>Amount</td>
                                     <td>:</td>
-                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionAmount']}</td>
+                                    <td style={{ padding: '10px' }}>
+                                        {detailedRow && JSON.parse(detailedRow.note).transactionAmount}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td style={{ padding: '10px' }}>Account</td>
                                     <td>:</td>
-                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionAccount']}</td>
+                                    <td style={{ padding: '10px' }}>
+                                        {detailedRow && JSON.parse(detailedRow.note).transactionAccount}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td style={{ padding: '10px' }}>Information</td>
                                     <td>:</td>
-                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionInfo']}</td>
+                                    <td style={{ padding: '10px' }}>
+                                        {detailedRow && JSON.parse(detailedRow.note).transactionInfo}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td style={{ padding: '10px' }}>Date</td>
                                     <td>:</td>
-                                    <td style={{ padding: '10px' }}>{detailedRow && JSON.parse(detailedRow.note)['transactionDate']}</td>
+                                    <td style={{ padding: '10px' }}>
+                                        {detailedRow && JSON.parse(detailedRow.note).transactionDate}
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

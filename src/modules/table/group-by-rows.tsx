@@ -1,16 +1,16 @@
-import { collapseStyle, expandStyle, GroupedTableData, RowExpandContext, TableColumn } from './table';
-import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { expand } from '../../icons/icons';
 import { Checkbox } from '@mui/material';
+import { useEffect, useState } from 'react';
+
 import GroupByRow from './group-by-row';
+import { collapseStyle, expandStyle, GroupedTableData, RowExpandContext, TableColumn } from './table';
+import { expand } from '../../icons/icons';
 
 const GroupByRows = ({
     columns,
     row,
     selectable,
     selected,
-    // expanded,
     onRowSelectionChange,
     onRowExpansionChange
 }: {
@@ -58,19 +58,27 @@ const GroupByRows = ({
                                             setSelected(!isSelected);
                                             setAllSelect(!isSelected);
                                             setSelectedCount(isSelected ? 0 : row.data.length);
-                                            onRowSelectionChange(isSelected ? undefined : row, row.data.length === selectedCount ? row.data.length : row.data.length);
+                                            onRowSelectionChange(
+                                                isSelected ? undefined : row,
+                                                row.data.length === selectedCount ? row.data.length : row.data.length
+                                            );
                                         }}
                                         indeterminate={selectedCount > 0 && !isSelected}
                                     />
                                 </td>
                             )}
-                            {row.key.map((r) => {
+
+                            {row.key.slice(0, row.key.length - 1).map((r) => {
                                 return (
                                     <td className="td-body" style={{ width: `${_columnWidth()}%` }}>
                                         {r}
                                     </td>
                                 );
                             })}
+
+                            <td className="td-body" style={{ width: `${_columnWidth()}%` }}>
+                                {row.key[row.key.length - 1]} {`(${row.data.length})`}
+                            </td>
 
                             <td className="td-body td-icon" style={{ width: '5%' }}>
                                 <span className="td-span">
@@ -81,14 +89,24 @@ const GroupByRows = ({
                                             onRowExpansionChange(!isExpanded);
                                         }}
                                     >
-                                        <i className="icon table-body-column-icon" style={(expanded === undefined ? isExpanded : expanded) ? collapseStyle : expandStyle}>
+                                        <i
+                                            className="icon table-body-column-icon"
+                                            style={
+                                                (expanded === undefined ? isExpanded : expanded)
+                                                    ? collapseStyle
+                                                    : expandStyle
+                                            }
+                                        >
                                             <FontAwesomeIcon icon={expand} />
                                         </i>
                                     </button>
                                 </span>
                             </td>
                             {columns.map((column) => (
-                                <td className={`td-body td-content-align-${_columnAlignment(column.key)}`} style={{ width: `${_columnWidth()}%` }}>
+                                <td
+                                    className={`td-body td-content-align-${_columnAlignment(column.key)}`}
+                                    style={{ width: `${_columnWidth()}%` }}
+                                >
                                     {column.groupByRender && column.groupByRender(row.data)}
                                 </td>
                             ))}

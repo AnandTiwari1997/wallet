@@ -1,13 +1,19 @@
+import { format, parse } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+
+import { Broker, DematAccount } from '../../data/models';
+import { addStockAccount, getBroker } from '../../modules/backend/BackendApi';
+import DateInput from '../../modules/date-input/date-input';
 import Select, { SelectOption } from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
-import { Broker, DematAccount } from '../../data/models';
-import React, { useEffect, useState } from 'react';
-import { format, parse } from 'date-fns';
-import { addStockAccount, getBroker } from '../../modules/backend/BackendApi';
-import { useGlobalLoadingState } from '../../index';
-import DateInput from '../../modules/date-input/date-input';
 
-const AddStockAccount = ({ account, onSubmit }: { account?: DematAccount; onSubmit: (success: boolean, data: DematAccount | undefined) => any | void }) => {
+const AddStockAccount = ({
+    account,
+    onSubmit
+}: {
+    account?: DematAccount;
+    onSubmit: (success: boolean, data: DematAccount | undefined) => any | void;
+}) => {
     const [accountBoId, setAccountBoId] = useState<string>('');
     const [accountType, setAccountType] = useState<string>('CASH');
     const [accountName, setAccountName] = useState<string>('');
@@ -19,11 +25,10 @@ const AddStockAccount = ({ account, onSubmit }: { account?: DematAccount; onSubm
     }>({});
     const [brokerOption, setBrokerOption] = useState<SelectOption[]>([]);
     const [edit, setEdit] = useState<boolean>(false);
-    const [state, dispatch] = useGlobalLoadingState();
 
     const _getBrokers = () => {
         getBroker({}).then((apiResponse) => {
-            let options: SelectOption[] = apiResponse.results
+            const options: SelectOption[] = apiResponse.results
                 .filter((value1) => {
                     return value1.broker_id.toString() !== '0';
                 })
@@ -79,7 +84,7 @@ const AddStockAccount = ({ account, onSubmit }: { account?: DematAccount; onSubm
                             className="button"
                             onClick={() => {
                                 setBrokerOption([]);
-                                let account: DematAccount = {
+                                const account: DematAccount = {
                                     account_bo_id: accountBoId,
                                     account_name: accountName,
                                     account_client_id: accountClientId,

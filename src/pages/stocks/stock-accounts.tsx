@@ -1,12 +1,15 @@
-import CSS from 'csstype';
-import Table, { TableColumn } from '../../modules/table/table';
-import { DematAccount } from '../../data/models';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { menu } from '../../icons/icons';
+import CSS from 'csstype';
 import { useEffect, useState } from 'react';
-import { getStockAccount, syncAccount } from '../../modules/backend/BackendApi';
+
+import { DematAccount } from '../../data/models';
+import { menu } from '../../icons/icons';
+import { ApiResponse, getStockAccount, syncAccount } from '../../modules/backend/BackendApi';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
+import Table, { TableColumn } from '../../modules/table/table';
+import useAPI from '../../hooks/app-hooks';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -20,11 +23,11 @@ const StockAccountPage = () => {
     const [showAddAccount, setShowAddAccount] = useState(false);
     const [showAccountMenu, setShowAccountMenu] = useState(false);
     const [accountMenuOptionFor, setAccountMenuOptionFor] = useState<string>('');
-    const [state, dispatch] = useState();
     const [selectedAccount, setSelectedAccount] = useState<DematAccount | undefined>(undefined);
+    const [getData, loading] = useAPI<ApiRequestBody<DematAccount>, ApiResponse<DematAccount>>(getStockAccount);
 
     useEffect(() => {
-        getStockAccount({}, dispatch).then((apiResponse) => {
+        getData({}).then((apiResponse) => {
             setCount(apiResponse.num_found);
             setAccounts(apiResponse.results);
         });
@@ -110,12 +113,17 @@ const StockAccountPage = () => {
                                 label={'Sync'}
                                 onMenuOptionClick={(event) => {
                                     console.log(row);
-                                    if (!selectedAccount) return;
+                                    if (!selectedAccount) {
+                                        return;
+                                    }
                                     syncAccount({
                                         criteria: {
                                             filters: [
-                                                { key: 'account_type', value: selectedAccount.account_type.toString() },
-                                                { key: 'account_id', value: selectedAccount.account_bo_id.toString() }
+                                                {
+                                                    key: 'account_type',
+                                                    value: [selectedAccount.account_type.toString()]
+                                                },
+                                                { key: 'account_id', value: [selectedAccount.account_bo_id.toString()] }
                                             ]
                                         }
                                     }).then((response) => {
@@ -133,7 +141,7 @@ const StockAccountPage = () => {
 
     return (
         <>
-            <Table columns={columns} rows={accounts} count={count} />
+            <Table columns={columns} rows={accounts} count={count} isLoading={loading} />
         </>
     );
 };

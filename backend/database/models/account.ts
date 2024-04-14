@@ -1,68 +1,62 @@
 import { Bank } from './bank.js';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
-export interface Account {
+@Entity()
+export class Account {
+    @PrimaryColumn()
     account_id: number;
+
+    @Column()
     account_name: string;
+
+    @Column()
     account_balance: number;
+
+    @Column()
     account_number: string;
+
+    @Column()
     account_type: string;
+
+    @Column()
+    bank_id: number;
+
+    @ManyToOne(() => Bank, {
+        eager: false
+    })
+    @JoinColumn({ name: 'bank_id' })
     bank: Bank;
+
+    @Column()
     start_date: Date;
+
+    @Column()
     last_synced_on: Date;
+
+    @Column()
     search_text: string;
-}
 
-export interface AccountDto {
-    account_id: number;
-    account_name: string;
-    account_balance: number;
-    account_number: string;
-    account_type: string;
-    bank: Bank;
-    start_date: Date;
-    search_text: string;
-}
-
-export class AccountBuilder {
-    static buildFromEntity(item: Account & Bank): Account {
-        let bank: Bank = new Bank(item.bank_id, item.name, item.icon, item.alert_email_id, item.primary_color);
-        return {
-            account_id: item.account_id,
-            account_name: item.account_name,
-            account_balance: item.account_balance,
-            account_number: item.account_number,
-            account_type: item.account_type,
-            bank: bank,
-            start_date: new Date(item.start_date),
-            last_synced_on: item.last_synced_on ? new Date(item.last_synced_on) : new Date(),
-            search_text: item.search_text
-        };
-    }
-
-    static toAccountDto(item: Account) {
-        return {
-            account_id: item.account_id,
-            account_name: item.account_name,
-            account_balance: item.account_balance,
-            account_number: item.account_number,
-            account_type: item.account_type,
-            bank: item.bank as Bank,
-            start_date: new Date(item.start_date),
-            search_text: item.search_text
-        };
-    }
-
-    static toAccount(item: AccountDto) {
-        return {
-            account_id: item.account_id,
-            account_name: item.account_name,
-            account_balance: item.account_balance,
-            account_number: item.account_number,
-            account_type: item.account_type,
-            bank: item.bank as Bank,
-            start_date: new Date(item.start_date),
-            last_synced_on: new Date(),
-            search_text: item.search_text
-        };
+    constructor(
+        account_id: number,
+        account_name: string,
+        account_balance: number,
+        account_number: string,
+        account_type: string,
+        bank_id: number,
+        start_date: Date,
+        last_synced_on: Date,
+        search_text: string,
+        bank: Bank
+    ) {
+        this.account_id = account_id;
+        this.account_name = account_name;
+        this.account_balance = account_balance;
+        this.account_number = account_number;
+        this.account_type = account_type;
+        this.bank_id = bank_id;
+        this.start_date = start_date;
+        this.last_synced_on = last_synced_on;
+        this.search_text = search_text;
+        this.bank = bank;
     }
 }

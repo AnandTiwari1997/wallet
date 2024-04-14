@@ -1,21 +1,24 @@
-import { useEffect, useState } from 'react';
-import { ArrayUtil } from '../../data/transaction-data';
-import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { indianRupee } from '../../icons/icons';
 import { format } from 'date-fns/esm';
-import Table, { TableColumn, TableData } from '../../modules/table/table';
+import { useEffect, useState } from 'react';
+
 import { darkGreen, darkRed } from '../../App';
-import { useGlobalLoadingState } from '../../index';
 import { ProvidentFundTransaction } from '../../data/models';
+import { ArrayUtil } from '../../data/transaction-data';
+import { indianRupee } from '../../icons/icons';
+import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
+import Table, { TableColumn, TableData } from '../../modules/table/table';
+import useAPI from '../../hooks/app-hooks';
 
 const ProvidentFund = () => {
     const [initialData, setInitialData] = useState<ProvidentFundTransaction[]>([]);
     const [count, setCount] = useState<number>(0);
-    const [state, dispatch] = useGlobalLoadingState();
+    const [getData, loading] = useAPI<ApiRequestBody<ProvidentFundTransaction>, ApiResponse<ProvidentFundTransaction>>(
+        getInvestmentsTransaction
+    );
 
     const buildCriteria = (
-        filters: { key: string; value: string }[] = [],
+        filters: { key: string; value: string[] }[] = [],
         sorts: {
             key: string;
             ascending: boolean;
@@ -31,11 +34,14 @@ const ProvidentFund = () => {
     };
 
     const fetchInvestmentTransactions = (requestBody: ApiRequestBody<ProvidentFundTransaction>) => {
-        getInvestmentsTransaction('provident_fund', requestBody, dispatch)
+        getData('provident_fund', requestBody)
             .then((response: ApiResponse<any>) => {
                 setCount(response.num_found);
                 // const formattedTransactions: ProvidentFundTransaction[] = ArrayUtil.map(response.results, (item: any) => ProvidentFundTransaction.build(item));
-                const sortedTransactions = ArrayUtil.sort(response.results, (item: ProvidentFundTransaction) => item.financial_year);
+                const sortedTransactions = ArrayUtil.sort(
+                    response.results,
+                    (item: ProvidentFundTransaction) => item.financial_year
+                );
                 setInitialData(sortedTransactions);
             })
             .catch((reason) => {
@@ -138,7 +144,9 @@ const ProvidentFund = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) => ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employee_contribution)).toFixed(2)}
+                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) =>
+                                ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employee_contribution)
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -190,7 +198,9 @@ const ProvidentFund = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) => ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employer_contribution)).toFixed(2)}
+                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) =>
+                                ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employer_contribution)
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -242,7 +252,9 @@ const ProvidentFund = () => {
                             <i className="icon">
                                 <FontAwesomeIcon icon={indianRupee} />
                             </i>
-                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) => ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.pension_amount)).toFixed(2)}
+                            {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) =>
+                                ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.pension_amount)
+                            ).toFixed(2)}
                         </div>
                     </div>
                 );
@@ -257,12 +269,13 @@ const ProvidentFund = () => {
             count={count}
             rows={initialData}
             groupByColumn={[columns[0]]}
+            isLoading={loading}
             onSort={(sortedColumn) => {
-                if (!sortedColumn)
+                if (!sortedColumn) {
                     fetchInvestmentTransactions({
                         criteria: buildCriteria([], [{ key: 'transaction_date', ascending: false }])
                     });
-                else
+                } else {
                     fetchInvestmentTransactions({
                         criteria: buildCriteria(
                             [],
@@ -274,6 +287,7 @@ const ProvidentFund = () => {
                             ]
                         )
                     });
+                }
             }}
         />
     );

@@ -15,7 +15,7 @@ export interface Storage<T> {
 export interface Criteria {
     filters?: {
         key: string;
-        value: string;
+        value: string[];
     }[];
     sorts?: {
         key: string;

@@ -1,0 +1,43 @@
+import { NewMailEventListener } from './listeners/new-mail-event-listener.js';
+import { AxisBankProcessor } from './processors/mail-processor/bank-processors/axis-bank-processor.js';
+import { PnbBankProcessor } from './processors/mail-processor/bank-processors/pnb-bank-processor.js';
+import { SbiBankProcessor } from './processors/mail-processor/bank-processors/sbi-bank-processor.js';
+import { NextBillionContractNoteProcessor } from './processors/mail-processor/contract-note-processors/nextbillion-contract-note-processor.js';
+import { ZerodhaContractNoteProcessor } from './processors/mail-processor/contract-note-processors/zerodha-contract-note-processor.js';
+import { AxisBankCreditCardBillProcessor } from './processors/mail-processor/bill-processors/axis-bank-credit-card-bill-processor.js';
+import { AirtelBillProcessor } from './processors/mail-processor/bill-processors/airtel-bill-processor.js';
+import { MutualFundProcessor } from './processors/mail-processor/mutual-fund-processor.js';
+import { MutualFundLatestNavScheduler } from './schedulers/mutual-fund-latest-nav-scheduler.js';
+import { StockLatestTradingPriceScheduler } from './schedulers/stock-latest-trading-price-scheduler.js';
+import { BankAccountTransactionSyncHandler } from './sync-handlers/bank-account-transaction-sync-handler.js';
+import { BillsSyncHandler } from './sync-handlers/bills-sync-handler.js';
+import { CreditCardAccountTransactionSyncHandler } from './sync-handlers/credit-card-account-transaction-sync-handler.js';
+import { DematAccountSyncHandler } from './sync-handlers/demat-account-sync-handler.js';
+import { LoanAccountTransactionSyncHandler } from './sync-handlers/loan-account-transaction-sync-handler.js';
+import { Schedulers } from './schedulers/schedulers.js';
+import { CommonAccountTransactionSyncHandler } from './sync-handlers/common-account-transaction-sync-handler.js';
+import { StockTransactionListener } from './listeners/stock-transaction-listener.js';
+import { LicHFlBankProcessor } from './processors/mail-processor/bank-processors/lic-hfl-bank-processor.js';
+
+export const newMailEventListener: NewMailEventListener = new NewMailEventListener();
+export const axisBankProcessor: AxisBankProcessor = new AxisBankProcessor();
+export const pnbBankProcessor: PnbBankProcessor = new PnbBankProcessor();
+export const sbiBankProcessor: SbiBankProcessor = new SbiBankProcessor();
+export const nextBillionContractNoteProcessor: NextBillionContractNoteProcessor =
+    new NextBillionContractNoteProcessor();
+export const zerodhaContractNoteProcessor: ZerodhaContractNoteProcessor = new ZerodhaContractNoteProcessor();
+export const axisBankCreditCardBillProcessor: AxisBankCreditCardBillProcessor = new AxisBankCreditCardBillProcessor();
+export const airtelBillProcessor: AirtelBillProcessor = new AirtelBillProcessor();
+export const mutualFundProcessor: MutualFundProcessor = new MutualFundProcessor();
+export const mutualFundLatestNavScheduler = new MutualFundLatestNavScheduler();
+export const stockLatestTradingPriceScheduler = new StockLatestTradingPriceScheduler();
+export const bankAccountTransactionSyncHandler = new BankAccountTransactionSyncHandler();
+export const billsSyncHandler = new BillsSyncHandler();
+export const creditCardSyncHandler = new CreditCardAccountTransactionSyncHandler();
+export const dematAccountSyncHandler = new DematAccountSyncHandler();
+export const loanAccountTransactionSyncHandler = new LoanAccountTransactionSyncHandler();
+export const accountSchedulers: Schedulers = new Schedulers();
+export const commonAccountTransactionSyncHandler: CommonAccountTransactionSyncHandler =
+    new CommonAccountTransactionSyncHandler();
+export const stockTransactionListener: StockTransactionListener = new StockTransactionListener();
+export const licHflBankProcessor: LicHFlBankProcessor = new LicHFlBankProcessor();

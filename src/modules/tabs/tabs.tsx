@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, ReactNode, useEffect, useState } from 'react';
 import './tab.css';
 
 interface TabHeaderInfo {
@@ -12,13 +12,23 @@ interface SelectedTab {
 }
 
 export interface TabProp {
-    label: React.ReactNode;
+    label: ReactNode;
     value: string;
     children: any;
     classes?: string;
+    badge?: boolean;
 }
 
-const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: string; children: ReactElement[]; onTabChange?: (selectedTab: SelectedTab) => void }) => {
+const Tabs = ({
+    selectedTab,
+    children,
+    onTabChange,
+    ...props
+}: {
+    selectedTab?: string;
+    children: ReactElement[];
+    onTabChange?: (selectedTab: SelectedTab) => void;
+}) => {
     const _getTabHeaderInfo = (): TabProp[] => {
         return children.map((value) => {
             return {
@@ -39,9 +49,12 @@ const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: 
 
     useEffect(() => {
         setTabHeaders(_getTabHeaderInfo());
-        if (selectedTab) setActiveTab(selectedTab);
-        else setActiveTab(tabHeaders[0].value);
-    }, [selectedTab]);
+        if (selectedTab) {
+            setActiveTab(selectedTab);
+        } else {
+            setActiveTab(tabHeaders[0].value);
+        }
+    }, [children, selectedTab]);
 
     return (
         <div {...props} className={'tabs-container'}>
@@ -49,16 +62,23 @@ const Tabs = ({ selectedTab, children, onTabChange, ...props }: { selectedTab?: 
                 {tabHeaders.map((tabHeaderInfo: TabProp, index: number) => {
                     return (
                         <div
-                            className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${tabHeaderInfo.classes ? tabHeaderInfo.classes : ''}`}
+                            className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${
+                                tabHeaderInfo.classes ? tabHeaderInfo.classes : ''
+                            }`}
                             onClick={() => {
                                 setActiveTab(tabHeaderInfo.value);
-                                if (onTabChange)
+                                if (onTabChange) {
                                     onTabChange({
                                         tabValue: tabHeaderInfo.value
                                     });
+                                }
                             }}
                         >
-                            <button className={`tab--label ${index < tabHeaders.length - 1 ? 'tab--label-separator' : ''}`}>{tabHeaderInfo.label}</button>
+                            <button
+                                className={`tab--label ${index < tabHeaders.length - 1 ? 'tab--label-separator' : ''}`}
+                            >
+                                {<>{tabHeaderInfo.label}</>}
+                            </button>
                             <div className={'tab--scroller'}></div>
                         </div>
                     );

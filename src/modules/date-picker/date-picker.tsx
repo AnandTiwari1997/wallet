@@ -1,7 +1,22 @@
 import './date-picker.css';
-import { arrowLeft, arrowRight } from '../../icons/icons';
+import {
+    addDays,
+    addMonths,
+    endOfMonth,
+    endOfWeek,
+    format,
+    isAfter,
+    isBefore,
+    isSameDay,
+    parse,
+    startOfMonth,
+    startOfWeek,
+    subDays,
+    subMonths
+} from 'date-fns/esm';
 import { useState } from 'react';
-import { addDays, addMonths, endOfMonth, endOfWeek, format, isAfter, isBefore, isSameDay, parse, startOfMonth, startOfWeek, subDays, subMonths } from 'date-fns/esm';
+
+import { arrowLeft, arrowRight } from '../../icons/icons';
 import IconButton from '../icon/icon-button';
 
 export interface DateRange {
@@ -10,7 +25,7 @@ export interface DateRange {
 }
 
 const _swap = (date1: any, date2: any) => {
-    let temp = new Date(date1);
+    const temp = new Date(date1);
     date1 = new Date(date2);
     date2 = new Date(temp);
     return [date1, date2];
@@ -30,7 +45,7 @@ const _format = (date: Date): string => {
 
 const rangeToSelection = (dateRange: DateRange): string[] => {
     let startDate = addDays(dateRange.startDate, 1);
-    let endDate = subDays(dateRange.endDate, 1);
+    const endDate = subDays(dateRange.endDate, 1);
     const newSoftSelectionRange = [];
     while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
         const formattedId: string = _format(startDate);
@@ -40,7 +55,15 @@ const rangeToSelection = (dateRange: DateRange): string[] => {
     return newSoftSelectionRange;
 };
 
-const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { range: DateRange; onSelectionChange: (dateRange: DateRange) => any | void; enableSelection: boolean }) => {
+const DatePicker = ({
+    range,
+    onSelectionChange,
+    enableSelection = true
+}: {
+    range: DateRange;
+    onSelectionChange: (dateRange: DateRange) => any | void;
+    enableSelection: boolean;
+}) => {
     const [month, setMonth] = useState(range?.startDate ? range.startDate.getMonth() : new Date().getMonth());
     const [year, setYear] = useState(range?.startDate ? range.startDate.getFullYear() : new Date().getMonth());
     const [selectionInPreview, setSelectionInPreview] = useState(false);
@@ -113,19 +136,29 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
     };
 
     const doesRenderSoftSelectionSpan = (elementId: string) => {
-        return softSelection?.start === elementId || softSelection?.middle.includes(elementId) || softSelection?.end === elementId;
+        return (
+            softSelection?.start === elementId ||
+            softSelection?.middle.includes(elementId) ||
+            softSelection?.end === elementId
+        );
     };
 
     const renderSelectionSpanClasses = (elementId: string): string => {
         const classNames: string[] = [];
         if (doesRenderSelectionSpan(elementId)) {
             if (selection?.start === elementId) {
-                if (selection?.forward) classNames.push('render-day-selection-edge-start');
-                else classNames.push('render-day-selection-edge-end');
+                if (selection?.forward) {
+                    classNames.push('render-day-selection-edge-start');
+                } else {
+                    classNames.push('render-day-selection-edge-end');
+                }
             }
             if (selection?.end === elementId) {
-                if (selection?.forward) classNames.push('render-day-selection-edge-end');
-                else classNames.push('render-day-selection-edge-start');
+                if (selection?.forward) {
+                    classNames.push('render-day-selection-edge-end');
+                } else {
+                    classNames.push('render-day-selection-edge-start');
+                }
             }
             if (selection?.middle.includes(elementId)) {
                 classNames.push('render-day-selection-in-range');
@@ -139,17 +172,29 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
         if (doesRenderSoftSelectionSpan(elementId)) {
             if (softSelection?.start === elementId) {
                 if (selectionInPreview) {
-                    if (softSelection.forward) classNames.push('render-day-start-soft-selection');
-                    else classNames.push('render-day-end-soft-selection');
-                } else classNames.push('render-day-start-soft-selection');
+                    if (softSelection.forward) {
+                        classNames.push('render-day-start-soft-selection');
+                    } else {
+                        classNames.push('render-day-end-soft-selection');
+                    }
+                } else {
+                    classNames.push('render-day-start-soft-selection');
+                }
             }
             if (softSelection?.end === elementId) {
                 if (selectionInPreview) {
-                    if (softSelection.forward) classNames.push('render-day-end-soft-selection');
-                    else classNames.push('render-day-start-soft-selection');
-                } else classNames.push('render-day-end-soft-selection');
+                    if (softSelection.forward) {
+                        classNames.push('render-day-end-soft-selection');
+                    } else {
+                        classNames.push('render-day-start-soft-selection');
+                    }
+                } else {
+                    classNames.push('render-day-end-soft-selection');
+                }
             }
-            if (softSelection?.middle.includes(elementId)) classNames.push('render-day-in-soft-selection');
+            if (softSelection?.middle.includes(elementId)) {
+                classNames.push('render-day-in-soft-selection');
+            }
         }
         return classNames.join(' ');
     };
@@ -157,26 +202,34 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
     const renderSelectedDaySpanClasses = (elementId: string): string => {
         const classNames: string[] = [];
         classNames.push('render-day-number');
-        if (doesRenderSelectionSpan(elementId)) classNames.push('render-day-selected');
+        if (doesRenderSelectionSpan(elementId)) {
+            classNames.push('render-day-selected');
+        }
         return classNames.join(' ');
     };
 
     const _handleOnMouseOver = (elementId: string) => {
         if (selectionInPreview) {
-            if (!selection?.start) return;
-            if (selection?.start === elementId) return;
+            if (!selection?.start) {
+                return;
+            }
+            if (selection?.start === elementId) {
+                return;
+            }
             let inRangeStart = _parse(selection.start);
             let inRangeEnd = _parse(elementId);
 
             const forward = isBefore(inRangeStart, inRangeEnd);
             // selection has been started, now tracking for end
-            if (forward === undefined) return;
+            if (forward === undefined) {
+                return;
+            }
 
             if (!forward) {
                 [inRangeStart, inRangeEnd] = _swap(inRangeStart, inRangeEnd);
             }
             let startDate = addDays(inRangeStart, 1);
-            let endDate = subDays(inRangeEnd, 1);
+            const endDate = subDays(inRangeEnd, 1);
             const newSoftSelectionRange = [];
             while (isBefore(startDate, endDate) || isSameDay(startDate, endDate)) {
                 const formattedId: string = _format(startDate);
@@ -201,8 +254,12 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
 
     const _handleOnMouseLeave = () => {
         if (selectionInPreview) {
-            if (softSelection?.forward === undefined) return;
-            if (!selection?.start) return;
+            if (softSelection?.forward === undefined) {
+                return;
+            }
+            if (!selection?.start) {
+                return;
+            }
             setSoftSelection({
                 start: selection.start,
                 middle: [],
@@ -218,7 +275,7 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
 
     const _handleOnClick = (elementId: string) => {
         if (!enableSelection) {
-            let start = _parse(elementId);
+            const start = _parse(elementId);
             setSelection({
                 start: elementId,
                 middle: [],
@@ -232,7 +289,9 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
             return;
         }
         if (selectionInPreview) {
-            if (!selection?.start) return;
+            if (!selection?.start) {
+                return;
+            }
             setSelectionInPreview(false);
             let start = _parse(selection.start);
             let end = _parse(elementId);
@@ -268,7 +327,7 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
     };
 
     const renderDays = () => {
-        let firstDayOfMonth = startOfMonth(new Date(year, month));
+        const firstDayOfMonth = startOfMonth(new Date(year, month));
 
         const weekStart = startOfWeek(firstDayOfMonth, { weekStartsOn: 0 });
         const isPreviousMonth = weekStart.getDate() !== 1;
@@ -278,7 +337,10 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
             let previousMonthDate: Date = weekStart;
             const endOfPreviousMonth = endOfMonth(previousMonthDate);
 
-            while (isBefore(previousMonthDate, endOfPreviousMonth) || isSameDay(previousMonthDate, endOfPreviousMonth)) {
+            while (
+                isBefore(previousMonthDate, endOfPreviousMonth) ||
+                isSameDay(previousMonthDate, endOfPreviousMonth)
+            ) {
                 const classNames = getClasses(previousMonthDate, false);
                 const formattedId: string = _format(previousMonthDate);
                 previousMonthDates.push(
@@ -292,14 +354,24 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
 
         let currentMonthDate: Date = firstDayOfMonth;
         const endOfCurrentMonth = endOfMonth(currentMonthDate);
-        let currentMonthDates = [];
+        const currentMonthDates = [];
         while (isBefore(currentMonthDate, endOfCurrentMonth) || isSameDay(currentMonthDate, endOfCurrentMonth)) {
             const classNames = getClasses(currentMonthDate, true);
             const formattedId: string = _format(currentMonthDate);
             currentMonthDates.push(
-                <button key={formattedId} className={classNames} onMouseOver={() => _handleOnMouseOver(formattedId)} onMouseLeave={_handleOnMouseLeave} onClick={() => _handleOnClick(formattedId)}>
-                    {doesRenderSelectionSpan(formattedId) && <span className={renderSelectionSpanClasses(formattedId)}></span>}
-                    {doesRenderSoftSelectionSpan(formattedId) && <span className={renderSoftSelectionSpanClasses(formattedId)}></span>}
+                <button
+                    key={formattedId}
+                    className={classNames}
+                    onMouseOver={() => _handleOnMouseOver(formattedId)}
+                    onMouseLeave={_handleOnMouseLeave}
+                    onClick={() => _handleOnClick(formattedId)}
+                >
+                    {doesRenderSelectionSpan(formattedId) && (
+                        <span className={renderSelectionSpanClasses(formattedId)}></span>
+                    )}
+                    {doesRenderSoftSelectionSpan(formattedId) && (
+                        <span className={renderSoftSelectionSpanClasses(formattedId)}></span>
+                    )}
                     <span className={renderSelectedDaySpanClasses(formattedId)}>{currentMonthDate.getDate()}</span>
                 </button>
             );
@@ -308,7 +380,7 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
         const weekEnd = endOfWeek(endOfCurrentMonth, { weekStartsOn: 0 });
         const isNextMonth = !isSameDay(weekEnd, endOfCurrentMonth);
 
-        let nextMonthDates = [];
+        const nextMonthDates = [];
         if (isNextMonth) {
             let nextMonthDate: Date = addDays(endOfCurrentMonth, 1);
             const nextMonthDateEnd: Date = weekEnd;
@@ -330,7 +402,12 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
     return (
         <div className="render-date-picker" id="date-picker">
             <div className="render-header">
-                <IconButton icon={arrowLeft} className={'arrow-container'} style={{ color: 'rgb(37, 52, 60)' }} onClick={() => handleDate(false)} />
+                <IconButton
+                    icon={arrowLeft}
+                    className={'arrow-container'}
+                    style={{ color: 'rgb(37, 52, 60)' }}
+                    onClick={() => handleDate(false)}
+                />
                 <span className="render-header-month-year">
                     <span>
                         <select value={month} onChange={(evt) => setMonth(parseInt(evt.currentTarget.value))}>
@@ -359,7 +436,12 @@ const DatePicker = ({ range, onSelectionChange, enableSelection = true }: { rang
                         </select>
                     </span>
                 </span>
-                <IconButton icon={arrowRight} className={'arrow-container'} style={{ color: 'rgb(37, 52, 60)' }} onClick={() => handleDate(true)} />
+                <IconButton
+                    icon={arrowRight}
+                    className={'arrow-container'}
+                    style={{ color: 'rgb(37, 52, 60)' }}
+                    onClick={() => handleDate(true)}
+                />
             </div>
             <div className="render-weekdays">
                 <span className="render-weekday">Sun</span>

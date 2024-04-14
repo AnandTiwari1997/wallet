@@ -13,9 +13,15 @@ export interface BadgeProp {
 const Badge = ({ children, badgeContent, anchorOrigin }: BadgeProp) => {
     return (
         <>
-            <span className={'badge-root'}>
+            <span className={'badge-root'} key={`${children}_${badgeContent}`}>
                 {children}
-                <span className={`badge-label ${anchorOrigin ? `badge-position-${anchorOrigin.vertical}-${anchorOrigin.horizontal}` : ''}`}>{badgeContent}</span>
+                <span
+                    className={`badge-label ${
+                        anchorOrigin ? `badge-position-${anchorOrigin.vertical}-${anchorOrigin.horizontal}` : ''
+                    }`}
+                >
+                    {badgeContent}
+                </span>
             </span>
         </>
     );

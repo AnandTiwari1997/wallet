@@ -1,12 +1,18 @@
 import TextBox from '../text-box/text-box';
 import DatePicker, { DateRange } from '../date-picker/date-picker';
+
 import React, { useState } from 'react';
+
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { calender } from '../../icons/icons';
+
 import ReactDOM from 'react-dom';
 import './date-input.css';
 import { format } from 'date-fns';
+
 import Button from '../button/button';
 
 const DateInput = ({ value, setValue, ...props }: { value: any; [key: string]: any }) => {
@@ -40,7 +46,12 @@ const DateInput = ({ value, setValue, ...props }: { value: any; [key: string]: a
                         display: 'flex'
                     }}
                 >
-                    <i aria-hidden="true" id={'calender-id'} className="calender-picker-icon icon arrow-container" onClick={() => setShowDatePicker(!showDatePicker)}>
+                    <i
+                        aria-hidden="true"
+                        id={'calender-id'}
+                        className="calender-picker-icon icon arrow-container"
+                        onClick={() => setShowDatePicker(!showDatePicker)}
+                    >
                         <FontAwesomeIcon icon={calender} />
                     </i>
                 </div>
@@ -51,7 +62,11 @@ const DateInput = ({ value, setValue, ...props }: { value: any; [key: string]: a
                         <div className="overlay-backdrop" onClick={() => setShowDatePicker(false)}></div>
                         <div className="date-picker-overlay-container">
                             <div className="date-picker-container">
-                                <DatePicker range={state} onSelectionChange={(dateRange) => setState(dateRange)} enableSelection={false} />
+                                <DatePicker
+                                    range={state}
+                                    onSelectionChange={(dateRange) => setState(dateRange)}
+                                    enableSelection={false}
+                                />
                                 <div className="custom-date-range-apply-button-container">
                                     <Button
                                         tabIndex={-1}

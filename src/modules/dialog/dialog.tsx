@@ -1,10 +1,23 @@
-import { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useEffect } from 'react';
+
 import { close } from '../../icons/icons';
 import DialogOverlay from '../overlay/dialog-overlay';
 import './dailog.css';
 
-const Dialog = ({ open, children, onBackdrop, onClose, header }: { open: boolean; children: any; onBackdrop?: () => void; onClose: () => void; header: any }) => {
+const Dialog = ({
+    open,
+    children,
+    onBackdrop,
+    onClose,
+    header
+}: {
+    open: boolean;
+    children: any;
+    onBackdrop?: () => void;
+    onClose: () => void;
+    header: any;
+}) => {
     useEffect(() => {}, []);
 
     return (

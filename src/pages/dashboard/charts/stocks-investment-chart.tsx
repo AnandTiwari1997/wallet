@@ -1,6 +1,7 @@
-import { Line } from 'react-chartjs-2';
-import { getStockHolding } from '../../../modules/backend/BackendApi';
 import { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
+
+import { getStockHolding } from '../../../modules/backend/BackendApi';
 
 const StocksInvestmentChart = () => {
     const [stockInvestedAmountChartData, setStockInvestedAmountChartData] = useState<
@@ -20,8 +21,10 @@ const StocksInvestmentChart = () => {
         getStockHolding({}).then((apiResponse) => {
             const grT: { key: string; value: number }[] = [];
             const grT1: { key: string; value: number }[] = [];
-            for (let holding of apiResponse.results) {
-                if (Number.parseFloat(holding.invested_amount) <= 0) continue;
+            for (const holding of apiResponse.results) {
+                if (Number.parseFloat(holding.invested_amount) <= 0) {
+                    continue;
+                }
                 grT.push({
                     key: holding.stock_symbol,
                     value: Number.parseFloat(holding.invested_amount)

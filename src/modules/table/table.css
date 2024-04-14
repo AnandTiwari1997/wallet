@@ -215,7 +215,6 @@
     animation: indeterminate 3.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
 }
 
-
 .tfoot {
     height: 48px;
     display: block;
@@ -252,8 +251,7 @@
     background: transparent;
     color: currentColor;
     border-radius: 5px;
-    height: 100%;
-    width: 30%;
+    width: 40%;
     text-align: center;
 }
 

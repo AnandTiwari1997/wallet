@@ -1,4 +1,4 @@
-import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../backend/database/models/account-transaction';
+import { Category, PaymentMode, TransactionStatus, TransactionType } from './transaction-data';
 
 export interface Account {
     account_id: number;

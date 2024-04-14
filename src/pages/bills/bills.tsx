@@ -1,23 +1,26 @@
 import Tabs from '../../modules/tabs/tabs';
-import Tab from '../../modules/tabs/tab';
-import Table, { TableColumn, TableData } from '../../modules/table/table';
+
 import './bill.css';
-import { Bill, billCategoryMap } from '../../data/models';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import CSS from 'csstype';
+import { addMonths, format } from 'date-fns';
+import { useEffect, useState } from 'react';
+
+import AddBill from './add-bill';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
+import { Bill, billCategoryMap } from '../../data/models';
+import { ArrayUtil } from '../../data/transaction-data';
 import { indianRupee, menu } from '../../icons/icons';
+import { ApiCriteria, ApiResponse, getBills, updateBill } from '../../modules/backend/BackendApi';
+import Badge from '../../modules/badge/badge';
+import Button from '../../modules/button/button';
+import Dialog from '../../modules/dialog/dialog';
+import IconButton from '../../modules/icon/icon-button';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
-import { ApiCriteria, getBills, updateBill } from '../../modules/backend/BackendApi';
-import CSS from 'csstype';
-import Dialog from '../../modules/dialog/dialog';
-import { useEffect, useState } from 'react';
-import AddBill from './add-bill';
-import { addMonths, format } from 'date-fns';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
-import Button from '../../modules/button/button';
-import { ArrayUtil } from '../../data/transaction-data';
-import Badge from '../../modules/badge/badge';
-import IconButton from '../../modules/icon/icon-button';
+import Table, { TableColumn, TableData } from '../../modules/table/table';
+import useAPI from '../../hooks/app-hooks';
+import Tab from '../../modules/tabs/tab';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -31,10 +34,10 @@ const BillsPage = () => {
     const [selectedTab, setSelectedTab] = useState('ACTIVE');
     const [showAddBill, setShowAddBill] = useState(false);
     const [selectedBill, setSelectedBill] = useState<Bill | undefined>(undefined);
-    const [state, dispatch] = useState();
     const [showBillActionMenu, setShowBillActionMenu] = useState(false);
     const [billMenuOptionFor, setBillMenuOptionFor] = useState<string>('');
     const [dueBillsCount, setDueBillsCount] = useState<number>(0);
+    const [getData, loading] = useAPI<ApiRequestBody<Bill>, ApiResponse<Bill>>(getBills);
 
     const VENDOR: TableColumn = {
         label: 'Vendor',
@@ -101,7 +104,9 @@ const BillsPage = () => {
                         <i className="icon">
                             <FontAwesomeIcon icon={indianRupee} />
                         </i>
-                        {ArrayUtil.sum(rows, (a: TableData<Bill>) => ArrayUtil.sum(a.data, (b: Bill) => (b.bill_status === 'UNPAID' ? b.bill_amount : 0))).toFixed(2)}
+                        {ArrayUtil.sum(rows, (a: TableData<Bill>) =>
+                            ArrayUtil.sum(a.data, (b: Bill) => (b.bill_status === 'UNPAID' ? b.bill_amount : 0))
+                        ).toFixed(2)}
                     </div>
                 </div>
             );
@@ -139,14 +144,26 @@ const BillsPage = () => {
                         <MenuOption
                             label={'Paid'}
                             onMenuOptionClick={(event) => {
-                                if (!selectedBill) return;
-                                if (selectedBill.bill_status === 'PAID') return;
+                                if (!selectedBill) {
+                                    return;
+                                }
+                                if (selectedBill.bill_status === 'PAID') {
+                                    return;
+                                }
                                 selectedBill.bill_status = 'PAID';
                                 selectedBill.label = 'NON_ACTIVE';
                                 selectedBill.transaction_date = new Date().toISOString();
                                 selectedBill.previous_bill_date = selectedBill.next_bill_date;
-                                selectedBill.next_bill_date = addMonths(new Date(selectedBill.previous_bill_date), 1).toISOString();
-                                updateBill({ data: selectedBill }).then((apiResponse) => fetchBills());
+                                selectedBill.next_bill_date = addMonths(
+                                    new Date(selectedBill.previous_bill_date),
+                                    1
+                                ).toISOString();
+                                updateBill({ data: selectedBill }).then((apiResponse) => {
+                                    fetchBills();
+                                    if (selectedTab === 'DUE') {
+                                        getDueBillsCount();
+                                    }
+                                });
                             }}
                         />
                         <MenuOption label={'Delete'} onMenuOptionClick={(event) => {}} />
@@ -175,18 +192,18 @@ const BillsPage = () => {
             }
         };
         if (selectedTab !== 'ALL') {
-            let criteria = buildCriteria(selectedTab);
+            const criteria = buildCriteria(selectedTab);
             body = { criteria: criteria };
         }
-        getBills(body, dispatch).then((value) => {
+        getData(body).then((value) => {
             setBills(value.results);
             setCount(value.num_found);
         });
     };
     const getDueBillsCount = () => {
-        let criteria = buildCriteria('DUE');
-        let body: ApiRequestBody<Bill> = { criteria: criteria };
-        getBills(body, dispatch).then((value) => {
+        const criteria = buildCriteria('DUE');
+        const body: ApiRequestBody<Bill> = { criteria: criteria };
+        getData(body).then((value) => {
             setDueBillsCount(value.num_found);
         });
     };
@@ -197,11 +214,11 @@ const BillsPage = () => {
     }, [selectedTab]);
 
     const buildCriteria = (label: string) => {
-        let criteria: ApiCriteria = {
+        const criteria: ApiCriteria = {
             filters: [
                 {
                     key: 'label',
-                    value: label
+                    value: [label]
                 }
             ],
             sorts: [{ key: 'next_bill_date', ascending: false }]
@@ -218,6 +235,7 @@ const BillsPage = () => {
                 onSort={(sortedColumn) => console.log(sortedColumn)}
                 onPagination={(tablePagination) => console.log(tablePagination)}
                 count={count}
+                isLoading={loading}
             />
         );
     };
@@ -252,7 +270,7 @@ const BillsPage = () => {
                 </Button>
             </div>
             <div style={{ background: 'white', margin: '10px', height: 'calc(100% - 3rem - 20px)' }}>
-                <Tabs selectedTab={'ACTIVE'} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
+                <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
                     <Tab label={'Upcoming Bills'} value={'ACTIVE'} classes={'tab--width'}>
                         {_renderTabData('ACTIVE')}
                     </Tab>

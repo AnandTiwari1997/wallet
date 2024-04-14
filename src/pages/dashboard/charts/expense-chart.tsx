@@ -1,8 +1,9 @@
 import { format, parse } from 'date-fns';
-import { Line } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
-import { ArrayUtil } from '../../../data/transaction-data';
+import { Line } from 'react-chartjs-2';
+
 import { Transaction } from '../../../data/models';
+import { ArrayUtil } from '../../../data/transaction-data';
 
 const ExpenseChart = ({ data }: { data: Transaction[] }) => {
     const [expenseChartData, setExpenseChartData] = useState<{ key: string; value: number }[]>([]);
@@ -11,13 +12,13 @@ const ExpenseChart = ({ data }: { data: Transaction[] }) => {
         const sortedTransactions = ArrayUtil.sort(data, (item: Transaction) => item.transaction_date);
         const groupedTransaction: { [key: string]: number[] } = {};
         sortedTransactions.forEach((transaction) => {
-            let key = format(new Date(transaction.transaction_date), 'dd-MM-yyyy');
-            let array = groupedTransaction[key] || [];
+            const key = format(new Date(transaction.transaction_date), 'dd-MM-yyyy');
+            const array = groupedTransaction[key] || [];
             array.push(transaction.transaction_type.toString().toUpperCase() === 'INCOME' ? 0 : transaction.amount);
             groupedTransaction[key] = array;
         });
         const grT: { key: string; value: number }[] = [];
-        for (let key in groupedTransaction) {
+        for (const key in groupedTransaction) {
             grT.push({
                 key: key,
                 value: ArrayUtil.sum<number>(groupedTransaction[key], (item) => item)

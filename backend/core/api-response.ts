@@ -16,7 +16,9 @@ abstract class ApiResponse {
         protected response: ApiResponseBody<any> | ApiErrorResponseBody | { message: string }
     ) {}
 
-    private static sanitize<T extends ApiResponse>(response: ApiResponseBody<any> | ApiErrorResponseBody | { message: string }): any {
+    private static sanitize<T extends ApiResponse>(
+        response: ApiResponseBody<any> | ApiErrorResponseBody | { message: string }
+    ): any {
         const clone: any = {};
         Object.assign(clone, response);
         for (const i in clone) if (typeof clone[i] === 'undefined') delete clone[i];

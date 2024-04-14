@@ -11,7 +11,8 @@
     cursor: inherit;
 }
 
-.input:focus, .input:active {
+.input:focus,
+.input:active {
     background: transparent;
     color: currentColor;
     font-weight: 500;

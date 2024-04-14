@@ -20,7 +20,8 @@ export const dbParam = {
     password: process.env.DB_USER_PWD || '',
     poolSize: parseInt(process.env.DB_POOL_SIZE || '5'),
     connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT_MILLIS || '10000'),
-    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MILLIS || '10000')
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MILLIS || '10000'),
+    loggingEnabled: process.env.DB_LOGGING_ENABLED === 'true'
 };
 export const corsUrl = process.env.CORS_URL;
 export const mailServerParam = {

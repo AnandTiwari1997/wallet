@@ -1,12 +1,18 @@
 import './week-picker.css';
-import { arrowLeft, arrowRight } from '../../icons/icons';
+import { addMonths, endOfDay, endOfWeek, startOfDay, startOfWeek, subMonths, getDaysInMonth } from 'date-fns';
 import { useState } from 'react';
-import { addMonths, endOfDay, endOfWeek, startOfDay, startOfWeek, subMonths } from 'date-fns';
-import { getDaysInMonth } from 'date-fns/esm';
+
+import { arrowLeft, arrowRight } from '../../icons/icons';
 import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
 import IconButton from '../icon/icon-button';
 
-const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
+const WeekPicker = ({
+    value,
+    onChange
+}: {
+    value: OnCalenderPickerChange | undefined;
+    onChange: (change: OnCalenderPickerChange, picker: string) => void;
+}) => {
     const [week, setWeek] = useState({
         firstDay: value ? value.rangeStart : undefined,
         lastDay: value ? value.rangeEnd : undefined
@@ -14,7 +20,7 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
     const [date, setDate] = useState(week.firstDay ? week.firstDay : new Date());
 
     const isLeapYear = () => {
-        let leapYear = new Date(new Date().getFullYear(), 1, 29);
+        const leapYear = new Date(new Date().getFullYear(), 1, 29);
         return leapYear.getDate() === 29;
     };
 
@@ -55,13 +61,18 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
     };
 
     const renderDays = () => {
-        let month = date.getMonth() + 1;
-        let ar = [];
+        const month = date.getMonth() + 1;
+        const ar = [];
         for (let i = 1; i <= days[month]; i++) {
-            let currentDate = new Date(date).setDate(i);
+            const currentDate = new Date(date).setDate(i);
 
             let cName = 'single-number';
-            if (week.firstDay && new Date(week.firstDay).getTime() <= new Date(currentDate).getTime() && week.lastDay && new Date(currentDate).getTime() <= new Date(week.lastDay).getTime()) {
+            if (
+                week.firstDay &&
+                new Date(week.firstDay).getTime() <= new Date(currentDate).getTime() &&
+                week.lastDay &&
+                new Date(currentDate).getTime() <= new Date(week.lastDay).getTime()
+            ) {
                 cName += ' selected-week';
                 if (startOfDay(new Date(week.firstDay)).getTime() === startOfDay(new Date(currentDate)).getTime()) {
                     cName += ' selected-week-start';
@@ -86,18 +97,18 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
         if (dayInTheWeek < 1) {
             dayInTheWeek = 7;
         }
-        let prevMonth = [];
+        const prevMonth = [];
         let prevMonthDays = new Date(date).getMonth();
         if (prevMonthDays === 0) {
             prevMonthDays = 12;
         }
         for (let i = dayInTheWeek; i > 1; i--) {
-            let previousMonth = new Date(date).setMonth(new Date(date).getMonth() - 1);
-            let currentDate = new Date(previousMonth).setDate(days[prevMonthDays] - i + 2);
+            const previousMonth = new Date(date).setMonth(new Date(date).getMonth() - 1);
+            const currentDate = new Date(previousMonth).setDate(days[prevMonthDays] - i + 2);
             let cName = 'single-number other-month';
-            let currentTime = new Date(currentDate).getTime();
-            let firstTime = week.firstDay && new Date(week.firstDay).getTime();
-            let endTime = week.lastDay && new Date(week.lastDay).getTime();
+            const currentTime = new Date(currentDate).getTime();
+            const firstTime = week.firstDay && new Date(week.firstDay).getTime();
+            const endTime = week.lastDay && new Date(week.lastDay).getTime();
             if (firstTime && currentTime >= firstTime && endTime && currentTime <= endTime) {
                 cName += ' selected-week';
                 if (firstTime === currentTime) {
@@ -112,7 +123,7 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
             );
         }
 
-        let nextMonth = [];
+        const nextMonth = [];
         let fullDays = 35;
         if ([...prevMonth, ...ar].length > 35) {
             fullDays = 42;
@@ -123,7 +134,12 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
             const lastDay = week.lastDay && week.lastDay.getTime();
             const lastDayOfMonth = new Date(new Date(date).setDate(getDaysInMonth(date)));
 
-            if (lastDay && lastDayOfMonth.getTime() <= lastDay && week.firstDay && week.firstDay.getMonth() === lastDayOfMonth.getMonth()) {
+            if (
+                lastDay &&
+                lastDayOfMonth.getTime() <= lastDay &&
+                week.firstDay &&
+                week.firstDay.getMonth() === lastDayOfMonth.getMonth()
+            ) {
                 cName += ' selected-week';
                 if (i === fullDays - [...prevMonth, ...ar].length) {
                     cName += ' selected-week-end';
@@ -136,8 +152,8 @@ const WeekPicker = ({ value, onChange }: { value: OnCalenderPickerChange | undef
                 </div>
             );
         }
-        let allDays: any[] = [...prevMonth, ...ar, ...nextMonth];
-        let finalWeeks: any[] = [];
+        const allDays: any[] = [...prevMonth, ...ar, ...nextMonth];
+        const finalWeeks: any[] = [];
         for (let i = 0; i < allDays.length; i = i + 7) {
             finalWeeks.push(
                 <div className="week" key={i}>

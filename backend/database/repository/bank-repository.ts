@@ -1,101 +1,33 @@
-import { Repository } from './repository.js';
-import { Bank, IBank } from '../models/bank.js';
-import { addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
-import { sqlDatabaseProvider } from '../initialize-database.js';
-import { Logger } from '../../core/logger.js';
+import { Bank } from '../models/bank.js';
+import { databaseProvider } from '../database-provider.js';
+import { DataSource, Repository } from 'typeorm';
+import { FindManyOptionsExtended } from '../find-options/FindManyOptionsExtended.js';
+import { SelectQueryBuilderExtended } from '../query-builder/SelectQueryBuilderExtended.js';
+import { DriverUtils } from 'typeorm/driver/DriverUtils.js';
 
-const logger: Logger = new Logger('BankRepository');
+class BankRepository extends Repository<Bank> {
+    private readonly dataSource: DataSource;
 
-class BankRepository implements Repository<Bank, number> {
-    static rowCount: number = 1;
-
-    setCurrentRowIndex(index: number) {
-        BankRepository.rowCount = index;
+    constructor(dataSource: DataSource) {
+        super(Bank, dataSource.manager, dataSource.createQueryRunner());
+        this.dataSource = dataSource;
     }
 
-    async add(item: Bank): Promise<Bank | undefined> {
-        try {
-            const bank = await this.find(item.bank_id);
-            if (bank) return bank;
-            item.bank_id = BankRepository.rowCount++;
-            let queryResult = await sqlDatabaseProvider.execute<IBank>(
-                `INSERT INTO bank(bank_id, name, icon, alert_email_id, primary_color)
-                 VALUES ($1, $2, $3, $4, $5)
-                 RETURNING *;`,
-                [item.bank_id, item.name, item.icon, item.alert_email_id, item.primary_color],
-                true
-            );
-            return queryResult.rows[0];
-        } catch (error) {
-            logger.error(`[Add] - Error On Add ${error}`);
-            return;
+    createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<Bank> {
+        let selectQueryBuilderExtended = new SelectQueryBuilderExtended<Bank>(this.dataSource, this.queryRunner);
+        if (alias) {
+            let alias_ = DriverUtils.buildAlias(this.dataSource.driver, undefined, alias);
+            selectQueryBuilderExtended.select(alias_).from(this.metadata.target, alias_);
+            return selectQueryBuilderExtended;
+        } else {
+            return selectQueryBuilderExtended;
         }
     }
 
-    async delete(id: number): Promise<boolean> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute('DELETE FROM bank WHERE bank_id = $1;', [id], true);
-            return queryResult.rows.length > 0;
-        } catch (error) {
-            logger.error(`[Delete] - Error On Delete ${error}`);
-            return false;
-        }
-    }
-
-    async deleteAll(): Promise<boolean> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute('DELETE FROM bank;', [], true);
-            return queryResult.rows.length > 0;
-        } catch (error) {
-            logger.error(`[DeleteAll] - Error On DeleteAll ${error}`);
-            return false;
-        }
-    }
-
-    async find(id: number): Promise<Bank | undefined> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute<IBank>('SELECT * FROM bank WHERE bank_id = $1;', [id], false);
-            return queryResult.rows[0];
-        } catch (error) {
-            logger.error(`[Find] - Error On Find ${error}`);
-            return undefined;
-        }
-    }
-
-    async findAll(criteria: Criteria): Promise<Bank[]> {
-        try {
-            let findSQL = 'SELECT * FROM bank';
-            let where = addWhereClause(findSQL, criteria);
-            findSQL = where.sql;
-            findSQL = addOrderByClause(findSQL, criteria);
-            findSQL = addLimitAndOffset(findSQL, criteria);
-            let queryResult = await sqlDatabaseProvider.execute<IBank>(findSQL, where.whereClauses, false);
-            return queryResult.rows;
-        } catch (error) {
-            logger.error(`[FindAll] - Error On FindAll ${error}`);
-            return [];
-        }
-    }
-
-    async update(item: Bank): Promise<Bank | undefined> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute<IBank>(
-                `UPDATE bank
-                 SET name=$1,
-                     icon=$2,
-                     alert_email_id=$3,
-                     primary_color=$4
-                 WHERE bank_id = $5
-                 RETURNING *`,
-                [item.name, item.icon, item.alert_email_id, item.primary_color, item.bank_id],
-                true
-            );
-            return queryResult.rows[0];
-        } catch (error) {
-            logger.error(`[Update] - Error On Update ${error}`);
-            return;
-        }
+    async findWithGroupBy(options: FindManyOptionsExtended<Bank>): Promise<Bank[]> {
+        let queryBuilder = this.createExtendedQueryBuilder(this.metadata.targetName).setFindOptionsExtended(options);
+        return await queryBuilder.getMany();
     }
 }
 
-export const bankRepository = new BankRepository();
+export const bankRepository = new BankRepository(databaseProvider.database);

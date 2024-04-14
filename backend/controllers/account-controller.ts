@@ -1,79 +1,126 @@
-import { accountRepository } from '../database/repository/account-repository.js';
-import { bankAccountTransactionSyncProvider } from '../workflows/sync-providers/bank-account-transaction-sync-provider.js';
-import { Account, AccountBuilder, AccountDto } from '../database/models/account.js';
 import express, { Request, Response } from 'express';
-import AsyncHandler from '../core/async-handler.js';
 import { BadRequestError, InternalError, NoDataError } from '../core/api-error.js';
-import { SuccessResponse } from '../core/api-response.js';
-import { ApiRequestBody } from '../types/api-request-body.js';
-import { ApiResponseBody } from '../types/api-response-body.js';
 import { ApiRequestPathParam } from '../types/api-request-path-param.js';
-import { SyncProviderFactory } from '../workflows/sync-providers/sync-provider.js';
-import { loanAccountTransactionSyncProvider } from '../workflows/sync-providers/loan-account-transaction-sync-provider.js';
-import { creditCardSyncProvider } from '../workflows/sync-providers/credit-card-sync-provider.js';
+import { ApiResponseBody } from '../types/api-response-body.js';
+import { ApiRequestBody } from '../types/api-request-body.js';
+import { accountRepository } from '../database/repository/account-repository.js';
+import { Account } from '../database/models/account.js';
+import { SuccessResponse } from '../core/api-response.js';
+import { RepositoryUtils } from '../database/util/repository-utils.js';
+import {
+    bankAccountTransactionSyncHandler,
+    creditCardSyncHandler,
+    loanAccountTransactionSyncHandler
+} from '../singleton.js';
+import { Logger } from '../core/logger.js';
+import { HttpRequestLogger } from '../core/api-middleware.js';
+import { AsyncApiHandler } from '../core/async-handler.js';
+
+const logger = new Logger('AccountController');
+
+function getProvider(account_type: string) {
+    switch (account_type) {
+        case 'BANK':
+            return bankAccountTransactionSyncHandler;
+        case 'LOAN':
+            return loanAccountTransactionSyncHandler;
+        default:
+            return creditCardSyncHandler;
+    }
+}
 
 const router = express.Router();
+router.use(HttpRequestLogger);
 router.post(
     '/_search',
-    AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<AccountDto>, ApiRequestBody<AccountDto>>, res: Response<ApiResponseBody<AccountDto>>) => {
-        const accounts = await accountRepository.findAll(req.body.criteria || {});
-        let apiResponse: ApiResponseBody<AccountDto> = {
-            num_found: accounts.length,
-            results: accounts.map((account) => AccountBuilder.toAccountDto(account))
-        };
-        return new SuccessResponse<ApiResponseBody<AccountDto>>(apiResponse).send(res);
-    })
+    AsyncApiHandler(
+        async (
+            req: Request<ApiRequestPathParam, ApiResponseBody<Account>, ApiRequestBody<Account>>,
+            res: Response<ApiResponseBody<Account>>
+        ) => {
+            let where = RepositoryUtils.getWhereClause(req.body.criteria);
+            let sort = RepositoryUtils.getSortClause(req.body.criteria);
+            let groupBy = RepositoryUtils.getGroupByClause(req.body.criteria);
+            const accounts = await accountRepository.findWithGroupBy({
+                where: where,
+                order: sort,
+                groupBy: groupBy,
+                limit: req.body.criteria?.limit,
+                offset: RepositoryUtils.getOffset(req.body.criteria),
+                relations: { bank: true }
+            });
+            let apiResponse: ApiResponseBody<Account> = {
+                num_found: accounts.length,
+                results: accounts.map((account) => account)
+            };
+            return new SuccessResponse<ApiResponseBody<Account>>(apiResponse).send(res);
+        }
+    )
 );
 router.post(
     '/',
-    AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<AccountDto>, ApiRequestBody<AccountDto>>, res: Response<ApiResponseBody<AccountDto>>) => {
-        let clientAccount: AccountDto | undefined = req.body.data;
-        if (!clientAccount) throw new BadRequestError('Invalid account provided');
-        let inputAccount: Account = AccountBuilder.toAccount(clientAccount);
-        if (!inputAccount) throw new BadRequestError('Invalid account details provided');
-        let account = await accountRepository.add(inputAccount);
-        if (!account) throw new InternalError('Not able to add account');
-        let apiResponse: ApiResponseBody<AccountDto> = {
-            num_found: 1,
-            results: [AccountBuilder.toAccountDto(account)]
-        };
-        let syncProvider = SyncProviderFactory.getProvider(account.account_type);
-        syncProvider.manualSync([account], false);
-        return new SuccessResponse<ApiResponseBody<AccountDto>>(apiResponse).send(res);
-    })
+    AsyncApiHandler(
+        async (
+            req: Request<ApiRequestPathParam, ApiResponseBody<Account>, ApiRequestBody<Account>>,
+            res: Response<ApiResponseBody<Account>>
+        ) => {
+            let clientAccount: Account | undefined = req.body.data;
+            if (!clientAccount) throw new BadRequestError('Invalid account provided');
+            let inputAccount: Account = Object.assign(Account.prototype, clientAccount);
+            if (!inputAccount) throw new BadRequestError('Invalid account details provided');
+            let account = await accountRepository.save(inputAccount);
+            if (!account) throw new InternalError('Not able to add account');
+            let apiResponse: ApiResponseBody<Account> = {
+                num_found: 1,
+                results: [account]
+            };
+            getProvider(account.account_type).sync([account], false);
+            return new SuccessResponse<ApiResponseBody<Account>>(apiResponse).send(res);
+        }
+    )
 );
 router.put(
     '/',
-    AsyncHandler(async (req: Request<ApiRequestPathParam, ApiResponseBody<AccountDto>, ApiRequestBody<AccountDto>>, res: Response<ApiResponseBody<AccountDto>>) => {
-        let clientAccount: AccountDto | undefined = req.body.data;
-        if (!clientAccount) throw new BadRequestError('Invalid account provided');
-        let inputAccount: Account = AccountBuilder.toAccount(clientAccount);
-        if (!inputAccount) throw new BadRequestError('Invalid account details provided');
-
-        let foundedAccount = await accountRepository.find(inputAccount.account_id);
-        if (!foundedAccount) throw new NoDataError('No account found');
-
-        inputAccount.last_synced_on = new Date(foundedAccount.last_synced_on);
-        let account = await accountRepository.update(inputAccount);
-
-        if (!account) throw new InternalError('Not able to update account');
-        let apiResponse: ApiResponseBody<AccountDto> = {
-            num_found: 1,
-            results: [AccountBuilder.toAccountDto(account)]
-        };
-        return new SuccessResponse<ApiResponseBody<AccountDto>>(apiResponse).send(res);
-    })
+    AsyncApiHandler(
+        async (
+            req: Request<ApiRequestPathParam, ApiResponseBody<Account>, ApiRequestBody<Account>>,
+            res: Response<ApiResponseBody<Account>>
+        ) => {
+            let clientAccount: Account | undefined = req.body.data;
+            if (!clientAccount) throw new BadRequestError('Invalid account provided');
+            let inputAccount: Account = Object.assign(Account.prototype, clientAccount);
+            if (!inputAccount) throw new BadRequestError('Invalid account details provided');
+            let foundedAccount = await accountRepository.findOne({
+                where: { account_id: inputAccount.account_id }
+            });
+            if (!foundedAccount) throw new NoDataError('No account found');
+            inputAccount.last_synced_on = new Date(foundedAccount.last_synced_on);
+            let account = await accountRepository.update(inputAccount.account_id, inputAccount);
+            if (!account.affected) throw new InternalError('Not able to update account');
+            let updatedAccount = await accountRepository.find({
+                where: { account_id: inputAccount.account_id },
+                relations: { bank: true }
+            });
+            let apiResponse: ApiResponseBody<Account> = {
+                num_found: 1,
+                results: [updatedAccount[0]]
+            };
+            return new SuccessResponse<ApiResponseBody<Account>>(apiResponse).send(res);
+        }
+    )
 );
 router.delete(
     '/',
-    AsyncHandler(
+    AsyncApiHandler(
         async (
-            req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<AccountDto>>,
+            req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<Account>>,
             res: Response<{
                 message: string;
             }>
         ) => {
-            let accounts = await accountRepository.findAll(req.body.criteria || {});
+            let accounts = await accountRepository.find({
+                relations: { bank: true }
+            });
             if (accounts.length !== req.body.criteria?.filters?.length) {
                 throw new BadRequestError('Invalid account Id provided for delete');
             }
@@ -88,25 +135,30 @@ router.delete(
 );
 router.post(
     '/sync',
-    AsyncHandler(
+    AsyncApiHandler(
         async (
-            req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<AccountDto>>,
+            req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<Account>>,
             res: Response<{
                 message: string;
             }>
         ) => {
-            let accounts = await accountRepository.findAll(req.body.criteria || {});
+            let where = RepositoryUtils.getWhereClause(req.body.criteria);
+            let accounts = await accountRepository.find({
+                where: where,
+                relations: { bank: true }
+            });
+            logger.info(accounts);
             let bankAccounts = accounts.filter((account) => account.account_type === 'BANK');
             let loanAccounts = accounts.filter((account) => account.account_type === 'LOAN');
             let creditCardAccount = accounts.filter((account) => account.account_type === 'CREDIT_CARD');
             if (bankAccounts.length > 0) {
-                bankAccountTransactionSyncProvider.manualSync(bankAccounts, true);
+                bankAccountTransactionSyncHandler.sync(bankAccounts, true);
             }
             if (loanAccounts.length > 0) {
-                loanAccountTransactionSyncProvider.manualSync(loanAccounts, true);
+                loanAccountTransactionSyncHandler.sync(loanAccounts, true);
             }
             if (creditCardAccount.length > 0) {
-                creditCardSyncProvider.manualSync(creditCardAccount, true);
+                creditCardSyncHandler.sync(creditCardAccount, true);
             }
             return new SuccessResponse<{
                 message: string;

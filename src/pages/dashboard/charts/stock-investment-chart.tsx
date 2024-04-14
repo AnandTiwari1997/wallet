@@ -1,10 +1,10 @@
-import { Line } from 'react-chartjs-2';
+import { format } from 'date-fns';
 import React, { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
+
+import { DematAccount } from '../../../data/models';
 import { getStockAccount, getStockHolding, getStockTransaction } from '../../../modules/backend/BackendApi';
 import Select, { SelectOption } from '../../../modules/select/select';
-import { useGlobalLoadingState } from '../../../index';
-import { format } from 'date-fns';
-import { DematAccount } from '../../../data/models';
 
 const StockInvestmentChart = () => {
     const [stockInvestmentTransactionChartData, setStockInvestmentTransactionChartData] = useState<
@@ -15,7 +15,6 @@ const StockInvestmentChart = () => {
     >([]);
     const [selectedHolding, setSelectedHolding] = useState<string>();
     const [holdingOptions, setHoldingOptions] = useState<SelectOption[]>([]);
-    const [state, dispatch] = useGlobalLoadingState();
     const [brokers, setBrokers] = useState<{ [key: string]: DematAccount }>();
 
     const getStockTransactions = (holdingId: string) => {
@@ -23,21 +22,19 @@ const StockInvestmentChart = () => {
             key: string;
             value: number;
         }[] = [];
-        getStockTransaction(
-            {
-                criteria: {
-                    filters: [{ key: 'holding', value: holdingId }],
-                    sorts: [{ key: 'transaction_date', ascending: true }]
-                }
-            },
-            dispatch
-        ).then((response) => {
-            let groupedTransaction: { [key: string]: number } = {};
+        getStockTransaction({
+            criteria: {
+                filters: [{ key: 'holding_id', value: [holdingId] }],
+                sorts: [{ key: 'transaction_date', ascending: true }],
+                groupBy: [{ key: 'holding_id' }]
+            }
+        }).then((response) => {
+            const groupedTransaction: { [key: string]: number } = {};
             response.results.forEach((value) => {
-                let key = format(new Date(value.transaction_date), 'dd-MM-yyyy');
+                const key = format(new Date(value.transaction_date), 'dd-MM-yyyy');
                 groupedTransaction[key] = value.amount;
             });
-            for (let key in groupedTransaction) {
+            for (const key in groupedTransaction) {
                 grT.push({
                     key: key,
                     value: groupedTransaction[key]
@@ -48,8 +45,8 @@ const StockInvestmentChart = () => {
     };
 
     useEffect(() => {
-        getStockAccount({}, dispatch).then((response) => {
-            let brokers: { [key: string]: DematAccount } = {};
+        getStockAccount({}).then((response) => {
+            const brokers: { [key: string]: DematAccount } = {};
             response.results.forEach((value) => {
                 brokers[value.account_bo_id] = value;
             });
@@ -65,8 +62,10 @@ const StockInvestmentChart = () => {
                 }
             }).then((apiResponse) => {
                 const options: SelectOption[] = [];
-                for (let holding of apiResponse.results) {
-                    if (Number.parseFloat(holding.invested_amount) <= 0) continue;
+                for (const holding of apiResponse.results) {
+                    if (Number.parseFloat(holding.invested_amount) <= 0) {
+                        continue;
+                    }
                     options.push({
                         label: holding.stock_name + (brokers ? ' - ' + brokers[holding.account_id].account_name : ''),
                         value: holding.holding_id
@@ -86,8 +85,7 @@ const StockInvestmentChart = () => {
                     display: 'flex',
                     justifyContent: 'end',
                     alignItems: 'center',
-                    marginRight: '10px'
-                    // width: 'fit-content'
+                    margin: '0 10px'
                 }}
             >
                 <Select

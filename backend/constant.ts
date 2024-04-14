@@ -79,6 +79,13 @@ export const ALL_STOCKS = [
     },
     {
         EXCHANGE: 'NSE',
+        SYMBOL_CODE: 'NBCC',
+        SYMBOL: 'NBCC',
+        NAME_OF_COMPANY: 'NBCC (India)',
+        ISIN_NUMBER: 'INE095N01031'
+    },
+    {
+        EXCHANGE: 'NSE',
         SYMBOL_CODE: '21STCENMGM',
         SYMBOL: '21STCENMGM',
         NAME_OF_COMPANY: '21st Century Management Services Limited',
@@ -8119,13 +8126,6 @@ export const ALL_STOCKS = [
         SYMBOL: 'NAZARA',
         NAME_OF_COMPANY: 'Nazara Technologies Limited',
         ISIN_NUMBER: 'INE418L01021'
-    },
-    {
-        EXCHANGE: 'NSE',
-        SYMBOL_CODE: 'NBCC',
-        SYMBOL: 'NBCC',
-        NAME_OF_COMPANY: 'NBCC (India) Limited',
-        ISIN_NUMBER: 'INE095N01031'
     },
     {
         EXCHANGE: 'NSE',

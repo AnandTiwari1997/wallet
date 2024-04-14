@@ -1,15 +1,34 @@
 import './range-picker.css';
 import Checkbox from '../checkbox/checkbox';
+
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css';
-import { startOfMonth, startOfWeek, startOfYear, subDays } from 'date-fns/esm';
+import {
+    startOfMonth,
+    startOfWeek,
+    startOfYear,
+    subDays,
+    differenceInDays,
+    differenceInMonths,
+    isSameDay,
+    isSameMonth,
+    isSameWeek,
+    isSameYear,
+    subMonths
+} from 'date-fns/esm';
 import React, { useCallback, useEffect, useState } from 'react';
-import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
-import { differenceInDays, differenceInMonths, isSameDay, isSameMonth, isSameWeek, isSameYear, subMonths } from 'date-fns';
-import DatePicker, { DateRange } from '../date-picker/date-picker';
-import Button from '../button/button';
 
-const RangePicker = ({ value, onChange }: { value: OnCalenderPickerChange | undefined; onChange: (change: OnCalenderPickerChange, picker: string) => void }) => {
+import Button from '../button/button';
+import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
+import DatePicker, { DateRange } from '../date-picker/date-picker';
+
+const RangePicker = ({
+    value,
+    onChange
+}: {
+    value: OnCalenderPickerChange | undefined;
+    onChange: (change: OnCalenderPickerChange, picker: string) => void;
+}) => {
     const getRangeFromValue = (value: string | undefined): DateRange => {
         switch (value) {
             case '7-days':
@@ -74,20 +93,31 @@ const RangePicker = ({ value, onChange }: { value: OnCalenderPickerChange | unde
 
     const getCheckedOption = useCallback(
         (diff: number, unit: string) => {
-            let start = state.startDate ? state.startDate : new Date();
-            let end = state.endDate ? state.endDate : new Date();
+            const start = state.startDate ? state.startDate : new Date();
+            const end = state.endDate ? state.endDate : new Date();
             switch (unit) {
                 case 'day':
                     return differenceInDays(end, start) === diff;
                 case 'month':
                     return (
-                        (isSameMonth(end, start) && isSameDay(start, startOfMonth(new Date())) && isSameDay(end, new Date()) && isSameYear(end, start)) ||
+                        (isSameMonth(end, start) &&
+                            isSameDay(start, startOfMonth(new Date())) &&
+                            isSameDay(end, new Date()) &&
+                            isSameYear(end, start)) ||
                         (diff > 0 && differenceInMonths(end, start) === diff)
                     );
                 case 'week':
-                    return isSameWeek(end, start) && isSameDay(start, startOfWeek(new Date())) && isSameDay(end, new Date());
+                    return (
+                        isSameWeek(end, start) &&
+                        isSameDay(start, startOfWeek(new Date())) &&
+                        isSameDay(end, new Date())
+                    );
                 case 'year':
-                    return isSameYear(end, start) && isSameDay(start, startOfYear(new Date())) && isSameDay(end, new Date());
+                    return (
+                        isSameYear(end, start) &&
+                        isSameDay(start, startOfYear(new Date())) &&
+                        isSameDay(end, new Date())
+                    );
             }
         },
         [state]
@@ -220,7 +250,11 @@ const RangePicker = ({ value, onChange }: { value: OnCalenderPickerChange | unde
                 <div className="range-picker-custom-range">
                     {
                         <div style={{ width: '100%' }}>
-                            <DatePicker range={state} onSelectionChange={(dateRange) => handleDateSelection(dateRange)} enableSelection />
+                            <DatePicker
+                                range={state}
+                                onSelectionChange={(dateRange) => handleDateSelection(dateRange)}
+                                enableSelection
+                            />
                             <div className="custom-date-range-apply-button-container">
                                 <Button onClick={handleCustomDateRangeApply}>Apply</Button>
                             </div>

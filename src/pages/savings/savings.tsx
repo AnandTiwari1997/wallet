@@ -1,14 +1,17 @@
-import CSS from 'csstype';
 import { Button, Dialog } from '@mui/material';
+import CSS from 'csstype';
 import { Fragment, useRef, useState } from 'react';
+
 import './savings.css';
 import MutualFund from './mutual-fund';
 import ProvidentFund from './provident-fund';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import { refresh } from '../../icons/icons';
 import { syncInvestmentAccount, syncInvestmentAccountCaptcha } from '../../modules/backend/BackendApi';
-import Tabs from '../../modules/tabs/tabs';
 import Tab from '../../modules/tabs/tab';
+import Tabs from '../../modules/tabs/tabs';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -120,10 +123,14 @@ const SavingsPage = () => {
         const eventSource: EventSource = syncInvestmentAccount(selectedTab);
         eventSource.onmessage = (ev: MessageEvent) => {
             const jsonData = JSON.parse(ev.data);
-            if (selectedTab === SavingsTab.MUTUAL_FUND.value) eventSource.close();
-            if (jsonData['type'] === 'ping') return;
-            setCaptchaUrl(jsonData['imageUrl']);
-            setCaptchaId(jsonData['captchaID']);
+            if (selectedTab === SavingsTab.MUTUAL_FUND.value) {
+                eventSource.close();
+            }
+            if (jsonData.type === 'ping') {
+                return;
+            }
+            setCaptchaUrl(jsonData.imageUrl);
+            setCaptchaId(jsonData.captchaID);
             setOpenCaptcha(true);
             eventSource.close();
         };
@@ -153,11 +160,22 @@ const SavingsPage = () => {
                                 <FontAwesomeIcon icon={refresh} />
                             </i>
                         </button>
-                        <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
-                            <Tab label={SavingsTab.MUTUAL_FUND.label} value={SavingsTab.MUTUAL_FUND.value} classes={'tab--width'}>
+                        <Tabs
+                            selectedTab={selectedTab}
+                            onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}
+                        >
+                            <Tab
+                                label={SavingsTab.MUTUAL_FUND.label}
+                                value={SavingsTab.MUTUAL_FUND.value}
+                                classes={'tab--width'}
+                            >
                                 <MutualFund />
                             </Tab>
-                            <Tab label={SavingsTab.PROVIDENT_FUND.label} value={SavingsTab.PROVIDENT_FUND.value} classes={'tab--width'}>
+                            <Tab
+                                label={SavingsTab.PROVIDENT_FUND.label}
+                                value={SavingsTab.PROVIDENT_FUND.value}
+                                classes={'tab--width'}
+                            >
                                 <ProvidentFund />
                             </Tab>
                         </Tabs>

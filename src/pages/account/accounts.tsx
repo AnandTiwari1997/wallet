@@ -1,18 +1,24 @@
 import CSS from 'csstype';
+
 import './accounts.css';
-import Table, { TableColumn } from '../../modules/table/table';
-import { Account, AccountType } from '../../data/models';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { indianRupee, menu } from '../../icons/icons';
 import { useEffect, useState } from 'react';
-import { getAccounts, syncAccount } from '../../modules/backend/BackendApi';
+
+import AddAccount from './add-account';
+import { Account, AccountType } from '../../data/models';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { ArrayUtil } from '../../data/transaction-data';
+import { indianRupee, menu } from '../../icons/icons';
+import { ApiResponse, getAccounts, syncAccount } from '../../modules/backend/BackendApi';
+import Button from '../../modules/button/button';
 import Dialog from '../../modules/dialog/dialog';
+import IconButton from '../../modules/icon/icon-button';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
-import AddAccount from './add-account';
-import { ArrayUtil } from '../../data/transaction-data';
-import Button from '../../modules/button/button';
-import IconButton from '../../modules/icon/icon-button';
+import Table, { TableColumn } from '../../modules/table/table';
+import useAPI from '../../hooks/app-hooks';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -26,11 +32,11 @@ const AccountPage = () => {
     const [showAddAccount, setShowAddAccount] = useState(false);
     const [showAccountMenu, setShowAccountMenu] = useState(false);
     const [accountMenuOptionFor, setAccountMenuOptionFor] = useState<number>(0);
-    const [state, dispatch] = useState();
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
+    const [getData, loading] = useAPI<ApiRequestBody<Account>, ApiResponse<Account>>(getAccounts);
 
     useEffect(() => {
-        getAccounts(dispatch).then((response) => {
+        getData().then((response) => {
             setCount(response.num_found);
             setAccounts(response.results);
         });
@@ -51,14 +57,22 @@ const AccountPage = () => {
                 return (
                     <div style={{ display: 'block' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Account Used:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{rows[0].account_name}</div>
+                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
+                            {rows[0].account_name}
+                        </div>
                     </div>
                 );
             },
             customRender: (row: Account) => {
                 return (
                     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                        {row.bank && <i className="icon" style={{ width: 'fit-content' }} dangerouslySetInnerHTML={{ __html: row.bank.icon }}></i>}
+                        {row.bank && (
+                            <i
+                                className="icon"
+                                style={{ width: 'fit-content' }}
+                                dangerouslySetInnerHTML={{ __html: row.bank.icon }}
+                            ></i>
+                        )}
                         <div>{row.account_name}</div>
                     </div>
                 );
@@ -154,12 +168,17 @@ const AccountPage = () => {
                                 label={'Sync'}
                                 onMenuOptionClick={(event) => {
                                     console.log(row);
-                                    if (!selectedAccount) return;
+                                    if (!selectedAccount) {
+                                        return;
+                                    }
                                     syncAccount({
                                         criteria: {
                                             filters: [
-                                                { key: 'account_type', value: selectedAccount.account_type.toString() },
-                                                { key: 'account_id', value: selectedAccount.account_id.toString() }
+                                                {
+                                                    key: 'account_type',
+                                                    value: [selectedAccount.account_type.toString()]
+                                                },
+                                                { key: 'account_id', value: [selectedAccount.account_id.toString()] }
                                             ]
                                         }
                                     }).then((response) => {
@@ -191,7 +210,13 @@ const AccountPage = () => {
                     <Button onClick={() => setShowAddAccount(true)}>Add</Button>
                 </div>
                 <div className="account-table-division">
-                    <Table columns={columns} rows={accounts} groupByColumn={[columns[0]]} count={count} />
+                    <Table
+                        columns={columns}
+                        rows={accounts}
+                        groupByColumn={[columns[0]]}
+                        count={count}
+                        isLoading={loading}
+                    />
                 </div>
             </div>
             <Dialog
@@ -206,7 +231,7 @@ const AccountPage = () => {
                     account={selectedAccount}
                     onSubmit={(success, data) => {
                         if (success) {
-                            getAccounts(dispatch).then((response) => {
+                            getData().then((response) => {
                                 setCount(response.num_found);
                                 setAccounts(response.results);
                             });

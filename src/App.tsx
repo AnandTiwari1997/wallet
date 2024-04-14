@@ -1,14 +1,9 @@
-import * as React from 'react';
-import Navigation from './modules/navigation/navigation';
 import CSS from 'csstype';
+import * as React from 'react';
+import { Outlet } from 'react-router-dom';
+
 import Header from './modules/header/header';
-import { Route, Routes } from 'react-router-dom';
-import DashboardPage from './pages/dashboard/dashboard';
-import TransactionPage from './pages/transaction/transaction';
-import SavingsPage from './pages/savings/savings';
-import AccountPage from './pages/account/accounts';
-import BillsPage from './pages/bills/bills';
-import StockPage from './pages/stocks/stocks';
+import Navigation from './modules/navigation/navigation';
 
 const mainStyle: CSS.Properties = {
     minHeight: '100vh',
@@ -50,15 +45,7 @@ const App = (): JSX.Element => {
                 <div style={bodyStyle}>
                     <Header heading={activeTab}></Header>
                     <div style={body}>
-                        <Routes>
-                            <Route path="/" element={<DashboardPage />} />
-                            <Route index path="/dashboard" element={<DashboardPage />} />
-                            <Route index path="/account" element={<AccountPage />} />
-                            <Route index path="/savings" element={<SavingsPage />} />
-                            <Route index path="/stocks" element={<StockPage />} />
-                            <Route index path="/transaction" element={<TransactionPage />} />
-                            <Route index path="/bills" element={<BillsPage />} />
-                        </Routes>
+                        <Outlet />
                     </div>
                 </div>
             </div>

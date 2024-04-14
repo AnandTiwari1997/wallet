@@ -1,11 +1,18 @@
+import { format, parse } from 'date-fns';
+import { useEffect, useState } from 'react';
+
+import { Account, Bank } from '../../data/models';
+import { addAccount, ApiResponse, getBanks, updateAccount } from '../../modules/backend/BackendApi';
 import Select, { SelectOption } from '../../modules/select/select';
 import TextBox from '../../modules/text-box/text-box';
-import { Account, Bank } from '../../data/models';
-import { useEffect, useState } from 'react';
-import { addAccount, ApiResponse, getBanks, updateAccount } from '../../modules/backend/BackendApi';
-import { format, parse } from 'date-fns';
 
-const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (success: boolean, data: Account | undefined) => any | void }) => {
+const AddAccount = ({
+    account,
+    onSubmit
+}: {
+    account?: Account;
+    onSubmit: (success: boolean, data: Account | undefined) => any | void;
+}) => {
     const [accountId, setAccountId] = useState<number>(0);
     const [accountType, setAccountType] = useState<string>('CASH');
     const [accountName, setAccountName] = useState<string>('');
@@ -22,7 +29,7 @@ const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (succe
 
     const _getBanks = () => {
         getBanks().then((value: ApiResponse<Bank>) => {
-            let options: SelectOption[] = value.results
+            const options: SelectOption[] = value.results
                 .filter((value1) => {
                     return value1.bank_id.toString() !== '0';
                 })
@@ -100,29 +107,46 @@ const AddAccount = ({ account, onSubmit }: { account?: Account; onSubmit: (succe
                             />
 
                             <p style={{ margin: '0.5em 0' }}>Account/Card Number</p>
-                            <TextBox setValue={setAccountNumber} value={accountNumber} placeholder={'Enter Account/Card Number'} />
+                            <TextBox
+                                setValue={setAccountNumber}
+                                value={accountNumber}
+                                placeholder={'Enter Account/Card Number'}
+                            />
 
                             <p>Loan Start Date</p>
-                            <TextBox setValue={setStartDate} value={startDate} placeholder={'Enter Loan Start Date in dd-MM-yyyy'} />
+                            <TextBox
+                                setValue={setStartDate}
+                                value={startDate}
+                                placeholder={'Enter Loan Start Date in dd-MM-yyyy'}
+                            />
                         </>
                     )}
 
                     {(accountType == 'LOAN' || accountType == 'CREDIT_CARD') && (
                         <>
                             <p style={{ margin: '0.5em 0' }}>Search Text</p>
-                            <TextBox setValue={setSearchText} value={searchText} placeholder={'Enter Text to filter mail'} />
+                            <TextBox
+                                setValue={setSearchText}
+                                value={searchText}
+                                placeholder={'Enter Text to filter mail'}
+                            />
                         </>
                     )}
 
                     <p style={{ margin: '0.5em 0' }}>Balance</p>
-                    <TextBox setValue={setAccountBalance} value={accountBalance} type={'number'} placeholder={'Enter Balance'} />
+                    <TextBox
+                        setValue={setAccountBalance}
+                        value={accountBalance}
+                        type={'number'}
+                        placeholder={'Enter Balance'}
+                    />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button
                             className="button"
                             onClick={() => {
                                 setBankOption([]);
-                                let account: Account = {
+                                const account: Account = {
                                     account_id: accountId,
                                     account_name: accountName,
                                     account_balance: accountBalance,

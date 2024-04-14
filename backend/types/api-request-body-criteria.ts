@@ -1,5 +1,5 @@
 export interface ApiCriteria {
-    filters?: { key: string; value: string }[];
+    filters?: { key: string; value: string[] }[];
     sorts?: { key: string; ascending: boolean }[];
     between?: { key: string; range: { start: string; end: string } }[];
     offset?: number;

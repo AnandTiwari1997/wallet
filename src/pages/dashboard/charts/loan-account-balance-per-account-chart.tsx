@@ -1,13 +1,14 @@
-import { Doughnut } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
+import { Doughnut } from 'react-chartjs-2';
+
 import { Account } from '../../../data/models';
 
 const LoanAccountBalancePerAccountChart = ({ data }: { data: Account[] }) => {
     const [loanAccountChartData, setLoanAccountChartData] = useState<{ key: string; value: number }[]>([]);
 
     useEffect(() => {
-        let loanAccounts = data.filter((value) => value.account_type === 'LOAN');
-        let loanAccountChartData = loanAccounts.map((value) => {
+        const loanAccounts = data.filter((value) => value.account_type === 'LOAN');
+        const loanAccountChartData = loanAccounts.map((value) => {
             return { key: value.account_name, value: value.account_balance };
         });
         setLoanAccountChartData(loanAccountChartData);

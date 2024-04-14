@@ -1,144 +1,74 @@
-import { Repository } from './repository.js';
-import { Transaction, TransactionBuilder } from '../models/account-transaction.js';
-import { addGroupByClause, addLimitAndOffset, addOrderByClause, addWhereClause, Criteria } from './storage.js';
-import { sqlDatabaseProvider } from '../initialize-database.js';
+import { AccountTransaction } from '../models/account-transaction.js';
 import { Logger } from '../../core/logger.js';
-import { Account } from '../models/account.js';
+import { DataSource, Repository } from 'typeorm';
+import { databaseProvider } from '../database-provider.js';
+import { SelectQueryBuilderExtended } from '../query-builder/SelectQueryBuilderExtended.js';
+import { FindManyOptionsExtended } from '../find-options/FindManyOptionsExtended.js';
+import { DriverUtils } from 'typeorm/driver/DriverUtils.js';
 
 const logger: Logger = new Logger('AccountTransactionRepository');
 
-class AccountTransactionRepository implements Repository<Transaction, string> {
-    async add(item: Transaction): Promise<Transaction | undefined> {
-        item.transaction_id = this.generateId(item);
-        try {
-            let queryResult = await sqlDatabaseProvider.execute<Transaction>(
-                'INSERT INTO account_transaction(transaction_id, account, transaction_date, amount, transaction_type, category, payment_mode, note, labels, currency, transaction_state, dated) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *;',
-                [
-                    item.transaction_id,
-                    item.account.account_id,
-                    item.transaction_date,
-                    item.amount,
-                    item.transaction_type,
-                    item.category,
-                    item.payment_mode,
-                    item.note,
-                    item.labels,
-                    item.currency,
-                    item.transaction_state,
-                    item.transaction_date
-                ],
-                true
-            );
+class AccountTransactionRepository extends Repository<AccountTransaction> {
+    private readonly dataSource: DataSource;
 
-            return await this.find(queryResult.rows[0].transaction_id);
-        } catch (error) {
-            logger.error(`[Add] - Error On Add ${error} Id ${item.transaction_id}`);
-            return;
+    constructor(dataSource: DataSource) {
+        super(AccountTransaction, dataSource.manager, dataSource.createQueryRunner());
+        this.dataSource = dataSource;
+    }
+
+    createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<AccountTransaction> {
+        let selectQueryBuilderExtended = new SelectQueryBuilderExtended<AccountTransaction>(this.dataSource, this.queryRunner);
+        if (alias) {
+            let alias_ = DriverUtils.buildAlias(this.dataSource.driver, undefined, alias);
+            selectQueryBuilderExtended.select(alias_).from(this.metadata.target, alias_);
+            return selectQueryBuilderExtended;
+        } else {
+            return selectQueryBuilderExtended;
         }
     }
 
-    delete(id: string): Promise<boolean> {
-        return Promise.resolve(false);
+    async countWithGroupBy(options: FindManyOptionsExtended<AccountTransaction>): Promise<number> {
+        let innerQuery = this.createExtendedQueryBuilder(this.metadata.targetName);
+        innerQuery.select('dated');
+        innerQuery.setFindOptionsExtended({
+            ...options,
+            relations: {
+                account: false
+            }
+        });
+        return (await innerQuery.getRawMany()).length;
     }
 
-    deleteAll(): Promise<boolean> {
-        return Promise.resolve(false);
-    }
-
-    async find(id: string): Promise<Transaction | undefined> {
+    async findWithGroupBy(options: FindManyOptionsExtended<AccountTransaction>): Promise<AccountTransaction[]> {
         try {
-            let findSQL = 'SELECT * FROM account_transaction WHERE transaction_id = $1';
-            let joinQuery = `SELECT a.*, b.*
-                             FROM (${findSQL}) a
-                                      INNER JOIN account b ON a.account = b.account_id;`;
-            let queryResult = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, [id], false);
-            if (queryResult.rowCount === 0) return;
-            return TransactionBuilder.buildFromEntity(queryResult.rows[0]);
-        } catch (error) {
-            logger.error(`[Find] - Error On Find ${error}`);
-            return;
-        }
-    }
-
-    async findAll(criteria: Criteria): Promise<Transaction[]> {
-        try {
-            let findSQL = `SELECT dated
-                           FROM account_transaction`;
-            let where = addWhereClause(findSQL, criteria);
-            findSQL = where.sql;
-            findSQL = addOrderByClause(findSQL, criteria);
-            findSQL = addLimitAndOffset(findSQL, criteria);
-            let joinQuery = `SELECT a.*, b.*
-                             FROM (${findSQL}) a
-                                      INNER JOIN account b ON a.account = b.account_id;`;
-            let queryResults = await sqlDatabaseProvider.execute<Transaction & Account>(findSQL, where.whereClauses, false);
-            return queryResults.rows.map((row) => TransactionBuilder.buildFromEntity(row));
-        } catch (error) {
-            logger.error(`[FindAll] - Error On FindAll ${error}`);
-            return [];
-        }
-    }
-
-    async update(item: Transaction): Promise<Transaction | undefined> {
-        try {
-            let queryResult = await sqlDatabaseProvider.execute<Transaction>(
-                'UPDATE account_transaction SET category=$1 WHERE transaction_id=$2 RETURNING *',
-                [item.category, item.transaction_id],
-                true
-            );
-            return await this.find(queryResult.rows[0].transaction_id);
-        } catch (error) {
-            logger.error(`[Update] - Error On Update ${error}`);
-            return;
-        }
-    }
-
-    generateId = (item: Transaction): string => {
-        return item.transaction_date.toISOString() + '_' + item.account.account_id.toString() + '_' + item.amount;
-    };
-
-    async findAllUsingGroupBy(criteria: Criteria) {
-        try {
-            let innerSql = `SELECT dated
-                            FROM account_transaction`;
-            let where = addWhereClause(innerSql, criteria);
-            innerSql = where.sql;
-            innerSql = addGroupByClause(innerSql, criteria);
-            innerSql = addOrderByClause(innerSql, criteria);
-            innerSql = addLimitAndOffset(innerSql, criteria);
-            let findSQL = `SELECT *
-                           FROM account_transaction`;
-            let outerWhere = addWhereClause(findSQL, criteria);
-            findSQL = outerWhere.sql;
-            findSQL = `${findSQL} AND dated IN (${innerSql})`;
-            findSQL = addOrderByClause(findSQL, criteria);
-            let joinQuery = `SELECT a.*, b.*
-                             FROM (${findSQL}) a
-                                      INNER JOIN account b ON a.account = b.account_id;`;
-            let queryResults = await sqlDatabaseProvider.execute<Transaction & Account>(joinQuery, outerWhere.whereClauses, false);
-            return queryResults.rows.map((row) => TransactionBuilder.buildFromEntity(row));
+            let innerQuery = this.createExtendedQueryBuilder();
+            innerQuery.select('dated');
+            innerQuery.from(AccountTransaction, 'account_transaction');
+            innerQuery.setFindOptionsExtended({
+                ...options,
+                relations: {
+                    account: false
+                }
+            });
+            let finalQuery = this.createExtendedQueryBuilder(this.metadata.targetName);
+            finalQuery.setFindOptionsExtended({
+                where: options.where,
+                order: options.order,
+                relations: {
+                    account: true
+                }
+            });
+            finalQuery.andWhere(`dated IN (${innerQuery.getQuery()})`);
+            let parameters = innerQuery.getParameters();
+            for (let key in parameters) {
+                finalQuery.setParameter(key, parameters[key]);
+            }
+            return await finalQuery.getMany();
         } catch (error) {
             logger.error(`[FindAllUsingGroupBy] - Error On FindAllUsingGroupBy ${error}`);
             return [];
         }
     }
-
-    async count(criteria: Criteria) {
-        try {
-            let innerSql = `SELECT DISTINCT SUM(1) OVER () as num_found
-                            FROM account_transaction`;
-            let where = addWhereClause(innerSql, criteria);
-            innerSql = where.sql;
-            innerSql = addGroupByClause(innerSql, criteria);
-            let queryResult = await sqlDatabaseProvider.execute<{
-                num_found: number;
-            }>(innerSql, where.whereClauses, false);
-            return queryResult.rows[0].num_found;
-        } catch (error) {
-            logger.error(`[Count] - Error On Count ${error}`);
-            return 0;
-        }
-    }
 }
 
-export const accountTransactionRepository = new AccountTransactionRepository();
+export const accountTransactionRepository = new AccountTransactionRepository(databaseProvider.database);
