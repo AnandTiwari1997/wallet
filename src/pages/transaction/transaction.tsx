@@ -8,6 +8,9 @@ import { format, startOfYear } from 'date-fns/esm';
 import { useEffect, useState } from 'react';
 
 import AddTransaction from './add-transaction';
+import useAPI from '../../hooks/app-hooks';
+import { AccountTransaction } from '../../../backend/database/models/account-transaction';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import { darkGreen, darkRed } from '../../App';
 import { Account, Transaction } from '../../data/models';
 import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
@@ -24,9 +27,6 @@ import Chip from '../../modules/chips/chip';
 import Dialog from '../../modules/dialog/dialog';
 import Select, { SelectOption } from '../../modules/select/select';
 import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
-import useAPI from '../../hooks/app-hooks';
-import { AccountTransaction } from '../../../backend/database/models/account-transaction';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -255,10 +255,10 @@ const TransactionPage = () => {
                                         }}
                                         selectedOption={category}
                                         options={Category.get()}
-                                        onChange={(event) => {
+                                        onSelectionChange={(event) => {
                                             if (event) {
                                                 if (categoryUpdateRow) {
-                                                    categoryUpdateRow.category = event.target.value;
+                                                    categoryUpdateRow.category = event.value;
                                                     setCategory(categoryUpdateRow.category.toString());
                                                 }
                                             }
@@ -427,9 +427,9 @@ const TransactionPage = () => {
                         <p style={{ height: '20px', margin: '0' }}>Account: </p>
                         <Select
                             selectedOption={selectedAccount}
-                            onChange={(event) => {
+                            onSelectionChange={(event) => {
                                 setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
-                                setSelectedAccount(event.target.value);
+                                setSelectedAccount(event.value);
                             }}
                             options={selectOptions}
                         ></Select>
@@ -443,9 +443,9 @@ const TransactionPage = () => {
                         <p style={{ height: '20px', margin: '0' }}>Transaction Type: </p>
                         <Select
                             selectedOption={transactionType}
-                            onChange={(event) => {
+                            onSelectionChange={(event) => {
                                 setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
-                                setTransactionType(event.target.value);
+                                setTransactionType(event.value);
                             }}
                             options={[{ value: '', label: 'All' }, TransactionType.INCOME, TransactionType.EXPENSE]}
                         ></Select>

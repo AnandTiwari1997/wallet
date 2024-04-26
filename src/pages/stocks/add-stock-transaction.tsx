@@ -34,8 +34,8 @@ const AddStockTransaction = ({
                     <Select
                         selectedOption={accountId}
                         options={[{ value: '', label: 'Select' }, ...accountOptions]}
-                        onChange={(event) => {
-                            const accountId = event.target.value;
+                        onSelectionChange={(event) => {
+                            const accountId = event.value;
                             getStockHolding({
                                 criteria: {
                                     filters: [
@@ -53,7 +53,7 @@ const AddStockTransaction = ({
                                 });
                                 setHoldingOptions([{ value: '', label: 'Select' }, ...options]);
                             });
-                            setAccountId(event.target.value);
+                            setAccountId(event.value);
                         }}
                     />
 
@@ -61,8 +61,8 @@ const AddStockTransaction = ({
                     <Select
                         selectedOption={stockHoldingId}
                         options={holdingOptions}
-                        onChange={(event) => {
-                            setStockHoldingId(event.target.value);
+                        onSelectionChange={(event) => {
+                            setStockHoldingId(event.value);
                         }}
                     />
 
@@ -73,22 +73,26 @@ const AddStockTransaction = ({
                             { value: 'B', label: 'Buy' },
                             { value: 'S', label: 'Sell' }
                         ]}
-                        onChange={(event) => {
-                            setTransactionType(event.target.value);
+                        onSelectionChange={(event) => {
+                            setTransactionType(event.value);
                         }}
                     />
 
                     <p style={{ margin: '0.5em 0' }}>Quantity</p>
-                    <TextBox setValue={setQuantity} value={quantity} placeholder={'Enter Account Bo Id'} />
+                    <TextBox
+                        value={quantity}
+                        placeholder={'Enter Account Bo Id'}
+                        onChange={(event) => setQuantity(Number.parseInt(event.target.value))}
+                    />
                     <p style={{ margin: '0.5em 0' }}>Transaction Price</p>
                     <TextBox
-                        setValue={setTransactionPrice}
                         value={transactionPrice}
                         placeholder={'Enter Account Name'}
+                        onChange={(event) => setTransactionPrice(Number.parseInt(event.target.value))}
                     />
 
                     <p>Transaction Date</p>
-                    <DateInput setValue={setTransactionDate} value={transactionDate} />
+                    <DateInput value={transactionDate} onChange={(event) => setTransactionDate(event.target.value)} />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button

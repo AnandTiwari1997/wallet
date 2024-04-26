@@ -4,11 +4,13 @@ import './accounts.css';
 import { useEffect, useState } from 'react';
 
 import AddAccount from './add-account';
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import { Account, AccountType } from '../../data/models';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { ArrayUtil } from '../../data/transaction-data';
+import useAPI from '../../hooks/app-hooks';
 import { indianRupee, menu } from '../../icons/icons';
 import { ApiResponse, getAccounts, syncAccount } from '../../modules/backend/BackendApi';
 import Button from '../../modules/button/button';
@@ -17,8 +19,6 @@ import IconButton from '../../modules/icon/icon-button';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
 import Table, { TableColumn } from '../../modules/table/table';
-import useAPI from '../../hooks/app-hooks';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -151,10 +151,11 @@ const AccountPage = () => {
                             }}
                         />
                         <Menu
-                            open={showAccountMenu}
+                            open={row.account_id === selectedAccount?.account_id}
                             onClose={() => {
                                 setAccountMenuOptionFor(0);
                                 setShowAccountMenu(false);
+                                setSelectedAccount(undefined);
                             }}
                             menuFor={`account-menu-${accountMenuOptionFor}`}
                         >
@@ -181,9 +182,11 @@ const AccountPage = () => {
                                                 { key: 'account_id', value: [selectedAccount.account_id.toString()] }
                                             ]
                                         }
-                                    }).then((response) => {
-                                        console.log(response.message);
-                                    });
+                                    })
+                                        .then((response) => {
+                                            console.log(response.message);
+                                        })
+                                        .finally(() => setSelectedAccount(undefined));
                                 }}
                             />
                             <MenuOption label={'Delete'} />
@@ -226,6 +229,7 @@ const AccountPage = () => {
                     setSelectedAccount(undefined);
                 }}
                 header="Account"
+                noAction
             >
                 <AddAccount
                     account={selectedAccount}

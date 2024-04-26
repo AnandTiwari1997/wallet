@@ -35,91 +35,101 @@ const AddTransaction = ({
 
     return (
         <>
-            <div style={{ width: '350px', display: 'flex', justifyContent: 'center' }}>
-                <div>
-                    <p style={{ margin: '0.5em 0' }}>Bill Category</p>
-                    <Select
-                        selectedOption={account.account_id}
-                        options={accounts.map((account) => {
-                            return {
-                                value: account.account_id,
-                                label: account.account_name
+            <div style={{ width: '350px' }}>
+                <p style={{ margin: '0.5em 0' }}>Bill Category</p>
+                <Select
+                    selectedOption={account.account_id}
+                    options={accounts.map((account) => {
+                        return {
+                            value: account.account_id,
+                            label: account.account_name
+                        };
+                    })}
+                    onSelectionChange={(event) => setAccount(accountOptions[event.value])}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Category</p>
+                <Select
+                    selectedOption={category}
+                    options={Category.get()}
+                    onSelectionChange={(event) => setCategory(event.value)}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Status</p>
+                <Select
+                    selectedOption={status}
+                    options={TransactionStatus.get()}
+                    onSelectionChange={(event) => setStatus(event.value)}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Payment Mode</p>
+                <Select
+                    selectedOption={paymentMode}
+                    options={PaymentMode.get()}
+                    onSelectionChange={(event) => setPaymentMode(event.value)}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Type</p>
+                <Select
+                    selectedOption={type}
+                    options={TransactionType.get()}
+                    onSelectionChange={(event) => setType(event.value)}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Amount</p>
+                <TextBox
+                    value={amount}
+                    placeholder={'Enter Transaction Amount'}
+                    onChange={(event) => {
+                        setAmount(Number.parseInt(event.target.value));
+                    }}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Description</p>
+                <TextBox
+                    value={note}
+                    placeholder={'Enter Description'}
+                    onChange={(event) => {
+                        setNote(event.target.value);
+                    }}
+                />
+
+                <p style={{ margin: '0.5em 0' }}>Date</p>
+                <DateInput setValue={setTransactionDate} value={transactionDate} />
+
+                <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                    <Button
+                        onClick={() => {
+                            const transaction: Transaction = {
+                                amount: amount,
+                                account: account,
+                                transaction_date: parse(transactionDate, 'dd-MM-yyyy', new Date()),
+                                transaction_type: type,
+                                transaction_state: status,
+                                payment_mode: paymentMode,
+                                category: category,
+                                note: JSON.stringify({
+                                    transactionAmount: amount,
+                                    transactionAccount: account.account_number,
+                                    transactionInfo: note,
+                                    transactionDate: new Date()
+                                }),
+                                labels: [],
+                                dated: parse(transactionDate, 'dd-MM-yyyy', new Date()),
+                                currency: 'INR',
+                                transaction_id: ''
                             };
-                        })}
-                        onChange={(event) => setAccount(accountOptions[event.target.value])}
-                    />
-
-                    <p style={{ margin: '0.5em 0' }}>Category</p>
-                    <Select
-                        selectedOption={category}
-                        options={Category.get()}
-                        onChange={(event) => setCategory(event.target.value)}
-                    />
-
-                    <p style={{ margin: '0.5em 0' }}>Status</p>
-                    <Select
-                        selectedOption={status}
-                        options={TransactionStatus.get()}
-                        onChange={(event) => setStatus(event.target.value)}
-                    />
-
-                    <p style={{ margin: '0.5em 0' }}>Payment Mode</p>
-                    <Select
-                        selectedOption={paymentMode}
-                        options={PaymentMode.get()}
-                        onChange={(event) => setPaymentMode(event.target.value)}
-                    />
-
-                    <p style={{ margin: '0.5em 0' }}>Type</p>
-                    <Select
-                        selectedOption={type}
-                        options={TransactionType.get()}
-                        onChange={(event) => setType(event.target.value)}
-                    />
-
-                    <p style={{ margin: '0.5em 0' }}>Amount</p>
-                    <TextBox setValue={setAmount} value={amount} placeholder={'Enter Transaction Amount'} />
-
-                    <p style={{ margin: '0.5em 0' }}>Description</p>
-                    <TextBox setValue={setNote} value={note} placeholder={'Enter Description'} />
-
-                    <p style={{ margin: '0.5em 0' }}>Date</p>
-                    <DateInput setValue={setTransactionDate} value={transactionDate} />
-
-                    <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                        <Button
-                            onClick={() => {
-                                const transaction: Transaction = {
-                                    amount: amount,
-                                    account: account,
-                                    transaction_date: parse(transactionDate, 'dd-MM-yyyy', new Date()),
-                                    transaction_type: type,
-                                    transaction_state: status,
-                                    payment_mode: paymentMode,
-                                    category: category,
-                                    note: JSON.stringify({
-                                        transactionAmount: amount,
-                                        transactionAccount: account.account_number,
-                                        transactionInfo: note,
-                                        transactionDate: new Date()
-                                    }),
-                                    labels: [],
-                                    dated: parse(transactionDate, 'dd-MM-yyyy', new Date()),
-                                    currency: 'INR',
-                                    transaction_id: ''
-                                };
-                                addTransaction(transaction).then((apiResponse) => {
-                                    onSubmit(
-                                        apiResponse && apiResponse.num_found === 1,
-                                        apiResponse.results ? apiResponse.results[0] : undefined
-                                    );
-                                    console.log('Saved Object', apiResponse.results);
-                                });
-                            }}
-                        >
-                            Add
-                        </Button>
-                    </div>
+                            addTransaction(transaction).then((apiResponse) => {
+                                onSubmit(
+                                    apiResponse && apiResponse.num_found === 1,
+                                    apiResponse.results ? apiResponse.results[0] : undefined
+                                );
+                                console.log('Saved Object', apiResponse.results);
+                            });
+                        }}
+                    >
+                        Add
+                    </Button>
                 </div>
             </div>
         </>

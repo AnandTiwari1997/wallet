@@ -1,10 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Checkbox } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { TableColumn } from './table';
 import { hide, right, show } from '../../icons/icons';
 import IconButton from '../icon/icon-button';
+import Checkbox from '../checkbox/checkbox';
 
 const GroupByRow = ({
     groupingKey,
@@ -32,7 +32,6 @@ const GroupByRow = ({
             hidden[value.key] = value.hidden;
         });
         setHidden({ ...hidden });
-        console.log(columns);
     }, [selected, columns]);
 
     const _columnAlignment = (column: string) => {
@@ -48,7 +47,7 @@ const GroupByRow = ({
             {selectable && (
                 <td className="td-body" style={{ width: '5%' }}>
                     <Checkbox
-                        style={{ padding: 0 }}
+                        customStyles={'td-checkbox-style'}
                         checked={isSelected}
                         onChange={() => {
                             setSelected(!isSelected);

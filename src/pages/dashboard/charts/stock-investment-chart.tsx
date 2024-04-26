@@ -91,9 +91,9 @@ const StockInvestmentChart = () => {
                 <Select
                     selectedOption={selectedHolding}
                     options={holdingOptions}
-                    onChange={(event) => {
-                        setSelectedHolding(event.target.value);
-                        getStockTransactions(event.target.value);
+                    onSelectionChange={(event) => {
+                        setSelectedHolding(event.value);
+                        getStockTransactions(event.value);
                     }}
                 />
             </div>

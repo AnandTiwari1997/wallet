@@ -2,14 +2,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CSS from 'csstype';
 import { useEffect, useState } from 'react';
 
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import { DematAccount } from '../../data/models';
+import useAPI from '../../hooks/app-hooks';
 import { menu } from '../../icons/icons';
 import { ApiResponse, getStockAccount, syncAccount } from '../../modules/backend/BackendApi';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
 import Table, { TableColumn } from '../../modules/table/table';
-import useAPI from '../../hooks/app-hooks';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',

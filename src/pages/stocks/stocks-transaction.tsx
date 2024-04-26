@@ -3,14 +3,14 @@ import CSS from 'csstype';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
 
+import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import { darkGreen, darkRed } from '../../App';
 import { DematAccount, StockTransaction } from '../../data/models';
 import { ArrayUtil } from '../../data/transaction-data';
+import useAPI from '../../hooks/app-hooks';
 import { indianRupee } from '../../icons/icons';
 import { ApiCriteria, ApiResponse, getStockTransaction } from '../../modules/backend/BackendApi';
 import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
-import useAPI from '../../hooks/app-hooks';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
 
 const topDiv: CSS.Properties = {
     display: 'flex',

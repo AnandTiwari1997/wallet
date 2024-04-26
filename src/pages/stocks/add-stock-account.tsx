@@ -60,24 +60,36 @@ const AddStockAccount = ({
             <div style={{ width: '250px', display: 'flex', justifyContent: 'center' }}>
                 <div>
                     <p style={{ margin: '0.5em 0' }}>Account BO Id</p>
-                    <TextBox setValue={setAccountBoId} value={accountBoId} placeholder={'Enter Account Bo Id'} />
+                    <TextBox
+                        value={accountBoId}
+                        placeholder={'Enter Account Bo Id'}
+                        onChange={(event) => setAccountBoId(event.target.value)}
+                    />
                     <p style={{ margin: '0.5em 0' }}>Account Name</p>
-                    <TextBox setValue={setAccountName} value={accountName} placeholder={'Enter Account Name'} />
+                    <TextBox
+                        value={accountName}
+                        placeholder={'Enter Account Name'}
+                        onChange={(event) => setAccountName(event.target.value)}
+                    />
 
                     <p style={{ margin: '0.5em 0' }}>Broker</p>
                     <Select
                         selectedOption={brokerId}
                         options={brokerOption}
-                        onChange={(event) => {
-                            setBrokerId(event.target.value);
+                        onSelectionChange={(event) => {
+                            setBrokerId(event.value);
                         }}
                     />
 
                     <p style={{ margin: '0.5em 0' }}>Client Id</p>
-                    <TextBox setValue={setAccountClientId} value={accountClientId} placeholder={'Enter Client Id'} />
+                    <TextBox
+                        value={accountClientId}
+                        placeholder={'Enter Client Id'}
+                        onChange={(event) => setAccountClientId(event.target.value)}
+                    />
 
                     <p>Account Start Date</p>
-                    <DateInput setValue={setStartDate} value={startDate} />
+                    <DateInput value={startDate} onChange={(event) => setStartDate(event.target.value)} />
 
                     <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                         <button

@@ -3,13 +3,15 @@
     color: rgba(0, 0, 0, 0.87);
     -webkit-transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-    border-radius: 4px;
-    box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14),
-        0px 9px 46px 8px rgba(0, 0, 0, 0.12);
+    /*box-shadow: 0px 11px 15px -7px rgba(0, 0, 0, 0.2), 0px 24px 38px 3px rgba(0, 0, 0, 0.14),*/
+    /*0px 9px 46px 8px rgba(0, 0, 0, 0.12);*/
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 2px 5px 2px;
     margin: 32px;
     position: relative;
     max-height: 664px;
     max-width: 600px;
+    flex: 0 0 auto;
+    border-radius: 6px;
 }
 
 .dialog-header-content {
@@ -17,14 +19,17 @@
 }
 
 .dialog-header {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
     height: 40px;
     display: flex;
     align-items: center;
     background-color: rgb(34, 52, 60);
     color: white;
-    padding: 5px 10px;
+    padding: 5px 22px;
     font-size: 1.3rem;
     position: sticky;
+    width: calc(100% - 44px);
 }
 
 .dialog-header-close {
@@ -42,6 +47,36 @@
     max-height: 550px;
     color: rgb(34, 52, 60);
     font-weight: 500;
-    width: calc(100% - 20px);
-    padding: 5px 10px;
+    width: calc(100% - 44px);
+    padding: 5px 22px;
+}
+
+.dialog-footer {
+    height: 50px;
+    display: flex;
+    padding: 5px 22px;
+    font-size: 1.3rem;
+    align-content: center;
+    justify-content: start;
+    border-top: 1px solid rgb(34, 52, 60);
+}
+
+.dialog-footer-action-button {
+    max-height: 40px;
+}
+
+.dialog-footer-secondary-button {
+    margin-left: 5px;
+}
+
+.dialog-overlay-background {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(1px);
+}
+
+.dialog-overlay-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }

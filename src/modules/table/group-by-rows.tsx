@@ -1,10 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Checkbox } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import GroupByRow from './group-by-row';
 import { collapseStyle, expandStyle, GroupedTableData, RowExpandContext, TableColumn } from './table';
 import { expand } from '../../icons/icons';
+import Checkbox from '../checkbox/checkbox';
 
 const GroupByRows = ({
     columns,
@@ -52,7 +52,7 @@ const GroupByRows = ({
                             {selectable && (
                                 <td className="td-body" style={{ width: '5%' }}>
                                     <Checkbox
-                                        style={{ padding: 0 }}
+                                        customStyles={'td-checkbox-style'}
                                         checked={isSelected}
                                         onChange={() => {
                                             setSelected(!isSelected);

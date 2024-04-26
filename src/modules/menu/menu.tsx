@@ -1,28 +1,34 @@
+import './menu.css';
+import React, { Fragment } from 'react';
+
 import Overlay from '../overlay/overlay';
 
-import './menu.css';
-import { useRef } from 'react';
-
-const Menu = ({
-    open,
-    menuFor,
-    onClose,
-    children
-}: {
+type MenuProps = {
     open: boolean;
     menuFor: string;
-    onClose: () => void | any;
-    children: any;
-}) => {
-    const ref = useRef();
+    onClose: () => void;
+    containerClass?: string;
+    children: React.ReactNode[];
+} & React.ComponentPropsWithoutRef<'ul'>;
+
+const Menu = ({ open, menuFor, onClose, children, ...props }: MenuProps) => {
     return (
-        <Overlay open={open} onBackdrop={onClose} triggerBy={menuFor}>
-            <div className="menu-list-container">
-                <ul className="ul-menu-list" onClick={onClose}>
-                    {children}
-                </ul>
-            </div>
-        </Overlay>
+        <Fragment>
+            {open && (
+                <Overlay
+                    trigger={document.querySelector('[id=' + menuFor + ']')}
+                    open={open}
+                    onBackdrop={onClose}
+                    parent={document.getElementsByTagName('body')[0]}
+                >
+                    <div className="menu-list-container" id="menu-container">
+                        <ul className="ul-menu-list" {...props} onClick={onClose}>
+                            {children}
+                        </ul>
+                    </div>
+                </Overlay>
+            )}
+        </Fragment>
     );
 };
 

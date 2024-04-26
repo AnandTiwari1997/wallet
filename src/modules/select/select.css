@@ -1,18 +1,20 @@
-.select {
+.select-container {
     position: relative;
     background: #ffffff;
-    width: 100%;
+    user-select: none;
+    height: 36px;
 }
 
-.select select {
-    appearance: none;
-    width: 100%;
+.select {
+    position: relative;
     font-size: 1rem;
     padding: 0.5rem;
     background-color: #ffffff;
-    border: 1px solid currentColor;
+    border: 1px solid black;
     color: #000000;
     cursor: pointer;
+    text-align: start;
+    height: calc(100% - 1rem);
 }
 
 .select::after {
@@ -30,9 +32,18 @@
     top: 50%;
 }
 
-.select select:active,
-.select select:focus {
-    background: transparent;
-    color: currentColor;
-    font-weight: 500;
+.select-option {
+    background: white;
+    height: fit-content;
+    padding: 5px 10px;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+}
+
+.selected,
+.select-option:hover {
+    background-color: rgb(37, 52, 60);
+    color: white;
 }

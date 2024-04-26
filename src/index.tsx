@@ -5,13 +5,14 @@ import './index.css';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 
 import App from './App';
-import reportWebVitals from './reportWebVitals';
-import DashboardPage from './pages/dashboard/dashboard';
 import AccountPage from './pages/account/accounts';
+import BillsPage from './pages/bills/bills';
+import DashboardPage from './pages/dashboard/dashboard';
+import ModuleTestPage from './pages/module-test/module-test';
 import SavingsPage from './pages/savings/savings';
 import StockPage from './pages/stocks/stocks';
 import TransactionPage from './pages/transaction/transaction';
-import BillsPage from './pages/bills/bills';
+import reportWebVitals from './reportWebVitals';
 
 const router = createHashRouter([
     {
@@ -47,6 +48,11 @@ const router = createHashRouter([
                 path: '/bills',
                 index: false,
                 element: <BillsPage />
+            },
+            {
+                path: '/module-test',
+                index: false,
+                element: <ModuleTestPage />
             }
         ]
     }

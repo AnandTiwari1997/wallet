@@ -64,7 +64,7 @@ export class Category {
     static SALARY = { label: 'Salary', value: 'SALARY' };
     static FOOD = { label: 'Food', value: 'FOOD' };
     static FUEL = { label: 'Fuel', value: 'FUEL' };
-    static CREDIT_CARD_PAYMENT: { label: 'Credit Card Payment'; value: 'CREDIT_CARD_PAYMENT' };
+    static CREDIT_CARD_PAYMENT = { label: 'Credit Card Payment', value: 'CREDIT_CARD_PAYMENT' };
     static PHONE_RECHARGE = { label: 'Phone Recharge', value: 'PHONE_RECHARGE' };
     static BROADBAND_RECHARGE = { label: 'Broadband Recharge', value: 'BROADBAND_RECHARGE' };
     static DTH_RECHARGE = { label: 'DTH Recharge', value: 'DTH_RECHARGE' };

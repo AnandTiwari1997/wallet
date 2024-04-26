@@ -284,3 +284,7 @@
     display: flex;
     align-items: center;
 }
+
+.td-checkbox-style {
+    padding: 0;
+}

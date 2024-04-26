@@ -113,7 +113,7 @@ const StockPage = () => {
                             <p style={{ height: '20px', margin: '0' }}>Account: </p>
                             <Select
                                 selectedOption={filterAccount}
-                                onChange={(event) => setFilteredAccount(event.target.value)}
+                                onSelectionChange={(event) => setFilteredAccount(event.value)}
                                 options={[{ value: '', label: 'All' }, ...selectOptions]}
                             ></Select>
                         </div>
@@ -128,7 +128,7 @@ const StockPage = () => {
                             <p style={{ height: '20px', margin: '0' }}>Transaction Type: </p>
                             <Select
                                 selectedOption={filterTransactionType}
-                                onChange={(event) => setFilterTransactionType(event.target.value)}
+                                onSelectionChange={(event) => setFilterTransactionType(event.value)}
                                 options={[
                                     { value: '', label: 'All' },
                                     { value: 'B', label: 'Buy' },

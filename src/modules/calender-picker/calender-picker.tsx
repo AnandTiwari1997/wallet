@@ -29,7 +29,6 @@ import RangePicker from '../range-picker/range-picker';
 import Tab from '../tabs/tab';
 import Tabs from '../tabs/tabs';
 import WeekPicker from '../week-picker/week-picker';
-// import { Tab, Tabs } from '@mui/material';
 import YearPicker from '../year-picker/year-picker';
 
 const calenerPickerBoxStyle: CSS.Properties = {
@@ -62,7 +61,7 @@ const CalenderPicker = ({
     onChange: (calenderPickerRange: OnCalenderPickerChange) => void;
     range?: { from: Date; to: Date };
 }) => {
-    const ref = useRef(null);
+    const ref = useRef<HTMLDivElement>(null);
     const tabsValue: PickerData = {
         activePicker: 'range',
         values: {
@@ -80,7 +79,6 @@ const CalenderPicker = ({
     const [openPicker, setOpenPicker] = useState(false);
     const [value, setValue] = useState(tabsValue);
     const [selectedTab, setSelectedTab] = useState('range');
-
     const handleOpenPicker = (isBackDrop: boolean) => {
         if (isBackDrop) {
             setOpenPicker(false);
@@ -241,7 +239,7 @@ const CalenderPicker = ({
             <div
                 className="css-wi57kk-GridEmotionStyles--headerRowItem-Header--headerRowItemNoPadding"
                 onClick={() => handleOpenPicker(false)}
-                id="selector"
+                id={'selector'}
                 ref={ref}
             >
                 <div className="css-1h182y4-TimeSelect--selectContainer-TimeSelect--styles-TimeSelect--render">
@@ -254,49 +252,55 @@ const CalenderPicker = ({
                 </div>
             </div>
             <IconButton icon={caretRight} onClick={renderNextRange} />
-            <Overlay open={openPicker} onBackdrop={() => handleOpenPicker(true)} triggerBy="selector" noShadow noMargin>
-                <div className="picker-body">
-                    <Fragment>
-                        <Tabs
-                            selectedTab={selectedTab}
-                            onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}
-                        >
-                            <Tab
-                                label={CalenderPickerTab.RANGE.label}
-                                value={CalenderPickerTab.RANGE.value}
-                                classes={'tab--width'}
+            <Fragment>
+                {openPicker && (
+                    <Overlay
+                        open={openPicker}
+                        onBackdrop={() => handleOpenPicker(true)}
+                        parent={document.getElementsByTagName('body')[0]}
+                        trigger={ref.current}
+                    >
+                        <div id={'calender-picker-body'} className="picker-body">
+                            <Tabs
+                                selectedTab={selectedTab}
+                                onTabChange={(selectedTab) => {
+                                    setSelectedTab(selectedTab.tabValue);
+                                }}
                             >
-                                <RangePicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
-                            </Tab>
-                            <Tab
-                                label={CalenderPickerTab.WEEKS.label}
-                                value={CalenderPickerTab.WEEKS.value}
-                                classes={'tab--width'}
-                            >
-                                <WeekPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
-                            </Tab>
-                            <Tab
-                                label={CalenderPickerTab.MONTHS.label}
-                                value={CalenderPickerTab.MONTHS.value}
-                                classes={'tab--width'}
-                            >
-                                <MonthPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
-                            </Tab>
-                            <Tab
-                                label={CalenderPickerTab.YEARS.label}
-                                value={CalenderPickerTab.YEARS.value}
-                                classes={'tab--width'}
-                            >
-                                <YearPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
-                            </Tab>
-                        </Tabs>
-                    </Fragment>
-                </div>
-            </Overlay>
+                                <Tab
+                                    label={CalenderPickerTab.RANGE.label}
+                                    value={CalenderPickerTab.RANGE.value}
+                                    classes={'tab--width'}
+                                >
+                                    <RangePicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                                </Tab>
+                                <Tab
+                                    label={CalenderPickerTab.WEEKS.label}
+                                    value={CalenderPickerTab.WEEKS.value}
+                                    classes={'tab--width'}
+                                >
+                                    <WeekPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                                </Tab>
+                                <Tab
+                                    label={CalenderPickerTab.MONTHS.label}
+                                    value={CalenderPickerTab.MONTHS.value}
+                                    classes={'tab--width'}
+                                >
+                                    <MonthPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                                </Tab>
+                                <Tab
+                                    label={CalenderPickerTab.YEARS.label}
+                                    value={CalenderPickerTab.YEARS.value}
+                                    classes={'tab--width'}
+                                >
+                                    <YearPicker onChange={onPickerUpdate} value={value.values[selectedTab]} />
+                                </Tab>
+                            </Tabs>
+                        </div>
+                    </Overlay>
+                )}
+            </Fragment>
         </div>
     );
 };
-// @ts-ignore
 export default CalenderPicker;
-
-// @ts-ignore

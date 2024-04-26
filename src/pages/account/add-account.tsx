@@ -72,112 +72,124 @@ const AddAccount = ({
 
     return (
         <>
-            <div style={{ width: '250px', display: 'flex', justifyContent: 'center' }}>
-                <div>
-                    <p style={{ margin: '0.5em 0' }}>Account Type</p>
-                    <Select
-                        selectedOption={accountType}
-                        options={[
-                            { value: 'CASH', label: 'Cash' },
-                            { value: 'BANK', label: 'Bank' },
-                            { value: 'LOAN', label: 'Loan' },
-                            { value: 'CREDIT_CARD', label: 'Credit Card' }
-                        ]}
-                        onChange={(event) => {
-                            if (event.target.value !== 'CASH') {
-                                _getBanks();
-                            } else {
-                                setBankOption([]);
-                            }
-                            setAccountType(event.target.value);
-                        }}
-                    />
-                    <p style={{ margin: '0.5em 0' }}>Account Name</p>
-                    <TextBox setValue={setAccountName} value={accountName} placeholder={'Enter Account Name'} />
+            <div style={{ width: '250px' }}>
+                <p style={{ margin: '0.5em 0' }}>Account Type</p>
+                <Select
+                    selectedOption={accountType}
+                    options={[
+                        { value: 'CASH', label: 'Cash' },
+                        { value: 'BANK', label: 'Bank' },
+                        { value: 'LOAN', label: 'Loan' },
+                        { value: 'CREDIT_CARD', label: 'Credit Card' }
+                    ]}
+                    onSelectionChange={(event) => {
+                        if (event.value !== 'CASH') {
+                            _getBanks();
+                        } else {
+                            setBankOption([]);
+                        }
+                        setAccountType(event.value);
+                    }}
+                />
+                <p style={{ margin: '0.5em 0' }}>Account Name</p>
+                <TextBox
+                    value={accountName}
+                    placeholder={'Enter Account Name'}
+                    onChange={(event) => {
+                        setAccountName(event.target.value);
+                    }}
+                />
 
-                    {accountType !== 'CASH' && (
-                        <>
-                            <p style={{ margin: '0.5em 0' }}>Bank</p>
-                            <Select
-                                selectedOption={bankId}
-                                options={bankOption}
-                                onChange={(event) => {
-                                    setBankId(Number.parseInt(event.target.value));
-                                }}
-                            />
-
-                            <p style={{ margin: '0.5em 0' }}>Account/Card Number</p>
-                            <TextBox
-                                setValue={setAccountNumber}
-                                value={accountNumber}
-                                placeholder={'Enter Account/Card Number'}
-                            />
-
-                            <p>Loan Start Date</p>
-                            <TextBox
-                                setValue={setStartDate}
-                                value={startDate}
-                                placeholder={'Enter Loan Start Date in dd-MM-yyyy'}
-                            />
-                        </>
-                    )}
-
-                    {(accountType == 'LOAN' || accountType == 'CREDIT_CARD') && (
-                        <>
-                            <p style={{ margin: '0.5em 0' }}>Search Text</p>
-                            <TextBox
-                                setValue={setSearchText}
-                                value={searchText}
-                                placeholder={'Enter Text to filter mail'}
-                            />
-                        </>
-                    )}
-
-                    <p style={{ margin: '0.5em 0' }}>Balance</p>
-                    <TextBox
-                        setValue={setAccountBalance}
-                        value={accountBalance}
-                        type={'number'}
-                        placeholder={'Enter Balance'}
-                    />
-
-                    <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                        <button
-                            className="button"
-                            onClick={() => {
-                                setBankOption([]);
-                                const account: Account = {
-                                    account_id: accountId,
-                                    account_name: accountName,
-                                    account_balance: accountBalance,
-                                    account_number: accountNumber,
-                                    account_type: accountType,
-                                    bank: banks[bankId],
-                                    start_date: parse(startDate, 'dd-MM-yyyy', new Date()),
-                                    search_text: searchText
-                                };
-                                if (edit) {
-                                    updateAccount(account)
-                                        .then((value) => {
-                                            onSubmit(true, value.results[0]);
-                                        })
-                                        .catch((reason) => {
-                                            onSubmit(true, undefined);
-                                        });
-                                } else {
-                                    addAccount(account)
-                                        .then((value) => {
-                                            onSubmit(true, value.results[0]);
-                                        })
-                                        .catch((reason) => {
-                                            onSubmit(true, undefined);
-                                        });
-                                }
+                {accountType !== 'CASH' && (
+                    <>
+                        <p style={{ margin: '0.5em 0' }}>Bank</p>
+                        <Select
+                            selectedOption={bankId}
+                            options={bankOption}
+                            onSelectionChange={(event) => {
+                                setBankId(Number.parseInt(event.value));
                             }}
-                        >
-                            Add
-                        </button>
-                    </div>
+                        />
+
+                        <p style={{ margin: '0.5em 0' }}>Account/Card Number</p>
+                        <TextBox
+                            value={accountNumber}
+                            placeholder={'Enter Account/Card Number'}
+                            onChange={(event) => {
+                                setAccountNumber(event.target.value);
+                            }}
+                        />
+
+                        <p>Loan Start Date</p>
+                        <TextBox
+                            value={startDate}
+                            placeholder={'Enter Loan Start Date in dd-MM-yyyy'}
+                            onChange={(event) => {
+                                setStartDate(event.target.value);
+                            }}
+                        />
+                    </>
+                )}
+
+                {(accountType == 'LOAN' || accountType == 'CREDIT_CARD') && (
+                    <>
+                        <p style={{ margin: '0.5em 0' }}>Search Text</p>
+                        <TextBox
+                            value={searchText}
+                            placeholder={'Enter Text to filter mail'}
+                            onChange={(event) => {
+                                setSearchText(event.target.value);
+                            }}
+                        />
+                    </>
+                )}
+
+                <p style={{ margin: '0.5em 0' }}>Balance</p>
+                <TextBox
+                    value={accountBalance}
+                    type={'number'}
+                    placeholder={'Enter Balance'}
+                    onChange={(event) => {
+                        setAccountBalance(Number.parseInt(event.target.value));
+                    }}
+                />
+
+                <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
+                    <button
+                        className="button"
+                        onClick={() => {
+                            setBankOption([]);
+                            const account: Account = {
+                                account_id: accountId,
+                                account_name: accountName,
+                                account_balance: accountBalance,
+                                account_number: accountNumber,
+                                account_type: accountType,
+                                bank: banks[bankId],
+                                start_date: parse(startDate, 'dd-MM-yyyy', new Date()),
+                                search_text: searchText
+                            };
+                            if (edit) {
+                                updateAccount(account)
+                                    .then((value) => {
+                                        onSubmit(true, value.results[0]);
+                                    })
+                                    .catch((reason) => {
+                                        onSubmit(true, undefined);
+                                    });
+                            } else {
+                                addAccount(account)
+                                    .then((value) => {
+                                        onSubmit(true, value.results[0]);
+                                    })
+                                    .catch((reason) => {
+                                        onSubmit(true, undefined);
+                                    });
+                            }
+                        }}
+                    >
+                        Add
+                    </button>
                 </div>
             </div>
         </>

@@ -65,7 +65,7 @@ const Tabs = ({
                             className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${
                                 tabHeaderInfo.classes ? tabHeaderInfo.classes : ''
                             }`}
-                            onClick={() => {
+                            onClick={(event) => {
                                 setActiveTab(tabHeaderInfo.value);
                                 if (onTabChange) {
                                     onTabChange({

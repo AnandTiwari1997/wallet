@@ -1,16 +1,10 @@
 import './text-box.css';
+import React from 'react';
 
-const TextBox = ({ value, setValue, ...props }: { value: any; [key: string]: any }) => {
-    return (
-        <input
-            className="input"
-            value={value}
-            {...props}
-            onChange={(event) => {
-                setValue(event.target.value);
-            }}
-        />
-    );
+type TextBoxProps = {} & React.ComponentPropsWithoutRef<'input'>;
+
+const TextBox = ({ value, ...props }: TextBoxProps) => {
+    return <input className="input" value={value} {...props} />;
 };
 
 export default TextBox;

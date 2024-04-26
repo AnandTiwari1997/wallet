@@ -77,10 +77,10 @@ const Navigation = ({ activeTab, setActiveTab }: { [key: string]: any }) => {
                     <NavLink
                         tabIndex={0}
                         className={activeTabClassName}
-                        onClick={() => setActiveTab('Statistics')}
-                        to="/statistics"
+                        onClick={() => setActiveTab('Module Test')}
+                        to="/module-test"
                     >
-                        <span>Statistics</span>
+                        <span>Module Test</span>
                     </NavLink>
                 </li>
             </ul>

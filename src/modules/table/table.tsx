@@ -5,7 +5,6 @@ import { caretLeft, caretRight, expandAll, hide, show } from '../../icons/icons'
 import { ArrayUtil } from '../../data/transaction-data';
 
 import './table.css';
-import { Checkbox } from '@mui/material';
 import CSS from 'csstype';
 
 import GroupByRow from './group-by-row';
@@ -13,6 +12,7 @@ import GroupByRows from './group-by-rows';
 import SortColumn, { SortedColumn } from './sort-column';
 import IconButton from '../icon/icon-button';
 import Select from '../select/select';
+import Checkbox from '../checkbox/checkbox';
 
 export interface TableColumn {
     key: string;
@@ -205,7 +205,7 @@ const Table = ({
                     {selectable && (
                         <td className="td-header" style={{ width: '5%' }}>
                             <Checkbox
-                                style={{ padding: 0 }}
+                                customStyles={'td-checkbox-style'}
                                 onChange={() => {
                                     setSelected(!isSelected);
                                     setAllSelect(!isSelected);
@@ -418,15 +418,15 @@ const Table = ({
                                 <Select
                                     className="td-select"
                                     selectedOption={currentPageSize}
-                                    onChange={(event) => {
+                                    onSelectionChange={(option) => {
                                         if (!onPagination) {
                                             return;
                                         }
-                                        const newPageSize = Number.parseInt(event.target.value);
+                                        const newPageSize = Number.parseInt(option.value);
                                         setCurrentPageSize(newPageSize);
                                         setCurrentPageNumber(0);
                                         onPagination({
-                                            pageSize: Number.parseInt(event.target.value),
+                                            pageSize: Number.parseInt(option.value),
                                             pageNumber: 0
                                         });
                                     }}

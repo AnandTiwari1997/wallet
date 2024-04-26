@@ -23,8 +23,9 @@ const imapConfig = {
 const logger: Logger = new Logger('MailService');
 export const connection: Connection = new Connection(imapConfig);
 let openedBox: Box | undefined = undefined;
-connection.once('ready', () => {
+connection.on('ready', () => {
     logger.info(`Mail Server Connection Established`);
+    connection.removeAllListeners('mail');
     reconnectMailServer();
     newMailEventListener.refresh();
     try {
@@ -39,10 +40,6 @@ connection.once('ready', () => {
             openedBox = box;
             connection.subscribeBox('INBOX', (error) => {
                 if (error) logger.error(error);
-                logger.info('`INBOX` Subscribed');
-
-                // which will notify us of new messages
-                // Subscribe to the "mail" event,
                 connection.on('mail', onNewEmail);
             });
         });

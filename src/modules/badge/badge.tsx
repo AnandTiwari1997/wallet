@@ -1,19 +1,19 @@
 import './badge.css';
 import React from 'react';
 
-export interface BadgeProp {
+type BadgeProp = {
     badgeContent: any;
     anchorOrigin: {
         vertical: string;
         horizontal: string;
     };
     children: any;
-}
+} & React.ComponentPropsWithoutRef<'span'>;
 
-const Badge = ({ children, badgeContent, anchorOrigin }: BadgeProp) => {
+const Badge: React.FC<BadgeProp> = ({ children, badgeContent, anchorOrigin, ...props }: BadgeProp) => {
     return (
         <>
-            <span className={'badge-root'} key={`${children}_${badgeContent}`}>
+            <span className={'badge-root'} key={`${children}_${badgeContent}`} {...props}>
                 {children}
                 <span
                     className={`badge-label ${

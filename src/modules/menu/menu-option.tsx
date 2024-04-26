@@ -1,16 +1,14 @@
 import './menu.css';
-import { MouseEventHandler } from 'react';
+import React from 'react';
 
-const MenuOption = ({
-    label,
-    onMenuOptionClick,
-    ...props
-}: {
+type MenuOptionProps = {
     label: string;
-    onMenuOptionClick?: MouseEventHandler<HTMLLIElement>;
-}) => {
+    onMenuOptionClick: (event: any) => void;
+} & React.ComponentPropsWithoutRef<'li'>;
+
+const MenuOption = ({ label, onMenuOptionClick, ...props }: MenuOptionProps) => {
     return (
-        <li className="li-menu-list" onClick={onMenuOptionClick} {...props}>
+        <li className="li-menu-list" {...props} onClick={onMenuOptionClick}>
             {label}
         </li>
     );

@@ -73,20 +73,24 @@ const AddBill = ({
                             { value: 'RENT', label: 'Rent' },
                             { value: 'CREDIT_CARD_BILL', label: 'Credit Card' }
                         ]}
-                        onChange={(event) => {
-                            if (event.target.value === 'ELECTRICITY_BILL') {
+                        onSelectionChange={(event) => {
+                            if (event.value === 'ELECTRICITY_BILL') {
                                 setVendorName(edit && bill ? bill.vendor_name : electricityVendors[0].label);
                             } else {
                                 setVendorName('');
                             }
-                            setBillCategory(event.target.value);
+                            setBillCategory(event.value);
                         }}
                     />
 
                     {billCategory !== 'ELECTRICITY_BILL' && (
                         <>
                             <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
-                            <TextBox setValue={setVendorName} value={vendorName} placeholder={'Enter Vendor Name'} />
+                            <TextBox
+                                value={vendorName}
+                                placeholder={'Enter Vendor Name'}
+                                onChange={(event) => setVendorName(event.target.value)}
+                            />
                         </>
                     )}
 
@@ -96,20 +100,24 @@ const AddBill = ({
                             <Select
                                 selectedOption={vendorName}
                                 options={electricityVendors}
-                                onChange={(event) => setVendorName(event.target.value)}
+                                onSelectionChange={(event) => setVendorName(event.value)}
                             />
                         </>
                     )}
 
                     <p style={{ margin: '0.5em 0' }}>Consumer Number</p>
                     <TextBox
-                        setValue={setBillConsumerNo}
                         value={billConsumerNo}
                         placeholder={'Enter Bill Consumer Number'}
+                        onChange={(event) => setBillConsumerNo(event.target.value)}
                     />
 
                     <p style={{ margin: '0.5em 0' }}>Bill Name</p>
-                    <TextBox setValue={setBillName} value={billName} placeholder={'Enter Bill Name'} />
+                    <TextBox
+                        value={billName}
+                        placeholder={'Enter Bill Name'}
+                        onChange={(event) => setBillName(event.target.value)}
+                    />
 
                     {billCategory !== 'ELECTRICITY_BILL' &&
                         billCategory !== 'INTERNET_BILL' &&
@@ -121,8 +129,8 @@ const AddBill = ({
                                     options={dates.map((date) => {
                                         return { value: date.toString(), label: date.toString() };
                                     })}
-                                    onChange={(event) => {
-                                        setBillingDate(event.target.value);
+                                    onSelectionChange={(event) => {
+                                        setBillingDate(event.value);
                                     }}
                                 />
                             </>
@@ -134,10 +142,10 @@ const AddBill = ({
                             <>
                                 <p style={{ margin: '0.5em 0' }}>Bill Amount</p>
                                 <TextBox
-                                    setValue={setBillAmount}
                                     value={billAmount}
                                     type={'number'}
                                     placeholder={'Enter Bill Amount'}
+                                    onChange={(event) => setBillAmount(Number.parseInt(event.target.value))}
                                 />
                             </>
                         )}

@@ -10,6 +10,7 @@ import AddBill from './add-bill';
 import { ApiRequestBody } from '../../../backend/types/api-request-body';
 import { Bill, billCategoryMap } from '../../data/models';
 import { ArrayUtil } from '../../data/transaction-data';
+import useAPI from '../../hooks/app-hooks';
 import { indianRupee, menu } from '../../icons/icons';
 import { ApiCriteria, ApiResponse, getBills, updateBill } from '../../modules/backend/BackendApi';
 import Badge from '../../modules/badge/badge';
@@ -19,7 +20,6 @@ import IconButton from '../../modules/icon/icon-button';
 import Menu from '../../modules/menu/menu';
 import MenuOption from '../../modules/menu/menu-option';
 import Table, { TableColumn, TableData } from '../../modules/table/table';
-import useAPI from '../../hooks/app-hooks';
 import Tab from '../../modules/tabs/tab';
 
 const topDiv: CSS.Properties = {
@@ -128,10 +128,11 @@ const BillsPage = () => {
                         }}
                     />
                     <Menu
-                        open={showBillActionMenu}
+                        open={row.bill_id === selectedBill?.bill_id}
                         onClose={() => {
                             setShowBillActionMenu(false);
                             setBillMenuOptionFor('');
+                            setSelectedBill(undefined);
                         }}
                         menuFor={`account-menu-${billMenuOptionFor}`}
                     >
@@ -158,12 +159,14 @@ const BillsPage = () => {
                                     new Date(selectedBill.previous_bill_date),
                                     1
                                 ).toISOString();
-                                updateBill({ data: selectedBill }).then((apiResponse) => {
-                                    fetchBills();
-                                    if (selectedTab === 'DUE') {
-                                        getDueBillsCount();
-                                    }
-                                });
+                                updateBill({ data: selectedBill })
+                                    .then((apiResponse) => {
+                                        fetchBills();
+                                        if (selectedTab === 'DUE') {
+                                            getDueBillsCount();
+                                        }
+                                    })
+                                    .finally(() => setSelectedBill(undefined));
                             }}
                         />
                         <MenuOption label={'Delete'} onMenuOptionClick={(event) => {}} />

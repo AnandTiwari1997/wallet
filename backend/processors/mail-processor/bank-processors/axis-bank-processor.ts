@@ -45,6 +45,33 @@ export class AxisBankProcessor extends BankProcessor {
         CREDIT_CARD: { true: TransactionType.INCOME, false: TransactionType.EXPENSE }
     };
 
+    processLoanTransaction(mailText: string, account: Account) {
+        const LOAN = {
+            account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
+            amount: new RegExp('(INR|INR.|INR |INR. |Rs|Rs.|Rs |Rs. )(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s([^.]*)|(IST)*\\sby\\s)([^.]*)'),
+            date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
+        };
+    }
+
+    processCreditCardTransaction(mailText: string, account: Account) {
+        const CREDIT_CARD = {
+            account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
+            amount: new RegExp('(INR|INR.|INR |INR. |Rs|Rs.|Rs |Rs. )(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s([^.]*)|(IST)*\\sby\\s)([^.]*)'),
+            date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
+        };
+    }
+
+    processRegularTransaction(mailText: string, account: Account) {
+        const BANK = {
+            account: new RegExp('[aA]/c\\sno\\.\\s([A-Z0-9]+)'),
+            amount: new RegExp('(INR|INR.|INR |INR. |Rs|Rs.|Rs |Rs. )(\\d+(\\.\\d+)?)'),
+            description: new RegExp('(Info-|Info-\\s|Info:\\s|(IST)*\\sat\\s([^.]*)|(IST)*\\sby\\s)([^.]*)'),
+            date: new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?')
+        };
+    }
+
     processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
             let mailText: string = this.getMailText(parsedMail, (text: string) => {
@@ -65,7 +92,7 @@ export class AxisBankProcessor extends BankProcessor {
             let isCredit: boolean | undefined =
                 mailText.toLowerCase().includes('credited') || mailText.toLowerCase().includes('using your card no.');
             if (!isCredit && !isDebit) return;
-            logger.info(mailText);
+
             amount = this.getAmount(mailText, this.regexMap[account.account_type]['amount']);
             if (amount.length > 0) {
                 mailText = mailText.replace(this.regexMap[account.account_type]['amount'], '');

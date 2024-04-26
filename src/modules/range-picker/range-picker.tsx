@@ -4,16 +4,16 @@ import Checkbox from '../checkbox/checkbox';
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css';
 import {
-    startOfMonth,
-    startOfWeek,
-    startOfYear,
-    subDays,
     differenceInDays,
     differenceInMonths,
     isSameDay,
     isSameMonth,
     isSameWeek,
     isSameYear,
+    startOfMonth,
+    startOfWeek,
+    startOfYear,
+    subDays,
     subMonths
 } from 'date-fns/esm';
 import React, { useCallback, useEffect, useState } from 'react';

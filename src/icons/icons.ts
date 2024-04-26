@@ -19,6 +19,7 @@ import {
     faEye,
     faEyeSlash,
     faIndianRupee,
+    faMinusSquare,
     faMoneyBill,
     faPencil,
     faPiggyBank,
@@ -58,3 +59,4 @@ export const menu = faEllipsisVertical;
 export const calender = faCalendar;
 export const save = faSave;
 export const hide = faEyeSlash;
+export const indeterminate = faMinusSquare;

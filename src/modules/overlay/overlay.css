@@ -1,12 +1,4 @@
 .overlay-backdrop {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-}
-
-.dialog-overlay-backdrop {
     transition: opacity 225ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     opacity: 1;
     position: fixed;
@@ -26,11 +18,11 @@
     bottom: 0;
     top: 0;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.5);
     -webkit-tap-highlight-color: transparent;
+    transition-delay: 200ms;
 }
 
-.dialog-overlay {
+.overlay {
     position: fixed;
     z-index: 1300;
     right: 0;

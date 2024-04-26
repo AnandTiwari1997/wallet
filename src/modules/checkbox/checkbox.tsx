@@ -1,57 +1,58 @@
 import { faCheckSquare, faSquare } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import MuiCheckbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import CSS from 'csstype';
+import React, { useState } from 'react';
+import './checkbox.css';
+import { faMinusSquare } from '@fortawesome/free-solid-svg-icons';
 
-// We use em because because we're matching Mui styling
+type CheckboxProps = {
+    indeterminate?: boolean;
+    label?: string;
+    customStyles?: string;
+    customLabelStyles?: string;
+} & React.ComponentPropsWithoutRef<'input'>;
 
 const iconStyle: CSS.Properties = {
-    width: '1em',
-    height: '1em',
-    padding: '0.125em',
+    width: '100%',
+    height: '100%',
     lineHeight: 'inherit',
     color: 'rgb(34, 52, 60)'
 };
 
 const uncheckedIcon = <FontAwesomeIcon icon={faSquare} style={iconStyle} className="icon" />;
 const checkedIcon = <FontAwesomeIcon icon={faCheckSquare} style={iconStyle} className="icon" />;
+const indeterminateIcon = <FontAwesomeIcon icon={faMinusSquare} style={iconStyle} className="icon" />;
 
-/**
- * A wrapper for the material design `FormControlLabel` `Checkbox` control.
- * Sets our custom overrides and checks for a label to determine the implementation.
- **
- * See MD docs for full api - [FormControlLabel](https://material-ui.com/api/form-control-label/) | [Checkbox](https://material-ui.com/api/checkbox/)
- */
 const Checkbox = ({
-    ariaLabel,
-    ariaLabelledby,
-    indeterminate,
+    indeterminate = false,
+    checked,
     label,
     customStyles,
     customLabelStyles,
-    labelPlacement,
-    ...baseProps
-}: {
-    [key: string]: any;
-}): JSX.Element => {
-    return label ? (
-        <FormControlLabel
-            control={
-                <MuiCheckbox className={customStyles} {...baseProps} checkedIcon={checkedIcon} icon={uncheckedIcon} />
-            }
-            className={customLabelStyles}
-            label={label}
-            labelPlacement={labelPlacement!}
-        />
-    ) : (
-        <MuiCheckbox
-            {...baseProps}
-            checkedIcon={checkedIcon}
-            className={customStyles}
-            icon={uncheckedIcon}
-            inputProps={ariaLabelledby ? { 'aria-labelledby': ariaLabelledby } : { 'aria-label': ariaLabel }}
-        />
+    ...props
+}: CheckboxProps) => {
+    const defaultChecked = checked ? checked : false;
+    const [isChecked, setIsChecked] = useState(defaultChecked);
+    return (
+        <label className={['checkbox-wrapper', customLabelStyles].join(' ')}>
+            <span className={['checkbox-wrapper-span', customStyles].join(' ')}>
+                <input
+                    type={'checkbox'}
+                    checked={isChecked}
+                    {...props}
+                    onChange={(event) => {
+                        setIsChecked(!isChecked);
+                        if (props['onChange']) {
+                            props['onChange'](event);
+                        }
+                    }}
+                />
+                <div className={'checkbox-wrapper-icons'}>
+                    {indeterminate ? indeterminateIcon : checked ? checkedIcon : uncheckedIcon}
+                </div>
+            </span>
+            {label && <span>{label}</span>}
+        </label>
     );
 };
 

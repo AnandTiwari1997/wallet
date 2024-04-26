@@ -1,54 +1,104 @@
 import './overlay.css';
-import { computePosition } from '@floating-ui/dom';
-import { useEffect } from 'react';
+import { autoUpdate, computePosition, ComputePositionReturn, flip } from '@floating-ui/dom';
+import React, { Fragment, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
+
+type OverlayProps = {
+    open: boolean;
+    parent: HTMLElement;
+    children: any;
+    onBackdrop: () => any;
+    backdropClass?: string;
+    containerClass?: string;
+    trigger: HTMLElement | null;
+} & React.ComponentPropsWithoutRef<'div'>;
 
 const Overlay = ({
     open,
-    close,
+    parent,
     children,
     onBackdrop,
-    triggerBy,
-    zIndex,
-    placement,
-    noShadow,
-    noMargin
-}: {
-    [key: string]: any;
-}) => {
+    backdropClass,
+    containerClass,
+    trigger,
+    ...props
+}: OverlayProps) => {
+    const backdrop = useRef<HTMLDivElement>(null);
+    const virtualElement = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!open) {
             return;
         }
-        const popover = document.getElementById('overlay-container')!;
-        const invoker = document.querySelector('[id=' + triggerBy + ']')!;
-        computePosition(invoker, popover, {
-            placement: placement ? placement : 'bottom-start',
-            strategy: 'absolute'
-        }).then(({ x, y }: { x: any; y: any }) => {
-            Object.assign(popover.style, {
-                left: `${x}px`,
-                top: `${y}px`,
-                position: 'absolute',
-                background: 'white',
-                boxShadow: noShadow
-                    ? ''
-                    : 'rgba(0, 0, 0, 0.2) 0px 5px 5px -3px, rgba(0, 0, 0, 0.14) 0px 8px 10px 1px, rgba(0, 0, 0, 0.12) 0px 3px 14px 2px',
-                marginTop: noMargin ? '0px' : '5px',
-                zIndex: zIndex ? zIndex : '1001'
+
+        // key handler and inert
+        const { current } = backdrop;
+        const keyHandler = (e: any) => [27].indexOf(e.which) >= 0 && onBackdrop();
+        if (current) {
+            window.addEventListener('keyup', keyHandler);
+        }
+        const rootElement = document.querySelector('#root');
+        if (open) {
+            window.setTimeout(() => {
+                if (rootElement) {
+                    rootElement.setAttribute('inert', 'true');
+                }
+            }, 10);
+        }
+        const popover = virtualElement.current;
+        const invoker = trigger as HTMLElement;
+        if (!popover || !invoker) {
+            return () => {
+                if (rootElement) {
+                    rootElement.removeAttribute('inert');
+                }
+                window.removeEventListener('keyup', keyHandler);
+            };
+        }
+        const cleanup = autoUpdate(invoker, popover, () => {
+            computePosition(invoker, popover, {
+                placement: 'bottom-start',
+                strategy: 'absolute',
+                middleware: [flip()]
+            }).then((computePositionReturn: ComputePositionReturn) => {
+                Object.assign(popover.style, {
+                    left: `${computePositionReturn.x}px`,
+                    top: `${computePositionReturn.y}px`,
+                    position: `${computePositionReturn.strategy}`
+                });
             });
         });
-    }, [open, triggerBy]);
+
+        return () => {
+            if (rootElement) {
+                rootElement.removeAttribute('inert');
+            }
+            window.removeEventListener('keyup', keyHandler);
+            cleanup();
+        };
+    }, [open, trigger]);
 
     return (
-        open &&
-        ReactDOM.createPortal(
-            <div className="overlay">
-                <div className="overlay-backdrop" onClick={onBackdrop}></div>
-                <div id="overlay-container">{children}</div>
-            </div>,
-            document.getElementById('calender-picker-overlay')!
-        )
+        <Fragment>
+            {open &&
+                ReactDOM.createPortal(
+                    <div className={'overlay'} {...props}>
+                        <div
+                            ref={backdrop}
+                            className={['overlay-backdrop', backdropClass].join(' ')}
+                            onClick={onBackdrop}
+                        ></div>
+                        <div
+                            ref={virtualElement}
+                            id={'overlay-container'}
+                            className={containerClass ? containerClass : ''}
+                        >
+                            {children}
+                        </div>
+                    </div>,
+                    parent ? parent : document.body
+                )}
+        </Fragment>
     );
 };
 

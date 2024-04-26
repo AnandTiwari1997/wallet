@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 import { darkGreen, darkRed } from '../../App';
 import { ProvidentFundTransaction } from '../../data/models';
 import { ArrayUtil } from '../../data/transaction-data';
+import useAPI from '../../hooks/app-hooks';
 import { indianRupee } from '../../icons/icons';
 import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
 import Table, { TableColumn, TableData } from '../../modules/table/table';
-import useAPI from '../../hooks/app-hooks';
 
 const ProvidentFund = () => {
     const [initialData, setInitialData] = useState<ProvidentFundTransaction[]>([]);
