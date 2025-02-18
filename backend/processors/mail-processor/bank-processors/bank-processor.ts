@@ -13,15 +13,13 @@ const logger: Logger = new Logger('BankProcessor');
 export abstract class BankProcessor implements IBankProcessor {
     process(parsedMail: ParsedMail): void | any | undefined {
         bankRepository
-            .find({
+            .findOne({
                 where: {
                     alert_email_id: parsedMail.from?.value[0].address
                 }
             })
-            .then((banks) => {
-                if (!banks) return;
-                if (banks.length === 0) return;
-                let bank = banks[0];
+            .then((bank) => {
+                if (!bank) return;
                 accountRepository
                     .find({
                         relations: {
@@ -52,6 +50,7 @@ export abstract class BankProcessor implements IBankProcessor {
                                 })
                                 .then((value) => {
                                     if (!value) {
+                                        transaction.transaction_id = id;
                                         accountTransactionRepository.save(transaction).then((updatedTransaction) => {
                                             if (updatedTransaction) {
                                                 account.last_synced_on = new Date();
@@ -71,23 +70,23 @@ export abstract class BankProcessor implements IBankProcessor {
             });
     }
 
-    getAccountNumber(mailString: string, regex: RegExp | undefined): string {
+    getAccountNumber(mailString: string): string {
         return '';
     }
 
-    getAmount(mailString: string, regex: RegExp | undefined): string {
+    getAmount(mailString: string): string {
         return '';
     }
 
-    getDate(mailString: string, regex: RegExp | undefined): string {
+    getDate(mailString: string): string {
         return '';
     }
 
-    getDescription(mailString: string, regex: RegExp | undefined): string {
+    getDescription(mailString: string): string {
         return '';
     }
 
-    getMailText(parsedMail: ParsedMail, onText: (text: string) => string | undefined): string {
+    getMailText(parsedMail: ParsedMail): string {
         return '';
     }
 

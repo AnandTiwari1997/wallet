@@ -1,10 +1,9 @@
+import { getStockAccount, getStockHolding, getStockTransaction } from 'backend/BackendApi';
+import { DematAccount } from 'data/models';
 import { format } from 'date-fns';
+import Select, { SelectOption } from 'modules/select/select';
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-
-import { DematAccount } from '../../../data/models';
-import { getStockAccount, getStockHolding, getStockTransaction } from '../../../modules/backend/BackendApi';
-import Select, { SelectOption } from '../../../modules/select/select';
 
 const StockInvestmentChart = () => {
     const [stockInvestmentTransactionChartData, setStockInvestmentTransactionChartData] = useState<
@@ -120,12 +119,6 @@ const StockInvestmentChart = () => {
                     }}
                     options={{
                         responsive: true,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'Investment Per Stock'
-                            }
-                        },
                         scales: {
                             x: {
                                 display: true,

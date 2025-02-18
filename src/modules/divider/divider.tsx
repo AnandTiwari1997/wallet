@@ -8,8 +8,8 @@ const Divider: React.FC<DivProp> = ({ width, ...props }: DivProp) => {
     return (
         <div
             style={{
-                borderTop: `${width / 2}px solid black`,
-                borderBottom: `${width / 2}px solid black`
+                height: `${width / 2}px`,
+                background: `var(--content-faded)`
             }}
             {...props}
         ></div>

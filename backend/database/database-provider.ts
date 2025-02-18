@@ -12,6 +12,7 @@ import { Holding } from './models/holding.js';
 import { ProvidentFundTransaction } from './models/provident-fund-transaction.js';
 import { MutualFundTransaction } from './models/mutual-fund-transaction.js';
 import { Bill } from './models/bill.js';
+import { SyncTracker } from './models/sync-tracker.js';
 
 const logger: Logger = new Logger('DatabaseProvider');
 
@@ -37,7 +38,8 @@ class DatabaseProvider {
                 ProvidentFundTransaction,
                 MutualFundTransaction,
                 Holding,
-                StockTransaction
+                StockTransaction,
+                SyncTracker
             ]
         });
         this.database.driver.connect().then(() => {

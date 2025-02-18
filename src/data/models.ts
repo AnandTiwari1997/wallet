@@ -1,7 +1,7 @@
-import { Category, PaymentMode, TransactionStatus, TransactionType } from './transaction-data';
+import { Category, PaymentMode, TransactionStatus, TransactionType } from 'data/transaction-data';
 
 export interface Account {
-    account_id: number;
+    account_id?: number;
     account_type: string;
     account_name: string;
     account_balance: number;
@@ -22,6 +22,7 @@ export interface Bank {
 export interface Transaction {
     transaction_id: string;
     account: Account;
+    account_id: number;
     transaction_date: Date;
     amount: number;
     category: Category;
@@ -136,7 +137,6 @@ export interface DematAccount {
     account_client_id: string;
     account_name: string;
     broker: Broker;
-    account_type: string;
     start_date: Date;
 }
 

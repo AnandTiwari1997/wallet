@@ -1,9 +1,9 @@
-import { faCheckSquare, faSquare } from '@fortawesome/free-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CSS from 'csstype';
 import React, { useState } from 'react';
+
 import './checkbox.css';
-import { faMinusSquare } from '@fortawesome/free-solid-svg-icons';
+import { checked, checkedIndeterminate, unchecked } from '../../icons/icons';
+import { Icon } from '../icon';
 
 type CheckboxProps = {
     indeterminate?: boolean;
@@ -19,9 +19,9 @@ const iconStyle: CSS.Properties = {
     color: 'rgb(34, 52, 60)'
 };
 
-const uncheckedIcon = <FontAwesomeIcon icon={faSquare} style={iconStyle} className="icon" />;
-const checkedIcon = <FontAwesomeIcon icon={faCheckSquare} style={iconStyle} className="icon" />;
-const indeterminateIcon = <FontAwesomeIcon icon={faMinusSquare} style={iconStyle} className="icon" />;
+const uncheckedIcon = <Icon icon={unchecked} style={iconStyle} className="icon" />;
+const checkedIcon = <Icon icon={checked} style={iconStyle} className="icon" />;
+const indeterminateIcon = <Icon icon={checkedIndeterminate} style={iconStyle} className="icon" />;
 
 const Checkbox = ({
     indeterminate = false,
@@ -42,8 +42,8 @@ const Checkbox = ({
                     {...props}
                     onChange={(event) => {
                         setIsChecked(!isChecked);
-                        if (props['onChange']) {
-                            props['onChange'](event);
+                        if (props.onChange) {
+                            props.onChange(event);
                         }
                     }}
                 />

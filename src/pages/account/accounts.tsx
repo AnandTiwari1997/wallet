@@ -1,39 +1,31 @@
+import 'pages/account/accounts.css';
+import { ApiRequestBody, ApiResponse, getAccounts, syncAccount } from 'backend/BackendApi';
 import CSS from 'csstype';
-
-import './accounts.css';
+import { Account, AccountType } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
+import useAPI from 'hooks/useAPI';
+import useSnackbar from 'hooks/useSnackbar';
+import { indianRupee, menu } from 'icons/icons';
+import { Dialog, Icon, IconButton, Table, TableColumn } from 'modules';
+import AddAccount from 'pages/account/add-account';
 import { useEffect, useState } from 'react';
-
-import AddAccount from './add-account';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
-import { Account, AccountType } from '../../data/models';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { ArrayUtil } from '../../data/transaction-data';
-import useAPI from '../../hooks/app-hooks';
-import { indianRupee, menu } from '../../icons/icons';
-import { ApiResponse, getAccounts, syncAccount } from '../../modules/backend/BackendApi';
-import Button from '../../modules/button/button';
-import Dialog from '../../modules/dialog/dialog';
-import IconButton from '../../modules/icon/icon-button';
-import Menu from '../../modules/menu/menu';
-import MenuOption from '../../modules/menu/menu-option';
-import Table, { TableColumn } from '../../modules/table/table';
+import FilterActionHeader from 'shared/filter-action-header/FilterActionHeader';
+import { Menu, MenuOption } from 'boxed-material-ui';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
     flexDirection: 'column',
-    height: '100%'
+    height: '100%',
+    margin: '1%'
 };
 
 const AccountPage = () => {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [count, setCount] = useState<number>(0);
     const [showAddAccount, setShowAddAccount] = useState(false);
-    const [showAccountMenu, setShowAccountMenu] = useState(false);
-    const [accountMenuOptionFor, setAccountMenuOptionFor] = useState<number>(0);
     const [selectedAccount, setSelectedAccount] = useState<Account | undefined>(undefined);
     const [getData, loading] = useAPI<ApiRequestBody<Account>, ApiResponse<Account>>(getAccounts);
+    const [snackBarConfig, setSnackbarConfig] = useSnackbar();
 
     useEffect(() => {
         getData().then((response) => {
@@ -113,12 +105,26 @@ const AccountPage = () => {
             label: 'Account Balance',
             groupByRender: (rows: Account[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Total Account Balance:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
-                            </i>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <Icon
+                                className={'table-body-column-icon'}
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                             {ArrayUtil.sum(rows, (row: Account) => row.account_balance).toFixed(2)}
                         </div>
                     </div>
@@ -126,10 +132,21 @@ const AccountPage = () => {
             },
             customRender: (row: Account) => {
                 return (
-                    <div>
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
-                        </i>
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Icon
+                            className={'table-body-column-icon'}
+                            icon={indianRupee}
+                            svgProps={{
+                                height: '12px',
+                                width: '12px'
+                            }}
+                        />
                         {row.account_balance.toFixed(2)}
                     </div>
                 );
@@ -142,33 +159,32 @@ const AccountPage = () => {
                 return (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                         <IconButton
+                            svgProps={{
+                                height: '16px',
+                                width: '16px'
+                            }}
                             id={`account-menu-${row.account_id}`}
                             icon={menu}
-                            onClick={() => {
-                                setAccountMenuOptionFor(row.account_id);
-                                setShowAccountMenu(true);
-                                setSelectedAccount(row);
-                            }}
+                            onClick={() => setSelectedAccount(row)}
                         />
                         <Menu
-                            open={row.account_id === selectedAccount?.account_id}
+                            open={row.account_id === selectedAccount?.account_id && !showAddAccount}
                             onClose={() => {
-                                setAccountMenuOptionFor(0);
-                                setShowAccountMenu(false);
                                 setSelectedAccount(undefined);
                             }}
-                            menuFor={`account-menu-${accountMenuOptionFor}`}
+                            menuFor={`account-menu-${row.account_id}`}
                         >
                             <MenuOption
                                 label={'Edit'}
                                 onMenuOptionClick={(event) => {
+                                    event.stopPropagation();
                                     setShowAddAccount(true);
+                                    // setSelectedAccount(undefined);
                                 }}
                             />
                             <MenuOption
                                 label={'Sync'}
                                 onMenuOptionClick={(event) => {
-                                    console.log(row);
                                     if (!selectedAccount) {
                                         return;
                                     }
@@ -184,7 +200,10 @@ const AccountPage = () => {
                                         }
                                     })
                                         .then((response) => {
-                                            console.log(response.message);
+                                            setSnackbarConfig({
+                                                open: true,
+                                                message: `Sync has been started.`
+                                            });
                                         })
                                         .finally(() => setSelectedAccount(undefined));
                                 }}
@@ -200,18 +219,15 @@ const AccountPage = () => {
     return (
         <>
             <div style={topDiv}>
-                <div
-                    style={{
-                        height: 'calc(3rem - 10px)',
-                        display: 'flex',
-                        justifyContent: 'end',
-                        alignItems: 'center',
-                        marginTop: '10px',
-                        marginRight: '10px'
-                    }}
-                >
-                    <Button onClick={() => setShowAddAccount(true)}>Add</Button>
-                </div>
+                <FilterActionHeader
+                    actions={[
+                        {
+                            onClick: () => setShowAddAccount(true),
+                            name: 'Add',
+                            hidden: false
+                        }
+                    ]}
+                />
                 <div className="account-table-division">
                     <Table
                         columns={columns}
@@ -229,7 +245,7 @@ const AccountPage = () => {
                     setSelectedAccount(undefined);
                 }}
                 header="Account"
-                noAction
+                hideAction
             >
                 <AddAccount
                     account={selectedAccount}
@@ -239,9 +255,11 @@ const AccountPage = () => {
                                 setCount(response.num_found);
                                 setAccounts(response.results);
                             });
-                            console.log(`Account ${data} has been add Successfully.`);
+                            setSnackbarConfig({
+                                open: true,
+                                message: `Account ${data?.account_name} has been add Successfully.`
+                            });
                         } else {
-                            console.log(`Error occurred while adding Account ${data}.`);
                         }
                         setSelectedAccount(undefined);
                         setShowAddAccount(false);

@@ -1,8 +1,7 @@
+import { Account } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { useEffect, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-
-import { Account } from '../../../data/models';
-import { ArrayUtil } from '../../../data/transaction-data';
 
 const BalancePerAccountChart = ({ data }: { data: Account[] }) => {
     const [accounts, setAccounts] = useState<Account[]>([]);
@@ -66,10 +65,6 @@ const BalancePerAccountChart = ({ data }: { data: Account[] }) => {
                 plugins: {
                     legend: {
                         position: 'right'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Amount Per Balance Account Type'
                     }
                 }
             }}

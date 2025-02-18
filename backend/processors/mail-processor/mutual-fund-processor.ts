@@ -7,9 +7,9 @@ import { mfParam } from '../../config.js';
 import { mutualFundRepository } from '../../database/repository/mutual-fund-repository.js';
 import { MutualFundTransaction } from '../../database/models/mutual-fund-transaction.js';
 import { RepositoryUtils } from '../../database/util/repository-utils.js';
-import { syncTrackerStorage } from '../../database/repository/sync-tracker-storage.js';
 import { Logger } from '../../core/logger.js';
 import { PythonUtil } from '../../utils/python-util.js';
+import { syncTrackerRepository } from '../../database/repository/sync-tracker-repository.js';
 
 const logger: Logger = new Logger('MutualFundProcessor');
 
@@ -35,7 +35,11 @@ export class MutualFundProcessor implements IAnonymousProcessor {
                     }[] = JSON.parse(newData);
                     await mutualFundRepository.delete({});
                     for (let parseData of parsedData) {
-                        let mutualFund = Object.assign(MutualFundTransaction.prototype, parseData);
+                        let mutualFund = Object.assign(
+                            MutualFundTransaction.prototype,
+                            parseData
+                        ) as MutualFundTransaction;
+                        mutualFund.is_credit = mutualFund.amount >= 0;
                         let id = RepositoryUtils.generateMutualFundTransactionId(mutualFund);
                         let mfTransaction = await mutualFundRepository.findOne({
                             where: {
@@ -51,11 +55,19 @@ export class MutualFundProcessor implements IAnonymousProcessor {
                             await mutualFundRepository.update(id, mfTransaction);
                         }
                     }
-                    const syncTracker = syncTrackerStorage.get('mutual_fund');
-                    if (!syncTracker) return;
-                    syncTracker.status = 'COMPLETED';
-                    syncTracker.endTime = new Date();
-                    syncTrackerStorage.update(syncTracker);
+                    syncTrackerRepository
+                        .findOne({
+                            where: {
+                                sync_type: 'mutual_fund',
+                                sync_status: 'IN_PROGRESS'
+                            }
+                        })
+                        .then((syncTracker) => {
+                            if (!syncTracker) return;
+                            syncTracker.sync_status = 'COMPLETED';
+                            syncTracker.sync_ended_at = new Date();
+                            syncTrackerRepository.update(syncTracker.sync_type, syncTracker).then((r) => {});
+                        });
                 },
                 (data) => {
                     logger.error('ERROR:', data);

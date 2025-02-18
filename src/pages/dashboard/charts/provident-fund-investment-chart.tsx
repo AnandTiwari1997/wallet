@@ -1,9 +1,8 @@
+import { ApiResponse, getInvestmentsTransaction } from 'backend/BackendApi';
+import { ProvidentFundTransaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { useEffect, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-
-import { ProvidentFundTransaction } from '../../../data/models';
-import { ArrayUtil } from '../../../data/transaction-data';
-import { ApiResponse, getInvestmentsTransaction } from '../../../modules/backend/BackendApi';
 
 const ProvidentFundInvestmentChart = () => {
     const [employeeContributionChartData, setEmployeeContributionChartData] = useState<
@@ -74,12 +73,6 @@ const ProvidentFundInvestmentChart = () => {
                 }}
                 options={{
                     responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Contribution Per Financial Year'
-                        }
-                    },
                     scales: {
                         x: {
                             display: true,

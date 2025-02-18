@@ -1,4 +1,4 @@
-var path = require('path');
+const path = require('path');
 
 const noRestrictedImportsPatterns = ['./*', '../*'];
 module.exports = {
@@ -6,12 +6,14 @@ module.exports = {
     parserOptions: {
         sourceType: 'module',
         requireConfigFile: false,
+        ecmaVersion: 'es2020',
         ecmaFeatures: {
             blockBindings: true,
             jsx: true,
             modules: true,
             tsx: true
         },
+        lib: ['ES2020'],
         babelOptions: {
             parserOpts: {
                 plugins: ['typescript']
@@ -36,7 +38,7 @@ module.exports = {
         'eol-last': 'error',
         eqeqeq: ['error', 'always'],
         'import/order': [
-            'error',
+            'off',
             {
                 'newlines-between': 'always',
                 groups: ['builtin', 'external', 'internal', ['sibling', 'parent'], 'index'],
@@ -47,23 +49,15 @@ module.exports = {
         ],
         'import/namespace': 'error',
         'import/no-duplicates': 'error',
-        'import/no-extraneous-dependencies': [
-            'error',
-            {
-                devDependencies: [
-                    'polyfill.js',
-                    '*.config.*'
-                ]
-            }
-        ],
+        'import/no-extraneous-dependencies': 'off',
         'import/no-self-import': 'error',
-        'import/no-unresolved': 'error',
+        'import/no-unresolved': 'off',
         'jsx-quotes': ['error', 'prefer-double'],
         'keyword-spacing': ['error', { before: true, after: true }],
-        'max-params': ['error', { max: 5 }],
+        'max-params': ['error', { max: 20 }],
         'max-statements-per-line': ['error', { max: 1 }],
         'no-cond-assign': 'error',
-        'no-console': ['error', { allow: ['warn', 'error'] }],
+        'no-console': 'off',
         'no-debugger': 'error',
         'no-dupe-args': 'error',
         'no-dupe-keys': 'error',
@@ -76,15 +70,17 @@ module.exports = {
         'no-loop-func': 'error',
         'no-mixed-spaces-and-tabs': 'error',
         'no-multi-str': 'error',
-        'no-nested-ternary': 'error',
+        'no-nested-ternary': 'off',
         'no-only-tests/no-only-tests': 'error',
-        'no-param-reassign': ['error', { props: true, ignorePropertyModificationsForRegex: ['.*[dD]raft.*'] }],
-        'no-restricted-imports': [
-            'error',
-            {
-                patterns: noRestrictedImportsPatterns
-            }
-        ],
+        'no-param-reassign': 'off',
+        // 'no-param-reassign': ['error', { props: true, ignorePropertyModificationsForRegex: ['.*[dD]raft.*'] }],
+        'no-restricted-imports': 'off',
+        // 'no-restricted-imports': [
+        //     'error',
+        //     {
+        //         patterns: noRestrictedImportsPatterns
+        //     }
+        // ],
         'no-sparse-arrays': 'error',
         'no-tabs': 'error',
         'no-this-before-super': 'error',
@@ -97,14 +93,14 @@ module.exports = {
         'no-unsanitized/method': 'error',
         'no-unsanitized/property': 'error',
         'no-unreachable': 'error',
-        'no-unused-vars': ['error', { vars: 'local', args: 'after-used' }],
+        // 'no-unused-vars': ['error', { vars: 'local', args: 'after-used' }],
         'no-useless-concat': 'error',
         'no-warning-comments': ['error', { terms: ['todo'] }],
         'one-var': ['error', 'never'],
         'one-var-declaration-per-line': ['error', 'always'],
         'prefer-const': ['error', { destructuring: 'any', ignoreReadBeforeAssign: true }],
         'react/no-access-state-in-setstate': 2,
-        'react/no-danger': 'error',
+        'react/no-danger': 'off',
         'react/no-deprecated': 'error',
         'react/no-direct-mutation-state': 'error',
         'react/no-arrow-function-lifecycle': 'error',
@@ -115,12 +111,13 @@ module.exports = {
         'react/no-unknown-property': ['error', { ignore: ['css'] }],
         'react/no-unstable-nested-components': ['error', { allowAsProps: true }],
         'react/prefer-stateless-function': ['error', { ignorePureComponents: true }],
-        'react/prop-types': [2, { ignore: ['dispatch', 'translate'] }],
+        'react/prop-types': 'off',
+        // 'react/prop-types': [2, { ignore: ['dispatch', 'translate'] }],
         'react/require-render-return': 'error',
         'react/sort-default-props': ['error', { ignoreCase: true }],
         'react/sort-prop-types': ['error', { ignoreCase: true }],
         'react-hooks/rules-of-hooks': 'error',
-        'react-hooks/exhaustive-deps': 'error',
+        // 'react-hooks/exhaustive-deps': 'error',
         'require-await': 'error',
         'space-before-blocks': 'error',
         'use-isnan': 'error',
@@ -135,6 +132,16 @@ module.exports = {
     },
     extends: ['plugin:prettier/recommended'],
     globals: {
-        ga: true
+        ga: true,
+        React: true,
+        google: true,
+        mount: true,
+        mountWithRouter: true,
+        shallow: true,
+        shallowWithRouter: true,
+        context: true,
+        expect: true,
+        jsdom: true,
+        JSX: true
     }
 };

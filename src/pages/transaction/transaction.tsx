@@ -1,32 +1,26 @@
-import CalenderPicker from '../../modules/calender-picker/calender-picker';
-
-import CSS from 'csstype';
-
-import './transaction.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { format, startOfYear } from 'date-fns/esm';
-import { useEffect, useState } from 'react';
-
-import AddTransaction from './add-transaction';
-import useAPI from '../../hooks/app-hooks';
-import { AccountTransaction } from '../../../backend/database/models/account-transaction';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
-import { darkGreen, darkRed } from '../../App';
-import { Account, Transaction } from '../../data/models';
-import { ArrayUtil, Category, TransactionType } from '../../data/transaction-data';
-import { edit, indianRupee, save, show } from '../../icons/icons';
+import CalenderPicker from 'boxed-material-ui/modules/CalenderPicker/CalenderPicker';
+import 'pages/transaction/transaction.css';
+import { darkGreen, darkRed } from 'App';
 import {
     ApiCriteria,
+    ApiRequestBody,
     ApiResponse,
     getAccounts,
     getAllTransactions,
     updateAccountTransaction
-} from '../../modules/backend/BackendApi';
-import Button from '../../modules/button/button';
-import Chip from '../../modules/chips/chip';
-import Dialog from '../../modules/dialog/dialog';
-import Select, { SelectOption } from '../../modules/select/select';
-import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
+} from 'backend/BackendApi';
+import CSS from 'csstype';
+import { Account, Transaction } from 'data/models';
+import { ArrayUtil, Category, TransactionType } from 'data/transaction-data';
+import { format, startOfYear } from 'date-fns/esm';
+import useAPI from 'hooks/useAPI';
+import useSnackbar from 'hooks/useSnackbar';
+import { close, edit, indianRupee, save, show } from 'icons/icons';
+import { Chip, Dialog, Icon, Table, TableColumn, TableData, TablePagination } from 'modules';
+import AddTransaction from 'pages/transaction/add-transaction';
+import { useEffect, useState } from 'react';
+import FilterActionHeader from 'shared/filter-action-header/FilterActionHeader';
+import { Select, SelectOption } from 'boxed-material-ui';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -63,7 +57,8 @@ const TransactionPage = () => {
     const [category, setCategory] = useState<string>('');
     const [categoryUpdateRow, setCategoryUpdateRow] = useState<Transaction | undefined>(undefined);
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [getData, loading] = useAPI<ApiRequestBody<AccountTransaction>, ApiResponse<Transaction>>(getAllTransactions);
+    const [getData, loading] = useAPI<ApiRequestBody<Transaction>, ApiResponse<Transaction>>(getAllTransactions);
+    const [snackBarConfig, setSnackbarConfig] = useSnackbar();
 
     const _getCriteria = (start: Date, end: Date, offset: number, limit: number) => {
         const criteria: ApiCriteria = {
@@ -81,7 +76,7 @@ const TransactionPage = () => {
             offset: offset,
             limit: limit
         };
-        const filters = [];
+        const filters: any[] = [];
         if (selectedAccount !== '') {
             filters.push({ key: 'account', value: [selectedAccount] });
         }
@@ -96,13 +91,6 @@ const TransactionPage = () => {
     };
 
     useEffect(() => {
-        getData({
-            criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
-        }).then((response: ApiResponse<Transaction>) => {
-            setCount(response.num_found);
-            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
-            setInitialData([...sortedTransactions]);
-        });
         getAccounts().then((response) => {
             setAccounts(response.results);
             const options = response.results.map((account) => {
@@ -112,6 +100,16 @@ const TransactionPage = () => {
                 };
             });
             setSelectOptions([{ value: '', label: 'All' }, ...options]);
+        });
+    }, []);
+
+    useEffect(() => {
+        getData({
+            criteria: _getCriteria(range.from, range.to, tablePagination.pageNumber, tablePagination.pageSize)
+        }).then((response: ApiResponse<Transaction>) => {
+            setCount(response.num_found);
+            const sortedTransactions = ArrayUtil.sort(response.results, (item: Transaction) => item.transaction_date);
+            setInitialData([...sortedTransactions]);
         });
     }, [selectedAccount, tablePagination, range, transactionType]);
 
@@ -138,7 +136,7 @@ const TransactionPage = () => {
             label: 'Account',
             groupByRender: (rows: Transaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Most Used Account:`}</div>
                         <div
                             style={{
@@ -168,6 +166,7 @@ const TransactionPage = () => {
                                                     account_id: currentValue.account.account_id,
                                                     count: 0
                                                 };
+                                                // eslint-disable-next-line no-param-reassign
                                                 previousValue[currentValue.account.account_id] = {
                                                     account_id: currentValue.account.account_id,
                                                     count: accountFreqMap.count + 1
@@ -192,7 +191,7 @@ const TransactionPage = () => {
             label: 'Category',
             groupByRender: (row: Transaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Category Used:`}</div>
                         <div
                             style={{
@@ -201,7 +200,7 @@ const TransactionPage = () => {
                                 fontWeight: '700'
                             }}
                         >
-                            {row[0].category.toString()}
+                            {Category.getLabel(row[0].category.toString())}
                         </div>
                     </div>
                 );
@@ -219,12 +218,12 @@ const TransactionPage = () => {
                             <>
                                 <div
                                     style={{
-                                        width: '80%',
+                                        width: '100%',
                                         textAlign: 'left',
                                         fontWeight: '700'
                                     }}
                                 >
-                                    {row.category.toString()}
+                                    {Category.getLabel(row.category.toString())}
                                 </div>
                                 <div>
                                     <i
@@ -235,7 +234,13 @@ const TransactionPage = () => {
                                         }}
                                         style={{ cursor: 'pointer' }}
                                     >
-                                        <FontAwesomeIcon icon={edit} />
+                                        <Icon
+                                            icon={edit}
+                                            svgProps={{
+                                                height: '12px',
+                                                width: '12px'
+                                            }}
+                                        />
                                     </i>
                                 </div>
                             </>
@@ -244,22 +249,23 @@ const TransactionPage = () => {
                             <>
                                 <div
                                     style={{
-                                        width: '80%',
-                                        textAlign: 'left',
-                                        fontWeight: '700'
+                                        width: '100%',
+                                        textAlign: 'left'
                                     }}
                                 >
                                     <Select
-                                        style={{
-                                            minWidth: 'unset'
+                                        size={'sm'}
+                                        showLabel={false}
+                                        spotClasses={{
+                                            root: 'edit-category-select-root'
                                         }}
                                         selectedOption={category}
                                         options={Category.get()}
                                         onSelectionChange={(event) => {
                                             if (event) {
                                                 if (categoryUpdateRow) {
-                                                    categoryUpdateRow.category = event.value;
-                                                    setCategory(categoryUpdateRow.category.toString());
+                                                    // categoryUpdateRow.category = event.value;
+                                                    setCategory(event.value);
                                                 }
                                             }
                                         }}
@@ -269,8 +275,34 @@ const TransactionPage = () => {
                                     style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        width: '20%',
-                                        justifyContent: 'center'
+                                        justifyContent: 'center',
+                                        marginLeft: '5px'
+                                    }}
+                                >
+                                    <i
+                                        className="icon"
+                                        onClick={() => {
+                                            if (categoryUpdateRow) {
+                                                setCategoryUpdateRow(undefined);
+                                            }
+                                        }}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        <Icon
+                                            icon={close}
+                                            svgProps={{
+                                                height: '12px',
+                                                width: '12px'
+                                            }}
+                                        />
+                                    </i>
+                                </div>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginLeft: '5px'
                                     }}
                                 >
                                     <i
@@ -279,6 +311,7 @@ const TransactionPage = () => {
                                             if (categoryUpdateRow) {
                                                 categoryUpdateRow.category = category;
                                                 updateAccountTransaction({ data: categoryUpdateRow }).then((value) => {
+                                                    // eslint-disable-next-line no-param-reassign
                                                     row.category = value.results[0].category;
                                                     setCategoryUpdateRow(undefined);
                                                 });
@@ -286,7 +319,13 @@ const TransactionPage = () => {
                                         }}
                                         style={{ cursor: 'pointer' }}
                                     >
-                                        <FontAwesomeIcon icon={save} />
+                                        <Icon
+                                            icon={save}
+                                            svgProps={{
+                                                height: '12px',
+                                                width: '12px'
+                                            }}
+                                        />
                                     </i>
                                 </div>
                             </>
@@ -300,16 +339,18 @@ const TransactionPage = () => {
             label: 'Note',
             customRender: (row: Transaction) => {
                 return (
-                    <i
-                        className="icon"
+                    <Icon
                         onClick={() => {
                             setDetailedRow(row);
                             setOpenDetailedView(true);
                         }}
                         style={{ cursor: 'pointer' }}
-                    >
-                        <FontAwesomeIcon icon={show} />
-                    </i>
+                        icon={show}
+                        svgProps={{
+                            height: '12px',
+                            width: '12px'
+                        }}
+                    />
                 );
             }
         },
@@ -338,14 +379,29 @@ const TransactionPage = () => {
             label: 'Amount',
             groupByRender: (row: Transaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Total Expenditure:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'end',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(row, (item: Transaction) => {
-                                if (item.transaction_type === TransactionType.EXPENSE.label) {
+                                if (item.transaction_type === TransactionType.EXPENSE.value) {
                                     return item.amount;
                                 }
                                 return 0;
@@ -358,11 +414,21 @@ const TransactionPage = () => {
                 return (
                     <span
                         style={{
-                            color: row.transaction_type === TransactionType.INCOME.label ? `${darkGreen}` : `${darkRed}`
+                            color:
+                                row.transaction_type === TransactionType.INCOME.value ? `${darkGreen}` : `${darkRed}`,
+                            display: 'flex',
+                            justifyContent: 'end',
+                            alignItems: 'center'
                         }}
                     >
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {row.amount.toFixed(2)}
                     </span>
@@ -370,7 +436,7 @@ const TransactionPage = () => {
             },
             columnFooter: (rows: TableData<Transaction>[]) => {
                 return (
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div
                             style={{
                                 width: '100%',
@@ -381,16 +447,23 @@ const TransactionPage = () => {
                             style={{
                                 width: '100%',
                                 display: 'flex',
-                                justifyContent: 'right',
-                                fontWeight: '700'
+                                justifyContent: 'end',
+                                fontWeight: '700',
+                                alignItems: 'center'
                             }}
                         >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (a: TableData<Transaction>) =>
                                 ArrayUtil.sum(a.data, (b: Transaction) =>
-                                    b.transaction_type === TransactionType.EXPENSE.label ? b.amount : 0
+                                    b.transaction_type === TransactionType.EXPENSE.value ? b.amount : 0
                                 )
                             ).toFixed(2)}
                         </div>
@@ -412,80 +485,38 @@ const TransactionPage = () => {
                 />
             </div>
             <div style={bodyStyle}>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'row'
-                    }}
-                >
-                    <div
-                        style={{
-                            margin: '10px 0',
-                            width: '300px'
-                        }}
-                    >
-                        <p style={{ height: '20px', margin: '0' }}>Account: </p>
-                        <Select
-                            selectedOption={selectedAccount}
-                            onSelectionChange={(event) => {
+                <FilterActionHeader
+                    filters={[
+                        {
+                            label: 'Account',
+                            onSelectionChange: (event) => {
                                 setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
                                 setSelectedAccount(event.value);
-                            }}
-                            options={selectOptions}
-                        ></Select>
-                    </div>
-                    <div
-                        style={{
-                            margin: '10px 5px',
-                            width: '300px'
-                        }}
-                    >
-                        <p style={{ height: '20px', margin: '0' }}>Transaction Type: </p>
-                        <Select
-                            selectedOption={transactionType}
-                            onSelectionChange={(event) => {
+                            },
+                            options: selectOptions,
+                            selectedOption: selectedAccount,
+                            hidden: false,
+                            loading: accounts.length === 0
+                        },
+                        {
+                            label: 'Transaction Type',
+                            onSelectionChange: (event) => {
                                 setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });
                                 setTransactionType(event.value);
-                            }}
-                            options={[{ value: '', label: 'All' }, TransactionType.INCOME, TransactionType.EXPENSE]}
-                        ></Select>
-                    </div>
-                    {/*<div*/}
-                    {/*    style={{*/}
-                    {/*        margin: '10px 5px',*/}
-                    {/*        width: '300px'*/}
-                    {/*    }}*/}
-                    {/*>*/}
-                    {/*    <p style={{ height: '20px', margin: '0' }}>Category Type: </p>*/}
-                    {/*    <Select*/}
-                    {/*        selectedOption={selectedCategory}*/}
-                    {/*        onChange={(event) => {*/}
-                    {/*            setTablePagination({ pageSize: tablePagination.pageSize, pageNumber: 0 });*/}
-                    {/*            setSelectedCategory(event.target.value);*/}
-                    {/*        }}*/}
-                    {/*        options={Category.get()}*/}
-                    {/*    ></Select>*/}
-                    {/*</div>*/}
-                    <div
-                        style={{
-                            height: 'calc(3rem - 10px)',
-                            display: 'block',
-                            marginTop: '30px',
-                            marginRight: '1%',
-                            float: 'right',
-                            right: '0',
-                            position: 'absolute'
-                        }}
-                    >
-                        <Button
-                            onClick={() => {
-                                setShowAddTransaction(true);
-                            }}
-                        >
-                            Add
-                        </Button>
-                    </div>
-                </div>
+                            },
+                            options: [{ value: '', label: 'All' }, TransactionType.INCOME, TransactionType.EXPENSE],
+                            selectedOption: transactionType,
+                            hidden: false
+                        }
+                    ]}
+                    actions={[
+                        {
+                            onClick: (event) => setShowAddTransaction(true),
+                            name: 'Add',
+                            hidden: false
+                        }
+                    ]}
+                />
 
                 <div
                     style={{
@@ -508,7 +539,7 @@ const TransactionPage = () => {
                 <Dialog
                     open={openDetailedView}
                     header={
-                        detailedRow?.transaction_type === TransactionType.EXPENSE.label
+                        detailedRow?.transaction_type === TransactionType.EXPENSE.value
                             ? TransactionType.EXPENSE.label
                             : TransactionType.INCOME.label
                     }
@@ -516,6 +547,7 @@ const TransactionPage = () => {
                         setOpenDetailedView(false);
                         setDetailedRow(undefined);
                     }}
+                    hideAction
                 >
                     <div>
                         <table>
@@ -552,13 +584,35 @@ const TransactionPage = () => {
                         </table>
                     </div>
                 </Dialog>
-                <Dialog open={showAddTransaction} onClose={() => setShowAddTransaction(false)} header={'Transaction'}>
+                <Dialog
+                    open={showAddTransaction}
+                    onClose={() => setShowAddTransaction(false)}
+                    header={'Transaction'}
+                    hideAction
+                >
                     <AddTransaction
                         accounts={accounts}
                         onSubmit={(success: boolean, data: Transaction | undefined) => {
                             setShowAddTransaction(false);
-                            console.log(success);
-                            console.log(data);
+                            setSnackbarConfig({
+                                open: true,
+                                message: `Transaction has been recorded.`
+                            });
+                            getData({
+                                criteria: _getCriteria(
+                                    range.from,
+                                    range.to,
+                                    tablePagination.pageNumber,
+                                    tablePagination.pageSize
+                                )
+                            }).then((response: ApiResponse<Transaction>) => {
+                                setCount(response.num_found);
+                                const sortedTransactions = ArrayUtil.sort(
+                                    response.results,
+                                    (item: Transaction) => item.transaction_date
+                                );
+                                setInitialData([...sortedTransactions]);
+                            });
                         }}
                     ></AddTransaction>
                 </Dialog>

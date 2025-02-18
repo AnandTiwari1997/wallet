@@ -33,6 +33,7 @@ export class LoanAccountTransactionSyncHandler implements ISyncHandler<Account> 
                     transaction.transaction_id = RepositoryUtils.generateAccountTransactionId(transaction);
                     accountTransactionRepository.save(transaction).then((updatedTransaction) => {
                         if (!updatedTransaction) return;
+                        logger.info(`Saved transaction ${updatedTransaction}`);
                         account.last_synced_on = new Date();
                         if (deltaSync) {
                             account.account_balance =

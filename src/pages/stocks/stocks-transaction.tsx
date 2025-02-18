@@ -1,16 +1,14 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { darkGreen, darkRed } from 'App';
+import { ApiCriteria, ApiRequestBody, ApiResponse, getStockTransaction } from 'backend/BackendApi';
 import CSS from 'csstype';
+import { DematAccount, StockTransaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { format } from 'date-fns';
+import useAPI from 'hooks/useAPI';
+import { indianRupee } from 'icons/icons';
+import { Icon } from 'modules';
+import { Table, TableColumn, TableData, TablePagination } from 'modules/table';
 import { useEffect, useState } from 'react';
-
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
-import { darkGreen, darkRed } from '../../App';
-import { DematAccount, StockTransaction } from '../../data/models';
-import { ArrayUtil } from '../../data/transaction-data';
-import useAPI from '../../hooks/app-hooks';
-import { indianRupee } from '../../icons/icons';
-import { ApiCriteria, ApiResponse, getStockTransaction } from '../../modules/backend/BackendApi';
-import Table, { TableColumn, TableData, TablePagination } from '../../modules/table/table';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -76,6 +74,10 @@ const StockTransactionPage = ({
         pageSize: 25,
         pageNumber: 0
     });
+    const [tableSort, setTableSort] = useState<{ key: string; ascending: boolean }>({
+        key: 'holding_id',
+        ascending: true
+    });
     const [getData, loading] = useAPI<ApiRequestBody<StockTransaction>, ApiResponse<StockTransaction>>(
         getStockTransaction
     );
@@ -83,11 +85,11 @@ const StockTransactionPage = ({
     const _getCriteria = (offset: number, limit: number) => {
         const criteria: ApiCriteria = {
             groupBy: [{ key: 'holding_id' }],
-            sorts: [{ key: 'holding_id', ascending: true }],
+            sorts: [tableSort],
             offset: offset,
             limit: limit
         };
-        const filters = [];
+        const filters: any[] = [];
         if (filterByAccount !== '') {
             filters.push({ key: 'demat_account', value: [filterByAccount] });
         }
@@ -109,7 +111,7 @@ const StockTransactionPage = ({
                 setInitialData(sortedTransactions);
             }
         );
-    }, [tablePagination, filterByAccount, filterByTransactionType]);
+    }, [tablePagination, tableSort, filterByAccount, filterByTransactionType]);
 
     const columns: TableColumn[] = [
         {
@@ -129,13 +131,16 @@ const StockTransactionPage = ({
             label: 'Transaction Date',
             groupByRender: (rows: StockTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Last Bought:`}</div>
                         <div
                             style={{
                                 width: '100%',
                                 textAlign: 'left',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             }}
                         >
                             {format(
@@ -156,12 +161,16 @@ const StockTransactionPage = ({
             customRender: (row: StockTransaction) => (row.transaction_type === 'B' ? 'Buy' : 'Sell'),
             groupByRender: (rows: StockTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Last Transaction:`}</div>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div
                             style={{
                                 width: '100%',
                                 textAlign: 'left',
+                                marginRight: `5px`
+                            }}
+                        >{`Last Transaction:`}</div>
+                        <div
+                            style={{
                                 fontWeight: '700'
                             }}
                         >
@@ -176,12 +185,16 @@ const StockTransactionPage = ({
             label: 'Quantity',
             groupByRender: (rows: StockTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Total Shares:`}</div>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div
                             style={{
                                 width: '100%',
                                 textAlign: 'left',
+                                marginRight: `5px`
+                            }}
+                        >{`Total Shares:`}</div>
+                        <div
+                            style={{
                                 fontWeight: '700'
                             }}
                         >
@@ -198,17 +211,30 @@ const StockTransactionPage = ({
             label: 'Transaction Price',
             groupByRender: (rows: StockTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Current Price:`}</div>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div
                             style={{
                                 width: '100%',
+                                textAlign: 'left'
+                            }}
+                        >{`Current Price:`}</div>
+                        <div
+                            style={{
                                 textAlign: 'left',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'end',
+                                alignItems: 'center'
                             }}
                         >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {rows[0].holding.current_price.toFixed(2)}
                         </div>
@@ -218,8 +244,14 @@ const StockTransactionPage = ({
             customRender: (row: StockTransaction) => {
                 return (
                     <span>
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {row.stock_transaction_price.toFixed(2)}
                     </span>
@@ -231,20 +263,26 @@ const StockTransactionPage = ({
             label: 'Invested Amount',
             groupByRender: (rows: StockTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Invested:`}</div>
-                        <div
-                            style={{
-                                width: '100%',
-                                textAlign: 'left',
-                                fontWeight: '700'
-                            }}
-                        >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
-                            </i>
-                            {Number.parseFloat(rows[0].holding.invested_amount).toFixed(2)}
-                        </div>
+                    <div
+                        style={{
+                            width: '100%',
+                            textAlign: 'left',
+                            fontWeight: '700',
+                            display: 'flex',
+                            justifyContent: 'end',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
+                        </i>
+                        {Number.parseFloat(rows[0].holding.invested_amount).toFixed(2)}
                     </div>
                 );
             },
@@ -252,11 +290,21 @@ const StockTransactionPage = ({
                 return (
                     <span
                         style={{
-                            color: row.transaction_type === 'B' ? `${darkGreen}` : `${darkRed}`
+                            width: '100%',
+                            color: row.transaction_type === 'B' ? `${darkGreen}` : `${darkRed}`,
+                            display: 'flex',
+                            justifyContent: 'end',
+                            alignItems: 'center'
                         }}
                     >
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {(row.stock_quantity * row.stock_transaction_price).toFixed(2)}
                     </span>
@@ -264,17 +312,26 @@ const StockTransactionPage = ({
             },
             columnFooter: (rows: TableData<StockTransaction>[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Total Invested:`}</div>
                         <div
                             style={{
                                 width: '100%',
                                 textAlign: 'left',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             }}
                         >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (item) =>
                                 Number.parseFloat(item.data[0].holding.invested_amount)
@@ -289,33 +346,52 @@ const StockTransactionPage = ({
             label: 'Current Amount',
             groupByRender: (rows: StockTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left' }}>{`Updated Amount:`}</div>
-                        <div
-                            style={{
-                                width: '100%',
-                                textAlign: 'left',
-                                fontWeight: '700',
-                                color:
-                                    rows[0].amount <
-                                    Number.parseInt(rows[0].holding.total_shares) * rows[0].holding.current_price
-                                        ? `${darkGreen}`
-                                        : `${darkRed}`
-                            }}
-                        >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
-                            </i>
-                            {(Number.parseInt(rows[0].holding.total_shares) * rows[0].holding.current_price).toFixed(2)}
-                        </div>
+                    <div
+                        style={{
+                            width: '100%',
+                            textAlign: 'left',
+                            fontWeight: '700',
+                            display: 'flex',
+                            justifyContent: 'end',
+                            alignItems: 'center',
+                            color:
+                                rows[0].amount <
+                                Number.parseInt(rows[0].holding.total_shares) * rows[0].holding.current_price
+                                    ? `${darkGreen}`
+                                    : `${darkRed}`
+                        }}
+                    >
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
+                        </i>
+                        {(Number.parseInt(rows[0].holding.total_shares) * rows[0].holding.current_price).toFixed(2)}
                     </div>
                 );
             },
             customRender: (row: StockTransaction) => {
                 return (
-                    <span>
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                    <span
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'end',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {row.amount ? row.amount.toFixed(2) : 0}
                     </span>
@@ -323,13 +399,16 @@ const StockTransactionPage = ({
             },
             columnFooter: (rows: TableData<StockTransaction>[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Total Amount:`}</div>
                         <div
                             style={{
                                 width: '100%',
                                 textAlign: 'left',
                                 fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
                                 color:
                                     ArrayUtil.sum(rows, (item) => item.data[0].amount) <
                                     ArrayUtil.sum(
@@ -343,7 +422,13 @@ const StockTransactionPage = ({
                             }}
                         >
                             <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(
                                 rows,
@@ -368,6 +453,12 @@ const StockTransactionPage = ({
             isLoading={loading}
             onPagination={(tablePagination: TablePagination) => {
                 setTablePagination(tablePagination);
+            }}
+            onSort={(sortedColumn) => {
+                setTableSort({
+                    key: sortedColumn!.column.key,
+                    ascending: sortedColumn!.ascending
+                });
             }}
         />
     );

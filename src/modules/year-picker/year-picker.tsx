@@ -1,10 +1,10 @@
 import './year-picker.css';
-import { addYears, startOfYear, subYears, endOfYear } from 'date-fns/esm';
+import { OnCalenderPickerChange } from 'boxed-material-ui/modules/CalenderPicker/CalenderPicker';
+import { addYears, endOfYear, startOfYear, subYears } from 'date-fns/esm';
 import React, { useState } from 'react';
 
 import { arrowLeft, arrowRight } from '../../icons/icons';
-import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
-import IconButton from '../icon/icon-button';
+import IconButton from '../icon-button/icon-button';
 
 const YearPicker = ({
     value,
@@ -121,9 +121,25 @@ const YearPicker = ({
     return (
         <div className="year-picker-container">
             <div className="year-picker-header">
-                <IconButton icon={arrowLeft} className={'arrow-container'} onClick={() => handleYears(false)} />
+                <IconButton
+                    icon={arrowLeft}
+                    className={'arrow-container'}
+                    onClick={() => handleYears(false)}
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
+                />
                 {`${years.startYear}-${years.endYear}`}
-                <IconButton icon={arrowRight} className={'arrow-container'} onClick={() => handleYears(true)} />
+                <IconButton
+                    icon={arrowRight}
+                    className={'arrow-container'}
+                    onClick={() => handleYears(true)}
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
+                />
             </div>
             <div className="year-picker-body">{renderMonths()}</div>
         </div>

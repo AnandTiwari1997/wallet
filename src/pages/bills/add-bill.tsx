@@ -1,10 +1,8 @@
+import { addBill, getElectricityVendors, updateBill } from 'backend/BackendApi';
+import { Bill } from 'data/models';
 import { addMonths } from 'date-fns';
+import { InputField, Select } from 'boxed-material-ui';
 import { useEffect, useState } from 'react';
-
-import { Bill } from '../../data/models';
-import { addBill, getElectricityVendors, updateBill } from '../../modules/backend/BackendApi';
-import Select from '../../modules/select/select';
-import TextBox from '../../modules/text-box/text-box';
 
 const dates = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
@@ -62,8 +60,9 @@ const AddBill = ({
         <>
             <div style={{ width: '250px', display: 'flex', justifyContent: 'center' }}>
                 <div>
-                    <p style={{ margin: '0.5em 0' }}>Bill Category</p>
+                    <div style={{ margin: '0.5em 0' }} />
                     <Select
+                        label={'Bill Category'}
                         selectedOption={billCategory}
                         options={[
                             { value: 'INTERNET_BILL', label: 'Internet' },
@@ -85,8 +84,9 @@ const AddBill = ({
 
                     {billCategory !== 'ELECTRICITY_BILL' && (
                         <>
-                            <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
-                            <TextBox
+                            <div style={{ margin: '0.5em 0' }} />
+                            <InputField
+                                label="Vendor Name"
                                 value={vendorName}
                                 placeholder={'Enter Vendor Name'}
                                 onChange={(event) => setVendorName(event.target.value)}
@@ -96,8 +96,9 @@ const AddBill = ({
 
                     {billCategory === 'ELECTRICITY_BILL' && (
                         <>
-                            <p style={{ margin: '0.5em 0' }}>Vendor Name</p>
+                            <div style={{ margin: '0.5em 0' }} />
                             <Select
+                                label={'Vendor Name'}
                                 selectedOption={vendorName}
                                 options={electricityVendors}
                                 onSelectionChange={(event) => setVendorName(event.value)}
@@ -105,15 +106,17 @@ const AddBill = ({
                         </>
                     )}
 
-                    <p style={{ margin: '0.5em 0' }}>Consumer Number</p>
-                    <TextBox
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label="Consumer Number"
                         value={billConsumerNo}
                         placeholder={'Enter Bill Consumer Number'}
                         onChange={(event) => setBillConsumerNo(event.target.value)}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Bill Name</p>
-                    <TextBox
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label={'Bill Name'}
                         value={billName}
                         placeholder={'Enter Bill Name'}
                         onChange={(event) => setBillName(event.target.value)}
@@ -123,8 +126,9 @@ const AddBill = ({
                         billCategory !== 'INTERNET_BILL' &&
                         billCategory !== 'CREDIT_CARD_BILL' && (
                             <>
-                                <p style={{ margin: '0.5em 0' }}>Billing Date</p>
+                                <div style={{ margin: '0.5em 0' }} />
                                 <Select
+                                    label={'Billing Date'}
                                     selectedOption={billingDate}
                                     options={dates.map((date) => {
                                         return { value: date.toString(), label: date.toString() };
@@ -140,8 +144,9 @@ const AddBill = ({
                         billCategory !== 'INTERNET_BILL' &&
                         billCategory !== 'CREDIT_CARD_BILL' && (
                             <>
-                                <p style={{ margin: '0.5em 0' }}>Bill Amount</p>
-                                <TextBox
+                                <div style={{ margin: '0.5em 0' }} />
+                                <InputField
+                                    label={'Bill Amount'}
                                     value={billAmount}
                                     type={'number'}
                                     placeholder={'Enter Bill Amount'}

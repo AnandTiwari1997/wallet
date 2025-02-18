@@ -1,10 +1,10 @@
 import './month-picker.css';
+import { OnCalenderPickerChange } from 'boxed-material-ui/modules/CalenderPicker/CalenderPicker';
 import { addYears, endOfMonth, startOfMonth, subYears } from 'date-fns/esm';
 import React, { useState } from 'react';
 
 import { arrowLeft, arrowRight } from '../../icons/icons';
-import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
-import IconButton from '../icon/icon-button';
+import IconButton from '../icon-button/icon-button';
 
 const MonthPicker = ({
     value,
@@ -99,9 +99,25 @@ const MonthPicker = ({
     return (
         <div className="month-picker-container">
             <div className="month-picker-header">
-                <IconButton icon={arrowLeft} className={'arrow-container'} onClick={() => handleYear(false)} />
+                <IconButton
+                    icon={arrowLeft}
+                    className={'arrow-container'}
+                    onClick={() => handleYear(false)}
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
+                />
                 {`${year}`}
-                <IconButton icon={arrowRight} className={'arrow-container'} onClick={() => handleYear(false)} />
+                <IconButton
+                    icon={arrowRight}
+                    className={'arrow-container'}
+                    onClick={() => handleYear(false)}
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
+                />
             </div>
             <div className="month-picker-body">{renderMonth()}</div>
         </div>

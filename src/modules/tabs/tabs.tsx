@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ReactElement, ReactNode, useEffect, useState } from 'react';
+import { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
 import './tab.css';
 
 interface TabHeaderInfo {
@@ -29,6 +29,10 @@ const Tabs = ({
     children: ReactElement[];
     onTabChange?: (selectedTab: SelectedTab) => void;
 }) => {
+    const selectedElement = useRef<HTMLDivElement>(null);
+    const [width, setWidth] = useState<number>(0);
+    const [left, setLeft] = useState<number>(0);
+
     const _getTabHeaderInfo = (): TabProp[] => {
         return children.map((value) => {
             return {
@@ -56,34 +60,64 @@ const Tabs = ({
         }
     }, [children, selectedTab]);
 
+    useEffect(() => {
+        setTimeout(() => {
+            const ref = document.getElementById(activeTab);
+            setWidth(ref?.offsetWidth || 0);
+            setLeft(ref?.offsetLeft || 0);
+        }, 10);
+        const resizeEvent = (ev: any) => {
+            setTimeout(() => {
+                const ref = document.getElementById(activeTab);
+                setWidth(ref?.offsetWidth || 0);
+                setLeft(ref?.offsetLeft || 0);
+            }, 10);
+        };
+        window.addEventListener('resize', resizeEvent);
+        return () => window.removeEventListener('resize', resizeEvent);
+    }, [activeTab]);
+
     return (
         <div {...props} className={'tabs-container'}>
-            <div className={'tabs--header'}>
-                {tabHeaders.map((tabHeaderInfo: TabProp, index: number) => {
-                    return (
-                        <div
-                            className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${
-                                tabHeaderInfo.classes ? tabHeaderInfo.classes : ''
-                            }`}
-                            onClick={(event) => {
-                                setActiveTab(tabHeaderInfo.value);
-                                if (onTabChange) {
-                                    onTabChange({
-                                        tabValue: tabHeaderInfo.value
-                                    });
-                                }
-                            }}
-                        >
-                            <button
-                                className={`tab--label ${index < tabHeaders.length - 1 ? 'tab--label-separator' : ''}`}
+            <div className={'tabs-header-container'}>
+                <div className={'tabs-header'}>
+                    {tabHeaders.map((tabHeaderInfo: TabProp, index: number) => {
+                        return (
+                            <div
+                                id={`${tabHeaderInfo.value}`}
+                                ref={tabHeaderInfo.value === activeTab ? selectedElement : null}
+                                className={`tab ${activeTab === tabHeaderInfo.value ? 'active--tab' : ''} ${
+                                    tabHeaderInfo.classes ? tabHeaderInfo.classes : ''
+                                }`}
+                                onClick={(event) => {
+                                    setActiveTab(tabHeaderInfo.value);
+                                    if (onTabChange) {
+                                        onTabChange({
+                                            tabValue: tabHeaderInfo.value
+                                        });
+                                    }
+                                }}
                             >
-                                {<>{tabHeaderInfo.label}</>}
-                            </button>
-                            <div className={'tab--scroller'}></div>
-                        </div>
-                    );
-                })}
+                                <button
+                                    className={`tab--label ${
+                                        index < tabHeaders.length - 1 ? 'tab--label-separator' : ''
+                                    }`}
+                                >
+                                    {<>{tabHeaderInfo.label}</>}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div
+                    className={'tab--scroller'}
+                    style={{
+                        width: width,
+                        left: left
+                    }}
+                ></div>
             </div>
+
             {_getActiveTabContent()}
         </div>
     );

@@ -1,5 +1,4 @@
 import { Response } from 'express';
-// import { environment } from '../config';
 import { BadRequestResponse, InternalErrorResponse, NotFoundResponse } from './api-response.js';
 import { environment } from '../config.js';
 
@@ -12,7 +11,10 @@ export enum ErrorType {
 }
 
 export abstract class ApiError extends Error {
-    protected constructor(public type: ErrorType, public message: string = 'error') {
+    protected constructor(
+        public type: ErrorType,
+        public message: string = 'error'
+    ) {
         super(type);
     }
 

@@ -9,14 +9,22 @@ module.exports = {
     entry: ['./polyfill.js', './src/index.tsx'],
     resolve: {
         extensions: ['.js', '.ts', '.tsx'],
+        fullySpecified: false,
         modules: [path.resolve(__dirname), 'node_modules'],
         preferRelative: true,
+        roots: [path.resolve(__dirname, 'src')],
         alias: {
             'core-js/es6': 'core-js/es',
-            modules: path.resolve(__dirname, 'modules/'),
-            pages: path.resolve(__dirname, 'pages/')
-        },
-        roots: [path.resolve(__dirname, '/')]
+            'boxed-material-ui': path.resolve(__dirname, 'src/', 'boxed-material-ui/'),
+            modules: path.resolve(__dirname, 'src/', 'modules/'),
+            pages: path.resolve(__dirname, 'src/', 'pages/'),
+            shared: path.resolve(__dirname, 'src/', 'shared/'),
+            icons: path.resolve(__dirname, 'src/', 'icons/'),
+            data: path.resolve(__dirname, 'src/', 'data/'),
+            context: path.resolve(__dirname, 'src/', 'context/'),
+            backend: path.resolve(__dirname, 'src/', 'backend/'),
+            hooks: path.resolve(__dirname, 'src/', 'hooks/')
+        }
     },
     module: {
         rules: [
@@ -43,7 +51,6 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './index.ejs',
             inject: false,
-            favicon: './public/favicon.ico',
             isDevelopmentMode: true,
             minify: {
                 collapseWhitespace: false,

@@ -65,9 +65,10 @@ export abstract class ContractNoteProcessor implements IContractNoteProcessor {
                     const parsedData: {
                         [key: string]: string;
                     }[] = JSON.parse(newData);
-                    eventEmitter.emit('stock', ['start', dematAccount]);
-                    eventEmitter.emit('stock', parsedData);
-                    eventEmitter.emit('stock', ['end', dematAccount]);
+                    eventEmitter.emit(dematAccount.account_name, {
+                        account: dematAccount,
+                        data: parsedData
+                    });
                 }
             });
     }

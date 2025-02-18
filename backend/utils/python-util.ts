@@ -68,4 +68,25 @@ export class PythonUtil {
             });
         }
     }
+
+    static readFile(
+        filePath: fs.PathOrFileDescriptor,
+        callback: (err: NodeJS.ErrnoException | null, data: string) => void
+    ) {
+        fs.readFile(
+            filePath,
+            {
+                encoding: 'utf8'
+            },
+            (err, data) => {
+                callback(err, data);
+            }
+        );
+    }
+
+    static readFileSync(filePath: fs.PathOrFileDescriptor) {
+        return fs.readFileSync(filePath, {
+            encoding: 'utf8'
+        });
+    }
 }

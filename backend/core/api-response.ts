@@ -13,11 +13,23 @@ enum ResponseStatus {
 abstract class ApiResponse {
     protected constructor(
         protected status: ResponseStatus,
-        protected response: ApiResponseBody<any> | ApiErrorResponseBody | { message: string }
+        protected response:
+            | ApiResponseBody<any>
+            | ApiErrorResponseBody
+            | { message: string }
+            | {
+                  [key: string]: string;
+              }
     ) {}
 
     private static sanitize<T extends ApiResponse>(
-        response: ApiResponseBody<any> | ApiErrorResponseBody | { message: string }
+        response:
+            | ApiResponseBody<any>
+            | ApiErrorResponseBody
+            | { message: string }
+            | {
+                  [key: string]: string;
+              }
     ): any {
         const clone: any = {};
         Object.assign(clone, response);
@@ -69,7 +81,14 @@ export class FailureMsgResponse extends ApiResponse {
     }
 }
 
-export class SuccessResponse<T extends ApiResponseBody<any> | { message: string }> extends ApiResponse {
+export class SuccessResponse<
+    T extends
+        | ApiResponseBody<any>
+        | { message: string }
+        | {
+              [key: string]: string;
+          }
+> extends ApiResponse {
     constructor(private data: T) {
         super(ResponseStatus.SUCCESS, data);
     }

@@ -1,29 +1,22 @@
+import 'App.css';
+import GlobalSnackbarContextProvider from 'context/globalSnackbarContextProvider';
 import CSS from 'csstype';
+import { Grid, Grids } from 'modules';
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
-
-import Header from './modules/header/header';
-import Navigation from './modules/navigation/navigation';
+import Header from 'shared/header/Header';
+import Navigation from 'shared/navigation/navigation';
 
 const mainStyle: CSS.Properties = {
     minHeight: '100vh',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     background: 'rgb(224, 224, 230)'
 };
 
-const mainStyle2: CSS.Properties = {
-    minHeight: '100vh',
-    display: 'flex',
-    flexDirection: 'row'
-};
-
-const bodyStyle: CSS.Properties = {
-    width: 'calc(100% - 13rem)'
-};
-
 const navigationStyle: CSS.Properties = {
-    width: '13rem'
+    minWidth: '4rem',
+    maxWidth: '14rem'
 };
 
 const body: CSS.Properties = {
@@ -34,22 +27,44 @@ export const darkGreen = '#008000';
 export const darkRed = '#FF0000';
 
 const App = (): JSX.Element => {
-    const [activeTab, setActiveTab] = React.useState('Dashboard');
+    const [activeTab, setActiveTab] = React.useState<string>('Dashboard');
+    const [bodyWidth, setBodyWidth] = React.useState<string>('4rem');
 
     return (
-        <div style={mainStyle}>
-            <div style={mainStyle2}>
+        <GlobalSnackbarContextProvider>
+            <div style={mainStyle}>
                 <div style={navigationStyle}>
-                    <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <Navigation
+                        active={activeTab}
+                        onNavigation={(state) => setActiveTab(state.current)}
+                        onPanelChange={(state) => {
+                            if (state.collapsed) {
+                                setBodyWidth(`14rem`);
+                            } else {
+                                setBodyWidth(`4rem`);
+                            }
+                        }}
+                    />
                 </div>
-                <div style={bodyStyle}>
-                    <Header heading={activeTab}></Header>
-                    <div style={body}>
-                        <Outlet />
-                    </div>
+                <div
+                    style={{
+                        width: `calc(100% - ${bodyWidth})`,
+                        transition: `all 0.25s ease 0s`
+                    }}
+                >
+                    <Grids>
+                        <Grid>
+                            <Header>
+                                <div className={'title'}>{activeTab}</div>
+                            </Header>
+                        </Grid>
+                        <Grid style={body}>
+                            <Outlet />
+                        </Grid>
+                    </Grids>
                 </div>
             </div>
-        </div>
+        </GlobalSnackbarContextProvider>
     );
 };
 

@@ -139,5 +139,15 @@ export const migrations: {
     V12: `ALTER TABLE IF EXISTS account_transaction RENAME COLUMN account TO account_id;`,
     V13: `ALTER TABLE IF EXISTS demat_account RENAME COLUMN broker TO broker_id;`,
     V14: `ALTER TABLE IF EXISTS stock RENAME COLUMN holding TO holding_id;`,
-    V15: `ALTER TABLE IF EXISTS stock RENAME COLUMN demat_account TO demat_account_id;`
+    V15: `ALTER TABLE IF EXISTS stock RENAME COLUMN demat_account TO demat_account_id;`,
+    V16: `CREATE TABLE IF NOT EXISTS sync_tracker
+            (
+                sync_type           TEXT NOT NULL,
+                sync_status         TEXT NOT NULL,
+                sync_started_at     TIMESTAMPTZ NOT NULL,
+                sync_ended_at       TIMESTAMPTZ,
+                CONSTRAINT sync_status_pk PRIMARY KEY (sync_type)
+            );`,
+    V17: `ALTER TABLE IF EXISTS account ADD COLUMN IF NOT EXISTS search_text TEXT NOT NULL;`,
+    V18: `ALTER TABLE IF EXISTS account_transaction ALTER COLUMN labels TYPE TEXT[] USING labels::TEXT[];;`
 };

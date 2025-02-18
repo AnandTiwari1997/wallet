@@ -1,8 +1,7 @@
+import { Transaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { useEffect, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-
-import { Transaction } from '../../../data/models';
-import { ArrayUtil } from '../../../data/transaction-data';
 
 const ExpensePerCategoryChart = ({ data }: { data: Transaction[] }) => {
     const [amountPerCategoryChartData, setAmountPerCategoryChartData] = useState<{ key: string; value: number }[]>([]);
@@ -46,10 +45,6 @@ const ExpensePerCategoryChart = ({ data }: { data: Transaction[] }) => {
                 plugins: {
                     legend: {
                         position: 'right'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Expense Per Category'
                     }
                 }
             }}

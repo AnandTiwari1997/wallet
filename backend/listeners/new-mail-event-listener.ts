@@ -25,9 +25,13 @@ export class NewMailEventListener implements IEventListener {
     }
 
     processRawMail(mails: { numberOfNewMails: number; totalMails: number }) {
-        logger.info('Mail Count : ', mails.numberOfNewMails);
+        logger.info(
+            `Mail Count: ${mails.numberOfNewMails}, Fetch Count: ${Math.abs(
+                mails.totalMails - mails.numberOfNewMails + 1
+            )}:${mails.totalMails}`
+        );
         const iFetch = connection.seq.fetch(
-            `${Math.abs(mails.totalMails - mails.numberOfNewMails)}:${mails.totalMails}`,
+            `${Math.abs(mails.totalMails - mails.numberOfNewMails + 1)}:${mails.totalMails}`,
             {
                 bodies: ''
             }
@@ -44,17 +48,23 @@ export class NewMailEventListener implements IEventListener {
                         keepCidLinks: false,
                         decodeStrings: true
                     },
-                    async (error, parsedMail) => {
+                    (error, parsedMail) => {
                         if (error) {
                             logger.error(error.message);
                             return;
                         }
-                        if (!parsedMail.text) return;
+                        if (!parsedMail.text && !parsedMail.html) return;
                         if (!parsedMail.from?.value[0].address) return;
                         eventEmitter.emit('parsed-mail', parsedMail);
                     }
                 );
             });
+        });
+        iFetch.on('error', (err) => {
+            logger.error(err);
+        });
+        iFetch.on('end', () => {
+            logger.info('Mail consumed');
         });
     }
 

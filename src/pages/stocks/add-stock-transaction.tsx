@@ -1,12 +1,10 @@
+import { addStockTransaction, getStockHolding } from 'backend/BackendApi';
+import { InputField, Select, SelectOption } from 'boxed-material-ui';
+import { DematAccount, Holding, StockTransaction } from 'data/models';
 import { format, parse } from 'date-fns';
+import { DateInput } from 'modules';
 import React, { useState } from 'react';
 import { v4 } from 'uuid';
-
-import { DematAccount, Holding, StockTransaction } from '../../data/models';
-import { addStockTransaction, getStockHolding } from '../../modules/backend/BackendApi';
-import DateInput from '../../modules/date-input/date-input';
-import Select, { SelectOption } from '../../modules/select/select';
-import TextBox from '../../modules/text-box/text-box';
 
 const AddStockTransaction = ({
     accountMap,
@@ -30,8 +28,9 @@ const AddStockTransaction = ({
         <>
             <div style={{ width: '250px', display: 'flex', justifyContent: 'center' }}>
                 <div>
-                    <p style={{ margin: '0.5em 0' }}>Account</p>
+                    <div style={{ margin: '0.5em 0' }} />
                     <Select
+                        label={'Account'}
                         selectedOption={accountId}
                         options={[{ value: '', label: 'Select' }, ...accountOptions]}
                         onSelectionChange={(event) => {
@@ -57,8 +56,9 @@ const AddStockTransaction = ({
                         }}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Stock</p>
+                    <div style={{ margin: '0.5em 0' }} />
                     <Select
+                        label={'Stock'}
                         selectedOption={stockHoldingId}
                         options={holdingOptions}
                         onSelectionChange={(event) => {
@@ -66,8 +66,9 @@ const AddStockTransaction = ({
                         }}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Stock</p>
+                    <div style={{ margin: '0.5em 0' }} />
                     <Select
+                        label={'Transaction Type'}
                         selectedOption={'B'}
                         options={[
                             { value: 'B', label: 'Buy' },
@@ -78,14 +79,17 @@ const AddStockTransaction = ({
                         }}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Quantity</p>
-                    <TextBox
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label={'Quantity'}
                         value={quantity}
                         placeholder={'Enter Account Bo Id'}
                         onChange={(event) => setQuantity(Number.parseInt(event.target.value))}
                     />
-                    <p style={{ margin: '0.5em 0' }}>Transaction Price</p>
-                    <TextBox
+
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label={'Transaction Price'}
                         value={transactionPrice}
                         placeholder={'Enter Account Name'}
                         onChange={(event) => setTransactionPrice(Number.parseInt(event.target.value))}
@@ -116,7 +120,6 @@ const AddStockTransaction = ({
                                         onSubmit(value && value.num_found === 1, value.results[0]);
                                     })
                                     .catch((reason) => {
-                                        console.log(reason);
                                         onSubmit(false, undefined);
                                     });
                             }}

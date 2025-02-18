@@ -1,7 +1,6 @@
+import { getStockHolding } from 'backend/BackendApi';
 import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-
-import { getStockHolding } from '../../../modules/backend/BackendApi';
 
 const StocksInvestmentChart = () => {
     const [stockInvestedAmountChartData, setStockInvestedAmountChartData] = useState<
@@ -60,12 +59,6 @@ const StocksInvestmentChart = () => {
                 }}
                 options={{
                     responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Investment Per Stock'
-                        }
-                    },
                     scales: {
                         x: {
                             display: true,

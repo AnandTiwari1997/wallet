@@ -1,0 +1,21 @@
+export const Shadows = {
+    normalColor: `#9f9f9f`,
+    darkerColor: `#333333`,
+    lighterColor: `#9f9f9f`,
+    activeColor: `#ffffff`,
+    hoverColor: `#494949`,
+    lowFloatingShadow: `-1px -1px 1px 0px #9f9f9f, 1px 1px 1px 0px #9f9f9f`,
+    lowFloatingDarkerShadow: `-1px -1px 2px 0px #333333, 1px 1px 2px 0px #333333`,
+    lowFloatingLighterShadow: `-1px -1px 2px 1px #9f9f9f, 1px 1px 2px 1px #9f9f9f`,
+    lowFloatingActiveShadow: `-1px -1px 2px 1px #ffffff, 1px 1px 2px 1px #ffffff`,
+    highFloatingShadow: ``,
+    highFloatingDarkerShadow: ``,
+    highFloatingLighterShadow: ``,
+    hoverFloatingShadow: `-2px -2px 4px 0px #494949, 2px 2px 4px 0px #494949`,
+    groundZeroShadow: `0px 0px 0px 0px #9f9f9f`,
+    menuShadow: `-1px 2px 4px 0px #9f9f9f, 1px 1px 4px 0px #9f9f9f`,
+    noTopFloatingShadow: `-1px 2px 4px 0px #9f9f9f, 1px 1px 4px 0px #9f9f9f`,
+    noBottomFloatingShadow: `-1px 2px 4px 0px #9f9f9f, 1px -2px 4px 0px #9f9f9f`,
+    noLeftFloatingShadow: `-1px -1px 4px 0px #9f9f9f, -2px 1px 4px 0px #9f9f9f`,
+    noRightFloatingShadow: `2px -1px 4px 0px #9f9f9f, 1px 1px 4px 0px #9f9f9f`
+};

@@ -36,7 +36,7 @@ export const billsSyncHandler = new BillsSyncHandler();
 export const creditCardSyncHandler = new CreditCardAccountTransactionSyncHandler();
 export const dematAccountSyncHandler = new DematAccountSyncHandler();
 export const loanAccountTransactionSyncHandler = new LoanAccountTransactionSyncHandler();
-export const accountSchedulers: Schedulers = new Schedulers();
+export const schedulers: Schedulers = new Schedulers();
 export const commonAccountTransactionSyncHandler: CommonAccountTransactionSyncHandler =
     new CommonAccountTransactionSyncHandler();
 export const stockTransactionListener: StockTransactionListener = new StockTransactionListener();

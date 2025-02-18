@@ -5,7 +5,7 @@ import { format, startOfMonth } from 'date-fns';
 import { Logger } from '../core/logger.js';
 import { mfParam, rootDirectoryPath } from '../config.js';
 import { getFirefoxWebDriver } from '../utils/web-driver-util.js';
-import { syncTrackerStorage } from '../database/repository/sync-tracker-storage.js';
+import { syncTrackerRepository } from '../database/repository/sync-tracker-repository.js';
 
 const logger: Logger = new Logger('MutualFundSyncHandler');
 
@@ -24,16 +24,22 @@ export class MutualFundSyncHandler {
                 let id = new Date().getTime().toString();
                 await driver.get('https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement');
                 logger.info(`Opened https://www.camsonline.com/Investors/Statements/Consolidated-Account-Statement`);
-                await driver.sleep(2000);
+                await driver.sleep(10000);
                 await driver.findElement(By.xpath('//*[@id="mat-radio-9"]/label/span[2]/b')).click();
                 logger.info(`Consent Accepted`);
-                await driver.findElement(By.xpath('//input[@type="button"]')).click();
+                await driver
+                    .findElement(By.xpath('//input[@type="Button" or @type="button" or @value="PROCEED"]'))
+                    .click();
                 logger.info(`Clicked Proceed`);
                 await driver.sleep(2000);
                 try {
-                    await driver.findElement(By.xpath('//div[contains(@class, "close-icon")]/mat-icon')).click();
+                    await driver
+                        .findElement(
+                            By.xpath('//div[contains(@class, "close-Icon") or contains(@class, "close-icon")]/mat-icon')
+                        )
+                        .click();
                     await driver.sleep(2000);
-                    await driver.findElement(By.xpath('//div[contains(@class, "close-icon")]/mat-icon')).click();
+                    // await driver.findElement(By.xpath('//div[contains(@class, "close-Icon")]/mat-Icon')).click();
                     logger.info(`Closed Dialog`);
                 } catch (e) {
                     logger.info(`No Closed Dialog`);
@@ -44,10 +50,10 @@ export class MutualFundSyncHandler {
                 await driver.sleep(2000);
                 await driver.findElement(By.id('mat-radio-14')).click();
                 logger.info(`Selected Specific Period`);
-                await driver.findElement(By.xpath('//*[@data-mat-calendar="mat-datepicker-1"]/button')).click();
+                await driver.findElement(By.xpath('//*[@data-mat-calendar="mat-datepicker-1"]/Button')).click();
                 await driver.sleep(2000);
                 await driver
-                    .findElement(By.xpath('//*[@id="mat-datepicker-1"]//button[@aria-label="Choose month and year"]'))
+                    .findElement(By.xpath('//*[@id="mat-datepicker-1"]//Button[@aria-label="Choose month and year"]'))
                     .click();
                 await driver.sleep(2000);
                 await driver
@@ -62,10 +68,10 @@ export class MutualFundSyncHandler {
                     .click();
                 await driver.sleep(2000);
                 logger.info(`Selected From Date`);
-                await driver.findElement(By.xpath('//*[@data-mat-calendar="mat-datepicker-2"]/button')).click();
+                await driver.findElement(By.xpath('//*[@data-mat-calendar="mat-datepicker-2"]/Button')).click();
                 await driver.sleep(2000);
                 await driver
-                    .findElement(By.xpath('//*[@id="mat-datepicker-2"]//button[@aria-label="Choose month and year"]'))
+                    .findElement(By.xpath('//*[@id="mat-datepicker-2"]//Button[@aria-label="Choose month and year"]'))
                     .click();
                 await driver.sleep(2000);
                 await driver
@@ -141,11 +147,19 @@ export class MutualFundSyncHandler {
             })
             .catch((reason) => {
                 console.log(reason);
-                const syncTracker = syncTrackerStorage.get('mutual_fund');
-                if (!syncTracker) return;
-                syncTracker.status = 'FAILED';
-                syncTracker.endTime = new Date();
-                syncTrackerStorage.update(syncTracker);
+                syncTrackerRepository
+                    .findOne({
+                        where: {
+                            sync_type: 'mutual_fund',
+                            sync_status: 'IN_PROGRESS'
+                        }
+                    })
+                    .then((syncTracker) => {
+                        if (!syncTracker) return;
+                        syncTracker.sync_status = 'FAILED';
+                        syncTracker.sync_ended_at = new Date();
+                        syncTrackerRepository.update(syncTracker.sync_type, syncTracker).then((r) => {});
+                    });
             });
     }
 }

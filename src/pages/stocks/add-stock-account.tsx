@@ -1,11 +1,9 @@
+import { addStockAccount, getBroker } from 'backend/BackendApi';
+import { InputField, Select, SelectOption } from 'boxed-material-ui';
+import { Broker, DematAccount } from 'data/models';
 import { format, parse } from 'date-fns';
+import { DateInput } from 'modules';
 import React, { useEffect, useState } from 'react';
-
-import { Broker, DematAccount } from '../../data/models';
-import { addStockAccount, getBroker } from '../../modules/backend/BackendApi';
-import DateInput from '../../modules/date-input/date-input';
-import Select, { SelectOption } from '../../modules/select/select';
-import TextBox from '../../modules/text-box/text-box';
 
 const AddStockAccount = ({
     account,
@@ -47,11 +45,14 @@ const AddStockAccount = ({
     useEffect(() => {
         setEdit(!!account);
         setAccountBoId(account ? account.account_bo_id : '');
-        setAccountType(account ? account.account_type : 'CASH');
         setAccountClientId(account ? account.account_client_id : '');
         setAccountName(account ? account.account_name : '');
         setStartDate(format(account ? new Date(account.start_date) : new Date(), 'dd-MM-yyyy'));
-        setBrokerId(account ? (account.broker ? account.broker.broker_id : '') : '');
+        if (account) {
+            setBrokerId(account.broker ? account.broker.broker_id : '');
+        } else {
+            setBrokerId('');
+        }
         _getBrokers();
     }, [account]);
 
@@ -59,21 +60,24 @@ const AddStockAccount = ({
         <>
             <div style={{ width: '250px', display: 'flex', justifyContent: 'center' }}>
                 <div>
-                    <p style={{ margin: '0.5em 0' }}>Account BO Id</p>
-                    <TextBox
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label={'Account BO Id'}
                         value={accountBoId}
                         placeholder={'Enter Account Bo Id'}
                         onChange={(event) => setAccountBoId(event.target.value)}
                     />
-                    <p style={{ margin: '0.5em 0' }}>Account Name</p>
-                    <TextBox
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label={'Account Name'}
                         value={accountName}
                         placeholder={'Enter Account Name'}
                         onChange={(event) => setAccountName(event.target.value)}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Broker</p>
+                    <div style={{ margin: '0.5em 0' }} />
                     <Select
+                        label={'Broker'}
                         selectedOption={brokerId}
                         options={brokerOption}
                         onSelectionChange={(event) => {
@@ -81,8 +85,9 @@ const AddStockAccount = ({
                         }}
                     />
 
-                    <p style={{ margin: '0.5em 0' }}>Client Id</p>
-                    <TextBox
+                    <div style={{ margin: '0.5em 0' }} />
+                    <InputField
+                        label={'Client Id'}
                         value={accountClientId}
                         placeholder={'Enter Client Id'}
                         onChange={(event) => setAccountClientId(event.target.value)}
@@ -100,11 +105,9 @@ const AddStockAccount = ({
                                     account_bo_id: accountBoId,
                                     account_name: accountName,
                                     account_client_id: accountClientId,
-                                    account_type: accountType,
                                     broker: brokers[brokerId],
                                     start_date: parse(startDate, 'dd-MM-yyyy', new Date())
                                 };
-                                console.log(account);
                                 if (edit) {
                                 } else {
                                     addStockAccount({ data: account }).then((apiResponse) => {

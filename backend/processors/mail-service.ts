@@ -56,7 +56,7 @@ function onNewEmail(numberOfMails: number) {
 connection.on('error', (error: any) => {
     logger.error(`Connection Error`);
     logger.error(error);
-    setTimeout((args) => {
+    setTimeout(() => {
         logger.info(`Reconnecting to Mail Server`);
         connection.connect();
     }, 30000);

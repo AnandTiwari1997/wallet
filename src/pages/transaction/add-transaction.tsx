@@ -1,13 +1,10 @@
+import { addTransaction } from 'backend/BackendApi';
+import { Button, InputField, Select } from 'boxed-material-ui';
+import { Account, Transaction } from 'data/models';
+import { Category, PaymentMode, TransactionStatus, TransactionType } from 'data/transaction-data';
 import { format, parse } from 'date-fns';
+import { DateInput } from 'modules';
 import React, { useEffect, useState } from 'react';
-
-import { Account, Transaction } from '../../data/models';
-import { Category, PaymentMode, TransactionStatus, TransactionType } from '../../data/transaction-data';
-import { addTransaction } from '../../modules/backend/BackendApi';
-import Button from '../../modules/button/button';
-import DateInput from '../../modules/date-input/date-input';
-import Select from '../../modules/select/select';
-import TextBox from '../../modules/text-box/text-box';
 
 const AddTransaction = ({
     accounts,
@@ -18,7 +15,7 @@ const AddTransaction = ({
 }) => {
     const [account, setAccount] = useState<Account>(accounts[0]);
     const [amount, setAmount] = useState(0);
-    const [category, setCategory] = useState(Category.OTHERS.value);
+    const [category, setCategory] = useState(Category.OTHER.value);
     const [note, setNote] = useState('');
     const [status, setStatus] = useState(TransactionStatus.COMPLETED.value);
     const [paymentMode, setPaymentMode] = useState(PaymentMode.CASH.value);
@@ -31,13 +28,14 @@ const AddTransaction = ({
             accountOptions[account.account_id] = account;
             setAccountOptions({ ...accountOptions });
         });
-    }, []);
+    }, [accountOptions, accounts]);
 
     return (
         <>
-            <div style={{ width: '350px' }}>
-                <p style={{ margin: '0.5em 0' }}>Bill Category</p>
+            <div style={{ width: '350px', overflow: 'auto' }}>
+                <div style={{ margin: '0.5em 0' }} />
                 <Select
+                    label={'Bill Category'}
                     selectedOption={account.account_id}
                     options={accounts.map((account) => {
                         return {
@@ -48,45 +46,54 @@ const AddTransaction = ({
                     onSelectionChange={(event) => setAccount(accountOptions[event.value])}
                 />
 
-                <p style={{ margin: '0.5em 0' }}>Category</p>
+                <div style={{ margin: '0.5em 0' }} />
                 <Select
+                    label={'Category'}
                     selectedOption={category}
                     options={Category.get()}
                     onSelectionChange={(event) => setCategory(event.value)}
                 />
 
-                <p style={{ margin: '0.5em 0' }}>Status</p>
+                <div style={{ margin: '0.5em 0' }} />
                 <Select
+                    label={'Status'}
                     selectedOption={status}
                     options={TransactionStatus.get()}
                     onSelectionChange={(event) => setStatus(event.value)}
                 />
 
-                <p style={{ margin: '0.5em 0' }}>Payment Mode</p>
+                <div style={{ margin: '0.5em 0' }} />
                 <Select
+                    label={'Payment Mode'}
                     selectedOption={paymentMode}
                     options={PaymentMode.get()}
                     onSelectionChange={(event) => setPaymentMode(event.value)}
                 />
 
-                <p style={{ margin: '0.5em 0' }}>Type</p>
+                <div style={{ margin: '0.5em 0' }} />
                 <Select
+                    label={'Type'}
                     selectedOption={type}
                     options={TransactionType.get()}
                     onSelectionChange={(event) => setType(event.value)}
                 />
 
-                <p style={{ margin: '0.5em 0' }}>Amount</p>
-                <TextBox
+                <div style={{ margin: '0.5em 0' }} />
+                <InputField
+                    label={'Amount'}
                     value={amount}
                     placeholder={'Enter Transaction Amount'}
                     onChange={(event) => {
+                        if (event.target.value === '') {
+                            return;
+                        }
                         setAmount(Number.parseInt(event.target.value));
                     }}
                 />
 
-                <p style={{ margin: '0.5em 0' }}>Description</p>
-                <TextBox
+                <div style={{ margin: '0.5em 0' }} />
+                <InputField
+                    label={'Description'}
                     value={note}
                     placeholder={'Enter Description'}
                     onChange={(event) => {
@@ -95,13 +102,14 @@ const AddTransaction = ({
                 />
 
                 <p style={{ margin: '0.5em 0' }}>Date</p>
-                <DateInput setValue={setTransactionDate} value={transactionDate} />
+                <DateInput value={transactionDate} />
 
                 <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
                     <Button
                         onClick={() => {
                             const transaction: Transaction = {
                                 amount: amount,
+                                account_id: account.account_id,
                                 account: account,
                                 transaction_date: parse(transactionDate, 'dd-MM-yyyy', new Date()),
                                 transaction_type: type,
@@ -124,7 +132,6 @@ const AddTransaction = ({
                                     apiResponse && apiResponse.num_found === 1,
                                     apiResponse.results ? apiResponse.results[0] : undefined
                                 );
-                                console.log('Saved Object', apiResponse.results);
                             });
                         }}
                     >

@@ -1,13 +1,14 @@
 import path from 'path';
-import fs from 'fs';
 import { Builder, By, until } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome.js';
 import { Logger } from '../core/logger.js';
 import { pfParam, rootDirectoryPath } from '../config.js';
+import { PythonUtil } from '../utils/python-util.js';
+import { ProvidentFundTransaction } from '../database/models/provident-fund-transaction.js';
+import { providentFundRepository } from '../database/repository/provident-fund-repository.js';
+import { syncTrackerRepository } from '../database/repository/sync-tracker-repository.js';
 import { dataChannel } from '../utils/data-channel-util.js';
 import { captchaStorage } from '../database/repository/captcha-storage.js';
-import { syncTrackerStorage } from '../database/repository/sync-tracker-storage.js';
-import { PythonUtil } from '../utils/python-util.js';
 
 const logger: Logger = new Logger('ProvidentFundSyncHandler');
 
@@ -15,11 +16,11 @@ export class ProvidentFundSyncHandler {
     sync(): void {
         (async function sync() {
             let downloadDirectory = path.resolve(rootDirectoryPath, 'reports', 'provident_fund');
-            fs.rm(downloadDirectory, { recursive: true, force: true }, (err) => {
-                if (err) {
-                    logger.error(err);
-                }
-            });
+            // fs.rm(downloadDirectory, { recursive: true, force: true }, (err) => {
+            //     if (err) {
+            //         logger.error(err);
+            //     }
+            // });
             logger.info(`Removed Reports Folder`);
             let driverBuilder = new Builder().forBrowser('chrome');
             driverBuilder.setChromeOptions(
@@ -34,7 +35,6 @@ export class ProvidentFundSyncHandler {
             let driver = await driverBuilder.build();
             let years: string[] = [];
             try {
-                let id = new Date().getTime().toString();
                 await driver.get('https://passbook.epfindia.gov.in/MemberPassBook/login');
                 logger.info(`Opened https://passbook.epfindia.gov.in/MemberPassBook/login`);
                 let username = await driver.findElement(By.id('username'));
@@ -45,29 +45,52 @@ export class ProvidentFundSyncHandler {
                 logger.info(`Entered Password`);
                 let imageElement = await driver.findElement(By.id('captcha_id'));
                 let captchaInput = await driver.findElement(By.id('captcha'));
+                let captchaId = new Date().getTime().toString();
                 imageElement.getAttribute('src').then((r) => {
-                    const data = {
+                    dataChannel.publish('sync', {
                         imageUrl: r,
-                        captchaID: id
-                    };
-                    dataChannel.publish('sync', data);
+                        captchaID: captchaId,
+                        type: 'captcha'
+                    });
                     dataChannel.deRegister('sync');
                 });
                 logger.info(`Captcha Image sent to Client`);
-                let interval: NodeJS.Timeout;
+                let captchaInterval: NodeJS.Timeout;
                 let captcha = await new Promise<string | undefined>((resolve) => {
-                    interval = setInterval(() => {
-                        if (captchaStorage.get(id)) {
-                            resolve(captchaStorage.get(id)?.captchaText);
-                            clearInterval(interval);
+                    captchaInterval = setInterval(() => {
+                        if (captchaStorage.get(captchaId)) {
+                            resolve(captchaStorage.get(captchaId)?.text);
+                            clearInterval(captchaInterval);
                         }
                     }, 1000);
                 });
+                logger.info(captcha);
                 if (!captcha) return [];
+                captchaStorage.delete(captchaId);
                 await captchaInput.sendKeys(captcha);
                 logger.info(`Entered Captcha`);
                 await driver.findElement(By.id('login')).click();
                 logger.info(`Clicked Login`);
+                let otpInterval: NodeJS.Timeout;
+                let otp = await new Promise<string | undefined>((resolve) => {
+                    otpInterval = setInterval(() => {
+                        if (captchaStorage.get(captchaId)) {
+                            resolve(captchaStorage.get(captchaId)?.text);
+                            clearInterval(otpInterval);
+                        }
+                    }, 1000);
+                });
+                if (!otp) return [];
+                let otpArray = otp.split('') || [];
+                let otpInputs = await driver.findElements(By.xpath('//div[contains(@class, "otp-field")]/input'));
+                for (let i = 0; i < otpArray.length; i++) {
+                    await otpInputs[i].sendKeys(otpArray[i]);
+                    await driver.sleep(1000);
+                }
+                logger.info(`Entered OTP`);
+                await driver.findElement(By.xpath('//button[@name="login-otp-verification"]')).click();
+                logger.info(`Clicked OTP Verify`);
+                await driver.sleep(2000);
                 await driver.wait(until.elementLocated(By.xpath('//a[@data-name="passbook"]')), 10000);
                 logger.info(`Located Passbook`);
                 await driver.wait(
@@ -79,7 +102,7 @@ export class ProvidentFundSyncHandler {
                 logger.info(`Clicked Passbook`);
                 let elements = await driver.findElements(By.xpath('//*[@id="pb-container"]/div[1]/div/div'));
                 years = await elements[0].getText().then((text) => text.split('\n'));
-                logger.info(`Years ${years}`);
+                logger.info(`Passbook will be processed for following Years ${years}`);
                 for (let index = 0; index < elements.length; index++) {
                     const element = elements[index];
                     const texts = await element.getText().then((text) => text.split('\n'));
@@ -88,20 +111,22 @@ export class ProvidentFundSyncHandler {
                         logger.info(`Clicked ${text}`);
                         await driver.sleep(5000);
                         await driver.wait(
-                            until.elementLocated(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`)),
+                            until.elementLocated(By.xpath(`//div[@id="v-tab-${text}"]//button[@name="pb-pdf"]`)),
                             10000
                         );
                         logger.info(`Located Download As PDF`);
                         await driver.sleep(5000);
                         await driver.wait(
                             until.elementIsVisible(
-                                driver.findElement(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`))
+                                driver.findElement(By.xpath(`//div[@id="v-tab-${text}"]//button[@name="pb-pdf"]`))
                             ),
                             10000
                         );
                         logger.info(`Download As PDF Visible`);
                         await driver.sleep(5000);
-                        await driver.findElement(By.xpath(`//*[@id="v-tab-${text}"]/div/div/div[2]/button[2]`)).click();
+                        await driver
+                            .findElement(By.xpath(`//div[@id="v-tab-${text}"]//button[@name="pb-pdf"]`))
+                            .click();
                         logger.info(`Clicked Download As PDf`);
                         await driver.sleep(5000);
                         await driver.wait(until.elementLocated(By.id('downloadPassbook')), 10000);
@@ -114,9 +139,7 @@ export class ProvidentFundSyncHandler {
                         logger.info(`Clicked DownloadPassbook`);
                         await driver.sleep(5000);
                         await driver
-                            .findElement(
-                                By.xpath('//div[@class="modal-header modal-header1"]/button[@class="btn-close"]')
-                            )
+                            .findElement(By.xpath('//div[@id="passbookModel"]//button[contains(@class,"btn-close")]'))
                             .click();
                         logger.info(`Closed Download Modal`);
                         await driver.sleep(5000);
@@ -130,41 +153,67 @@ export class ProvidentFundSyncHandler {
                 await driver.quit();
             }
         })()
-            .then((years) => {
-                const pfData: { [key: string]: string }[] = [];
+            .then(async (years) => {
                 for (let year of years) {
-                    PythonUtil.run(
-                        [
-                            'provident_fund',
-                            `PYBOM00464460000024760_${year}.pdf`,
-                            `PYBOM00464460000024760_${year}_OUTPUT.json`,
-                            ''
-                        ],
-                        (data: any) => {
-                            let newData = data.replaceAll("'", '"');
-                            const parsedData: { [key: string]: string }[] = JSON.parse(newData);
-                            for (let parseData of parsedData) {
-                                // providentFundRepository.save(ProvidentFundTransactionBuilder.build(parseData));
+                    logger.info(`Processing PF for ${year}`);
+                    let data = PythonUtil.runSync([
+                        'provident_fund',
+                        `PYBOM00464460000024760_${year}.pdf`,
+                        `PYBOM00464460000024760_${year}_OUTPUT.json`,
+                        'AWDPT2993E'
+                    ]);
+                    if (!data) continue;
+                    let newData = data.replaceAll("'", '"');
+                    const parsedData: { [key: string]: string }[] = JSON.parse(newData);
+                    logger.info(`${parsedData.length}`);
+                    for (let parseData of parsedData) {
+                        logger.info(`Parsed Data ${JSON.stringify(parseData)}`);
+                        let providentFund = Object.assign(
+                            ProvidentFundTransaction.prototype,
+                            parseData
+                        ) as ProvidentFundTransaction;
+                        logger.info(`Provident Fund ${JSON.stringify(providentFund)}`);
+                        providentFund.transaction_id = providentFundRepository.getTransactionId(providentFund);
+                        let providentFundTransaction = await providentFundRepository.findOne({
+                            where: {
+                                transaction_id: providentFund.transaction_id
                             }
-                            const syncTracker = syncTrackerStorage.get('provident_fund');
-                            if (!syncTracker) return;
-                            syncTracker.status = 'COMPLETED';
-                            syncTracker.endTime = new Date();
-                            syncTrackerStorage.update(syncTracker);
-                        },
-                        (data) => {
-                            logger.error(data);
+                        });
+                        logger.info(`Found Provident Fund ${JSON.stringify(providentFundTransaction)}`);
+                        if (!providentFundTransaction) {
+                            await providentFundRepository.save(providentFund);
                         }
-                    );
+                    }
+                    syncTrackerRepository
+                        .findOne({
+                            where: {
+                                sync_type: 'provident_fund',
+                                sync_status: 'IN_PROGRESS'
+                            }
+                        })
+                        .then((syncTracker) => {
+                            if (!syncTracker) return;
+                            syncTracker.sync_status = 'COMPLETED';
+                            syncTracker.sync_ended_at = new Date();
+                            syncTrackerRepository.update(syncTracker.sync_type, syncTracker).then((r) => {});
+                        });
                 }
             })
             .catch((reason) => {
                 logger.error(reason);
-                const syncTracker = syncTrackerStorage.get('provident_fund');
-                if (!syncTracker) return;
-                syncTracker.status = 'FAILED';
-                syncTracker.endTime = new Date();
-                syncTrackerStorage.update(syncTracker);
+                syncTrackerRepository
+                    .findOne({
+                        where: {
+                            sync_type: 'provident_fund',
+                            sync_status: 'IN_PROGRESS'
+                        }
+                    })
+                    .then((syncTracker) => {
+                        if (!syncTracker) return;
+                        syncTracker.sync_status = 'FAILED';
+                        syncTracker.sync_ended_at = new Date();
+                        syncTrackerRepository.update(syncTracker.sync_type, syncTracker).then((r) => {});
+                    });
             });
     }
 

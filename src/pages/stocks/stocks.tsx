@@ -1,18 +1,14 @@
+import 'pages/stocks/stocks.css';
+import { getStockAccount, syncInvestmentAccount } from 'backend/BackendApi';
 import CSS from 'csstype';
+import { DematAccount, StockTransaction, Transaction } from 'data/models';
+import { Dialog, SelectOption, Tab, Tabs } from 'modules';
+import AddStockAccount from 'pages/stocks/add-stock-account';
+import AddStockTransaction from 'pages/stocks/add-stock-transaction';
+import StockAccountPage from 'pages/stocks/stock-accounts';
+import StockTransactionPage from 'pages/stocks/stocks-transaction';
 import { Fragment, useEffect, useRef, useState } from 'react';
-
-import './stocks.css';
-import AddStockAccount from './add-stock-account';
-import AddStockTransaction from './add-stock-transaction';
-import StockAccountPage from './stock-accounts';
-import StockTransactionPage from './stocks-transaction';
-import { DematAccount, StockTransaction, Transaction } from '../../data/models';
-import { getStockAccount, syncInvestmentAccount } from '../../modules/backend/BackendApi';
-import Button from '../../modules/button/button';
-import Dialog from '../../modules/dialog/dialog';
-import Select, { SelectOption } from '../../modules/select/select';
-import Tab from '../../modules/tabs/tab';
-import Tabs from '../../modules/tabs/tabs';
+import FilterActionHeader from 'shared/filter-action-header/FilterActionHeader';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -102,84 +98,40 @@ const StockPage = () => {
     return (
         <div style={topDiv}>
             <div style={bodyStyle}>
-                <div className="stocks-action-body">
-                    {selectedTab === StocksTab.TRANSACTION.value && (
-                        <div
-                            style={{
-                                margin: '10px 0',
-                                width: '300px'
-                            }}
-                        >
-                            <p style={{ height: '20px', margin: '0' }}>Account: </p>
-                            <Select
-                                selectedOption={filterAccount}
-                                onSelectionChange={(event) => setFilteredAccount(event.value)}
-                                options={[{ value: '', label: 'All' }, ...selectOptions]}
-                            ></Select>
-                        </div>
-                    )}
-                    {selectedTab === StocksTab.TRANSACTION.value && (
-                        <div
-                            style={{
-                                margin: '10px 5px',
-                                width: '300px'
-                            }}
-                        >
-                            <p style={{ height: '20px', margin: '0' }}>Transaction Type: </p>
-                            <Select
-                                selectedOption={filterTransactionType}
-                                onSelectionChange={(event) => setFilterTransactionType(event.value)}
-                                options={[
-                                    { value: '', label: 'All' },
-                                    { value: 'B', label: 'Buy' },
-                                    { value: 'S', label: 'Sell' }
-                                ]}
-                            ></Select>
-                        </div>
-                    )}
-                    {selectedTab === StocksTab.TRANSACTION.value && (
-                        <div
-                            style={{
-                                height: 'calc(3rem - 10px)',
-                                display: 'block',
-                                marginTop: '30px',
-                                marginRight: '1%',
-                                float: 'right',
-                                right: '0',
-                                position: 'absolute'
-                            }}
-                        >
-                            <Button
-                                onClick={() => {
-                                    setShowAddStockTransaction(true);
-                                }}
-                            >
-                                Add
-                            </Button>
-                        </div>
-                    )}
-                    {selectedTab === StocksTab.ACCOUNTS.value && (
-                        <div
-                            style={{
-                                height: 'calc(3rem - 10px)',
-                                display: 'block',
-                                marginTop: '30px',
-                                marginRight: '1%',
-                                float: 'right',
-                                right: '0',
-                                position: 'absolute'
-                            }}
-                        >
-                            <Button
-                                onClick={() => {
-                                    setShowAddDematAccount(true);
-                                }}
-                            >
-                                Add
-                            </Button>
-                        </div>
-                    )}
-                </div>
+                <FilterActionHeader
+                    filters={[
+                        {
+                            label: 'Account',
+                            onSelectionChange: (event) => setFilteredAccount(event.value),
+                            options: [{ value: '', label: 'All' }, ...selectOptions],
+                            selectedOption: filterAccount,
+                            hidden: selectedTab !== StocksTab.TRANSACTION.value
+                        },
+                        {
+                            label: 'Transaction Type',
+                            onSelectionChange: (event) => setFilterTransactionType(event.value),
+                            options: [
+                                { value: '', label: 'All' },
+                                { value: 'B', label: 'Buy' },
+                                { value: 'S', label: 'Sell' }
+                            ],
+                            selectedOption: filterTransactionType,
+                            hidden: selectedTab !== StocksTab.TRANSACTION.value
+                        }
+                    ]}
+                    actions={[
+                        {
+                            onClick: (event) => setShowAddStockTransaction(true),
+                            name: 'Add',
+                            hidden: selectedTab !== StocksTab.TRANSACTION.value
+                        },
+                        {
+                            onClick: (event) => setShowAddDematAccount(true),
+                            name: 'Add',
+                            hidden: selectedTab === StocksTab.TRANSACTION.value
+                        }
+                    ]}
+                />
                 <div className="stocks-tabs-body">
                     <div
                         style={{
@@ -229,8 +181,6 @@ const StockPage = () => {
                     account={selectedAccount}
                     onSubmit={(success: boolean, data: DematAccount | undefined) => {
                         setShowAddDematAccount(false);
-                        console.log(success);
-                        console.log(data);
                     }}
                 />
             </Dialog>
@@ -246,8 +196,6 @@ const StockPage = () => {
                     accountOptions={selectOptions}
                     onSubmit={(success: boolean, data: StockTransaction | undefined) => {
                         setShowAddStockTransaction(false);
-                        console.log(success);
-                        console.log(data);
                     }}
                 />
             </Dialog>

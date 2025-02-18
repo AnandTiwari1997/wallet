@@ -1,17 +1,12 @@
-import { Button, Dialog } from '@mui/material';
+import 'pages/savings/savings.css';
+import { syncInvestmentAccount, syncInvestmentAccountCaptcha } from 'backend/BackendApi';
+import { Button, InputField } from 'boxed-material-ui/modules';
 import CSS from 'csstype';
+import { refresh } from 'icons/icons';
+import { Dialog, Icon, Tab, Tabs } from 'modules';
+import MutualFund from 'pages/savings/mutual-fund';
+import ProvidentFund from 'pages/savings/provident-fund';
 import { Fragment, useRef, useState } from 'react';
-
-import './savings.css';
-import MutualFund from './mutual-fund';
-import ProvidentFund from './provident-fund';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { refresh } from '../../icons/icons';
-import { syncInvestmentAccount, syncInvestmentAccountCaptcha } from '../../modules/backend/BackendApi';
-import Tab from '../../modules/tabs/tab';
-import Tabs from '../../modules/tabs/tabs';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -75,6 +70,9 @@ const SavingsPage = () => {
     const [openCaptcha, setOpenCaptcha] = useState(false);
     const [captchaUrl, setCaptchaUrl] = useState<string | undefined>(undefined);
     const [captchaId, setCaptchaId] = useState<string | undefined>(undefined);
+    const [openOTP, setOpenOTP] = useState(false);
+    const [otpId, setOtpId] = useState<string | undefined>(undefined);
+    const [otpMessage, setOtpMessage] = useState<string | undefined>(undefined);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const switchTabs = (e: any, tab: string) => {
@@ -92,33 +90,6 @@ const SavingsPage = () => {
         }
     ];
 
-    // const renderTabs = () => {
-    //     return tabs.map((tab, index) => {
-    //         let rootClasses: string = 'savings-tab-root';
-    //         if (index !== tabs.length - 1) rootClasses += ' tab-root-after';
-    //         return (
-    //             <Tab
-    //                 key={index}
-    //                 label={tab.label}
-    //                 value={tab.value}
-    //                 classes={{
-    //                     root: rootClasses,
-    //                     selected: 'tab-selected'
-    //                 }}
-    //             />
-    //         );
-    //     });
-    // };
-
-    const renderTabContent = () => {
-        switch (selectedTab) {
-            case SavingsTab.MUTUAL_FUND.value:
-                return <MutualFund />;
-            case SavingsTab.PROVIDENT_FUND.value:
-                return <ProvidentFund />;
-        }
-    };
-
     const handleRefresh = () => {
         const eventSource: EventSource = syncInvestmentAccount(selectedTab);
         eventSource.onmessage = (ev: MessageEvent) => {
@@ -129,9 +100,11 @@ const SavingsPage = () => {
             if (jsonData.type === 'ping') {
                 return;
             }
-            setCaptchaUrl(jsonData.imageUrl);
-            setCaptchaId(jsonData.captchaID);
-            setOpenCaptcha(true);
+            if (jsonData.type === 'captcha') {
+                setCaptchaUrl(jsonData.imageUrl);
+                setCaptchaId(jsonData.captchaID);
+                setOpenCaptcha(true);
+            }
             eventSource.close();
         };
     };
@@ -144,9 +117,26 @@ const SavingsPage = () => {
             syncInvestmentAccountCaptcha(selectedTab, {
                 data: {
                     id: captchaId,
-                    captcha: inputRef.current?.value
+                    text: inputRef.current?.value
                 }
-            }).then((r) => console.log(r));
+            }).then((r) => {
+                setOtpMessage('Please enter OTP sent to your registered number.');
+                setOtpId(captchaId);
+                setOpenOTP(true);
+            });
+        }
+    };
+
+    const handleOTP = () => {
+        setOpenOTP(false);
+        setOtpMessage(undefined);
+        if (inputRef.current?.value && otpId) {
+            syncInvestmentAccountCaptcha(selectedTab, {
+                data: {
+                    id: otpId,
+                    text: inputRef.current?.value
+                }
+            }).then((r) => {});
         }
     };
 
@@ -157,7 +147,13 @@ const SavingsPage = () => {
                     <div style={{ background: 'white', height: '100%' }}>
                         <button className="icon-button tab-refresh-icon" onClick={handleRefresh}>
                             <i className="icon">
-                                <FontAwesomeIcon icon={refresh} />
+                                <Icon
+                                    icon={refresh}
+                                    svgProps={{
+                                        height: '16px',
+                                        width: '16px'
+                                    }}
+                                />
                             </i>
                         </button>
                         <Tabs
@@ -180,24 +176,28 @@ const SavingsPage = () => {
                             </Tab>
                         </Tabs>
                     </div>
-                    {/*<Tabs*/}
-                    {/*    onChange={switchTabs}*/}
-                    {/*    value={selectedTab}*/}
-                    {/*    classes={{*/}
-                    {/*        scroller: 'tab-scroller',*/}
-                    {/*        root: 'savings-tabs-root',*/}
-                    {/*        indicator: 'tab-indicator',*/}
-                    {/*        flexContainer: 'savings-tabs-flex-container'*/}
-                    {/*    }}*/}
-                    {/*>*/}
-                    {/*    {renderTabs()}*/}
-                    {/*</Tabs>*/}
-                    {/*<div className="savings-tab-content">{renderTabContent()}</div>*/}
-                    <Dialog open={openCaptcha} classes={{ paper: 'captcha-dialog' }}>
+                    <Dialog open={openCaptcha} hideAction>
                         <img src={captchaUrl} alt="" className="captcha-dialog-image" />
-                        <input className="captcha-dialog-input" ref={inputRef} />
-                        <div className="captcha-dialog-action" onClick={handleCaptcha}>
-                            <Button>Submit</Button>
+                        <InputField
+                            className="captcha-dialog-input"
+                            ref={inputRef}
+                            showLabel={false}
+                            placeholder={'Enter Captcha'}
+                        />
+                        <div className="captcha-dialog-action">
+                            <Button onClick={handleCaptcha}>Submit</Button>
+                        </div>
+                    </Dialog>
+                    <Dialog open={openOTP} hideAction>
+                        <p>{otpMessage}</p>
+                        <InputField
+                            className="captcha-dialog-input"
+                            ref={inputRef}
+                            showLabel={false}
+                            placeholder={'Enter OTP'}
+                        />
+                        <div className="captcha-dialog-action">
+                            <Button onClick={handleOTP}>Submit</Button>
                         </div>
                     </Dialog>
                 </Fragment>

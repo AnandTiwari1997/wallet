@@ -1,11 +1,38 @@
-import { IconDefinition } from '@fortawesome/free-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './icon.css';
+import { ComponentPropsWithoutRef, PropsWithChildren, useEffect } from 'react';
 
-const Icon = ({ icon, className, style }: { icon: IconDefinition; className?: string; style?: any }) => {
+import { IconDetails } from '../../icons';
+
+type IconProps = {
+    icon: IconDetails;
+    className?: string;
+    svgProps?: ComponentPropsWithoutRef<'svg'>;
+} & PropsWithChildren &
+    ComponentPropsWithoutRef<'i'>;
+
+const Icon = (props: IconProps) => {
+    const { icon, className, children, svgProps, ...others } = props;
+    useEffect(() => {
+        if (icon) {
+            return;
+        }
+    }, []);
     return (
-        <i aria-hidden="true" className={`icon ${className}`} style={style}>
-            <FontAwesomeIcon icon={icon} />
+        <i aria-hidden="true" className={['icon', className].join(' ')} {...others}>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox={`0 0 ${icon.width} ${icon.height}`}
+                fill={`currentColor`}
+                {...svgProps}
+            >
+                {Array.isArray(icon.path) ? (
+                    icon.path.map((path) => {
+                        return <path d={path} />;
+                    })
+                ) : (
+                    <path d={icon.path} />
+                )}
+            </svg>
         </i>
     );
 };

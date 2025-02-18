@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AsyncApiHandler } from '../core/async-handler.js';
+import { AsyncApiHandler, DeserializedAsyncApiHandler } from '../core/api-handler.js';
 import { ApiResponseBody } from '../types/api-response-body.js';
 import { ApiRequestBody } from '../types/api-request-body.js';
 import { SuccessResponse } from '../core/api-response.js';
@@ -8,8 +8,10 @@ import { RepositoryUtils } from '../database/util/repository-utils.js';
 import { BadRequestError, InternalError } from '../core/api-error.js';
 import { AccountTransaction, TransactionType } from '../database/models/account-transaction.js';
 import { accountTransactionRepository } from '../database/repository/account-transaction-repository.js';
-import { accountRepository } from '../database/repository/account-repository.js';
 import { HttpRequestLogger } from '../core/api-middleware.js';
+import { ApiCriteria } from '../types/api-request-body-criteria.js';
+import { AccountTransactionDeserializer } from '../core/deserializer.js';
+import { accountRepository } from '../database/repository/account-repository.js';
 
 const router = express.Router();
 router.use(HttpRequestLogger);
@@ -44,25 +46,19 @@ router.post(
 );
 router.post(
     '/',
-    AsyncApiHandler(
+    DeserializedAsyncApiHandler<AccountTransaction, AccountTransaction>(
         async (
-            req: Request<ApiRequestPathParam, ApiResponseBody<AccountTransaction>, ApiRequestBody<AccountTransaction>>,
+            criteria: ApiCriteria,
+            requestData: AccountTransaction | undefined,
             res: Response<ApiResponseBody<AccountTransaction>>
         ) => {
-            let transactionDto = req.body.data;
-            if (!transactionDto) throw new BadRequestError('Invalid transaction provided');
-            let transaction = await accountTransactionRepository.save(transactionDto);
+            if (!requestData) throw new BadRequestError('Invalid transaction provided');
+            let account = await accountRepository.findOne({ where: { account_id: requestData.account_id } });
+            if (!account) throw new InternalError('Not able to add account');
+            requestData.transaction_id = RepositoryUtils.generateAccountTransactionId(requestData);
+            requestData.account = account;
+            let transaction = await accountTransactionRepository.save(requestData);
             if (!transaction) throw new InternalError('Not able to add transaction');
-            let apiResponse: ApiResponseBody<AccountTransaction> = {
-                num_found: 1,
-                results: [transaction]
-            };
-            let account =
-                (await accountRepository.findOne({
-                    where: {
-                        account_id: transaction.account.account_id
-                    }
-                })) || transaction.account;
             account.account_balance =
                 transaction.transaction_type === TransactionType.INCOME
                     ? account.account_balance + transaction.amount
@@ -76,8 +72,13 @@ router.post(
                         }
                     })) || transaction.account;
             }
+            let apiResponse: ApiResponseBody<AccountTransaction> = {
+                num_found: 1,
+                results: [transaction]
+            };
             return new SuccessResponse<ApiResponseBody<AccountTransaction>>(apiResponse).send(res);
-        }
+        },
+        new AccountTransactionDeserializer()
     )
 );
 router.put(
@@ -89,7 +90,27 @@ router.put(
         ) => {
             let transactionDto = req.body.data;
             if (!transactionDto) throw new BadRequestError('Invalid transaction provided');
-            let transaction = await accountTransactionRepository.update(transactionDto.transaction_id, transactionDto);
+            let oldTransaction = await accountTransactionRepository.findOne({
+                where: {
+                    transaction_id: transactionDto.transaction_id
+                },
+                relations: {
+                    account: true
+                }
+            });
+            if (!oldTransaction) throw new BadRequestError('Invalid transaction provided');
+            let propertiesToUpdate = {};
+            Object.keys(transactionDto).forEach((key: string) => {
+                // @ts-ignore
+                if (transactionDto[key].toString() !== oldTransaction[key].toString()) {
+                    // @ts-ignore
+                    propertiesToUpdate[key] = transactionDto[key];
+                }
+            });
+            let transaction = await accountTransactionRepository.update(
+                transactionDto.transaction_id,
+                propertiesToUpdate
+            );
             if (!transaction.affected) throw new InternalError('Not able to update transaction');
             let transaction_ = await accountTransactionRepository.findOne({
                 where: {

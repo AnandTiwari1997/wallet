@@ -70,7 +70,7 @@ export class Category {
     static DTH_RECHARGE = { label: 'DTH Recharge', value: 'DTH_RECHARGE' };
     static DIVIDEND = { label: 'Dividend', value: 'DIVIDEND' };
     static INTEREST_RECEIVED = { label: 'Interest Received', value: 'INTEREST_RECEIVED' };
-    static OTHERS = { label: 'Others', value: 'OTHER' };
+    static OTHER = { label: 'Others', value: 'OTHER' };
     static INVESTMENT = { label: 'Investment', value: 'INVESTMENT' };
     static SUBSCRIPTION = { label: 'Subscription', value: 'SUBSCRIPTION' };
     static RENT = { label: 'Rent', value: 'RENT' };
@@ -89,6 +89,7 @@ export class Category {
     static SENT_OTHER = { label: 'Sent to Other', value: 'SENT_OTHER' };
     static RECEIVED_OTHER = { label: 'Received from Other', value: 'RECEIVED_OTHER' };
     static PHARMACY = { label: 'Pharmacy', value: 'PHARMACY' };
+    static CREDIT_CARD_SPEND = { label: 'Credit Card Spend', value: 'CREDIT_CARD_SPEND' };
 
     static categoryMap: { [key: string]: { label: string; value: string } } = {
         SALARY: Category.SALARY,
@@ -100,7 +101,7 @@ export class Category {
         DTH_RECHARGE: Category.DTH_RECHARGE,
         DIVIDEND: Category.DIVIDEND,
         INTEREST_RECEIVED: Category.INTEREST_RECEIVED,
-        OTHER: Category.OTHERS,
+        OTHER: Category.OTHER,
         INVESTMENT: Category.INVESTMENT,
         SUBSCRIPTION: Category.SUBSCRIPTION,
         RENT: Category.RENT,
@@ -118,7 +119,8 @@ export class Category {
         RECEIVED_SELF: Category.RECEIVED_SELF,
         SENT_OTHER: Category.SENT_OTHER,
         RECEIVED_OTHER: Category.RECEIVED_OTHER,
-        PHARMACY: Category.PHARMACY
+        PHARMACY: Category.PHARMACY,
+        CREDIT_CARD_SPEND: Category.CREDIT_CARD_SPEND
     };
 
     static getLabel(value: string) {
@@ -154,7 +156,7 @@ export class Category {
             Category.SENT_OTHER,
             Category.RECEIVED_OTHER,
             Category.PHARMACY,
-            Category.OTHERS
+            Category.OTHER
         ];
     }
 }

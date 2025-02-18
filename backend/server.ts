@@ -15,15 +15,21 @@ import holdingRoutes from './controllers/stock-holding-controller.js';
 import { Logger, LoggerLevel } from './core/logger.js';
 import { ApiError, ErrorType, InternalError, NotFoundError } from './core/api-error.js';
 import { API_PATH } from './constant.js';
-import { environment, port } from './config.js';
+import { environment, port, startMailServer } from './config.js';
 import { DematAccount } from './database/models/demat-account.js';
 import { dematAccountRepository } from './database/repository/demat-account-repository.js';
 import { PythonUtil } from './utils/python-util.js';
 import { connection } from './processors/mail-service.js';
 import EventEmitter from 'events';
-import { accountSchedulers, mutualFundLatestNavScheduler, stockLatestTradingPriceScheduler } from './singleton.js';
+import { mutualFundLatestNavScheduler, schedulers, stockLatestTradingPriceScheduler } from './singleton.js';
+import { syncTrackerRepository } from './database/repository/sync-tracker-repository.js';
+import { AsyncApiHandler } from './core/api-handler.js';
+import { ApiRequestPathParam } from './types/api-request-path-param.js';
+import { ApiRequestBody } from './types/api-request-body.js';
+import { SuccessResponse } from './core/api-response.js';
 
 Logger.level = LoggerLevel.INFO;
+let HEALTH: string = 'DOWN';
 export const eventEmitter: EventEmitter = new EventEmitter();
 
 const corsOptions = {
@@ -46,6 +52,17 @@ router.use(API_PATH.STOCKS, stocksRoutes);
 router.use(API_PATH.DEMAT_ACCOUNT, dematAccountRoutes);
 router.use(API_PATH.BROKERS, brokerRoutes);
 router.use(API_PATH.HOLDING, holdingRoutes);
+router.get(
+    '/wallet/health',
+    AsyncApiHandler(
+        async (
+            req: Request<ApiRequestPathParam, { health: string }, ApiRequestBody<{}>>,
+            res: Response<{ health: string }>
+        ) => {
+            return new SuccessResponse<{ health: string }>({ health: HEALTH }).send(res);
+        }
+    )
+);
 
 const app = express();
 app.use(cors(corsOptions));
@@ -70,9 +87,15 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
     PythonUtil.installDependencies();
     logger.info(`Backend Server Started listening on ${port}`);
-    connection.connect();
+    HEALTH = 'UP';
+    if (startMailServer) {
+        connection.connect();
+    }
     eventEmitter.addListener('boxOpened', async () => {
-        accountSchedulers.schedule();
+        await syncTrackerRepository.query(
+            "UPDATE sync_tracker SET sync_status='FAILED', sync_ended_At = now() WHERE sync_status = 'IN_PROGRESS'"
+        );
+        schedulers.schedule();
         mutualFundLatestNavScheduler.schedule();
         stockLatestTradingPriceScheduler.schedule();
     });

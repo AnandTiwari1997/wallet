@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+import time
 import uuid
 from datetime import datetime, timedelta
 
@@ -303,7 +304,6 @@ class StockProcessor(FundProcessor):
 
     def save(self, file_format="json", file_path=None):
         df = DataFrame(self.data, columns=self.header)
-        print(self.data)
 
         clean_txt(df.stock_quantity)
         clean_txt(df.stock_transaction_price)
@@ -370,12 +370,17 @@ class ZerodhaBrokingStockProcessor:
 
     def process(self, images: list[Image]):
         text = get_text(get_cv2_image(images[0]))
-        group = re.search(r'trade date: (.*)\n', text.lower()).group()
+        is_v1 = re.search(r"Contract note cum tax invoice", text)
+        start_page = 1
+        end_page = -2
+        if not is_v1:
+            start_page = len(images) - 3 // 2
+            end_page = len(images)
+        group = re.search(r"trade date: (.*)\n", text.lower()).group()
         trade_date = re.search(r"\d+/\d+/\d+", group.strip()).group()
         trade_date = datetime.strptime(trade_date, '%d/%m/%Y').strftime('%d-%m-%Y')
-
-        for image in images[1:-2]:
-            for table in get_tables(get_cv2_image(image), self.table_scale, 1e5):
+        for image in images[start_page:end_page]:
+            for table in get_tables(get_cv2_image(image), self.table_scale, 5e5):
                 data_for_same_isin = []
                 rows = get_cells(table, 60, 40 ,20)
                 for row in rows:
@@ -401,12 +406,59 @@ class ZerodhaBrokingStockProcessor:
                             'transaction_date': trade_date + " " + trade_time
                         }
                         data_for_same_isin.append(inner_data)
-                    else:
-                        exchange = re.search(r'([a-zA-Z\s]+)', get_text(row[6])).group().strip()
-                        if len(exchange) > 0 and exchange.lower() == 'sub total':
-                            for stock_data in data_for_same_isin:
-                                self.all_data.append(stock_data)
-                            data_for_same_isin = []
+                for stock_data in data_for_same_isin:
+                    self.all_data.append(stock_data)
+                data_for_same_isin = []
+        return self.all_data
+
+    def process_v2(self, images: list[Image]):
+        text = get_text(get_cv2_image(images[0]))
+        group = re.search(r'trade date: (.*)\n', text.lower()).group()
+        trade_date = re.search(r"\d+/\d+/\d+", group.strip()).group()
+        trade_date = datetime.strptime(trade_date, '%d/%m/%Y').strftime('%d-%m-%Y')
+
+        for image in images[1:-3]:
+            for table in get_tables(get_cv2_image(image), self.table_scale, 5e5):
+                data_for_same_isin = []
+                rows = get_cells(table, 60, 40 ,20)
+                for row in rows[2:]:
+                    isin = get_text(row[0]).strip()
+                    symbol = get_text(row[1]).strip()
+                    is_buy = get_text(row[2]).strip()
+                    if is_buy:
+                        transaction_type = 'B'
+                        buy_stock_quantity = re.search(r'\d+', is_buy).group().strip()
+                        amount = '-' + get_text(row[6]).strip().replace('(', '').replace(')', '')
+                        stock_transaction_price = str(float(amount) / int(buy_stock_quantity))
+                        inner_data = {
+                            'order_no': symbol,
+                            'stock_isin': isin,
+                            'transaction_type': transaction_type,
+                            'stock_quantity': buy_stock_quantity,
+                            'stock_transaction_price': stock_transaction_price,
+                            'amount': amount,
+                            'transaction_date': trade_date + " 00:00:00"
+                        }
+                        data_for_same_isin.append(inner_data)
+                    is_sell = get_text(row[7])
+                    if is_sell:
+                        sell_stock_quantity = '-' + re.search(r'\d+', is_sell).group().strip()
+                        transaction_type = 'S'
+                        amount = get_text(row[11]).strip().replace('(', '').replace(')', '')
+                        stock_transaction_price = str(float(amount) / int(sell_stock_quantity))
+                        inner_data = {
+                            'order_no': symbol,
+                            'stock_isin': isin,
+                            'transaction_type': transaction_type,
+                            'stock_quantity': sell_stock_quantity,
+                            'stock_transaction_price': stock_transaction_price,
+                            'amount': amount,
+                            'transaction_date': trade_date + " 00:00:00"
+                        }
+                        data_for_same_isin.append(inner_data)
+                for stock_data in data_for_same_isin:
+                    self.all_data.append(stock_data)
+                data_for_same_isin = []
         return self.all_data
 
 
@@ -447,8 +499,6 @@ if __name__ == '__main__':
     input_file = sys.argv[2]
     output_file = sys.argv[3]
     password = sys.argv[4]
-#     print(f'Input File {input_file}')
-#     print(f'Output File {input_file}')
     if processor_type == "mutual_fund":
         mutual_fund = MutualFundProcessor()
         mutual_fund.process(input_file, "Anand@1997")

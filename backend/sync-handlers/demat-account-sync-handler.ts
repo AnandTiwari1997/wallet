@@ -10,6 +10,7 @@ import { simpleParser } from 'mailparser';
 import { connection } from '../processors/mail-service.js';
 import { PythonUtil } from '../utils/python-util.js';
 import { stockTransactionListener } from '../singleton.js';
+import { eventEmitter } from '../server.js';
 
 const logger: Logger = new Logger('DematAccountSyncHandler');
 
@@ -44,11 +45,11 @@ export class DematAccountSyncHandler implements ISyncHandler<DematAccount> {
                         const iFetch = connection.fetch(mailIds, {
                             bodies: ''
                         });
-                        let alreadyProcessed = 0;
                         let mailProcessed = 0;
                         let parsedDataList: {
                             [key: string]: string;
                         }[] = [];
+                        let continuationId = -1;
                         iFetch.on('message', function (msg, sequenceNumber) {
                             msg.once('body', function (stream, info) {
                                 simpleParser(stream, async (error, parsedMail) => {
@@ -56,6 +57,7 @@ export class DematAccountSyncHandler implements ISyncHandler<DematAccount> {
                                         logger.error(error.message);
                                         return;
                                     }
+                                    mailProcessed++;
                                     try {
                                         if (
                                             isBefore(
@@ -63,7 +65,6 @@ export class DematAccountSyncHandler implements ISyncHandler<DematAccount> {
                                                 dematAccount.last_synced_on
                                             )
                                         ) {
-                                            alreadyProcessed++;
                                             return;
                                         }
                                         if (!parsedMail.text && !parsedMail.html) return;
@@ -94,6 +95,7 @@ export class DematAccountSyncHandler implements ISyncHandler<DematAccount> {
                                                 ),
                                                 buffer
                                             );
+                                            // Send to python container and wait for result
                                             let data: any = PythonUtil.runSync([
                                                 brokerUniqueDirName,
                                                 `${fileName}.pdf`,
@@ -101,8 +103,14 @@ export class DematAccountSyncHandler implements ISyncHandler<DematAccount> {
                                                 `${mfParam.panNo.toUpperCase()}`
                                             ]);
                                             let newData = data.replaceAll("'", '"');
-                                            parsedDataList.push(JSON.parse(newData));
-                                            mailProcessed++;
+                                            let currList: [{ [key: string]: string }] = JSON.parse(newData);
+                                            parsedDataList.push(...currList);
+                                            if (mailProcessed === mailIds.length) {
+                                                eventEmitter.emit(dematAccount.account_name, {
+                                                    account: dematAccount,
+                                                    data: parsedDataList
+                                                });
+                                            }
                                         }
                                     } catch (Exception) {
                                         logger.error(

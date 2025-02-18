@@ -8,8 +8,11 @@ class DataChannelUtil {
         this.responseStream[key] = responseStream;
     };
     // @ts-ignore
-    publish = (key: string, data: { [key: string]: string }) => {
-        if (this.responseStream[key]) this.responseStream[key].write(`data: ${JSON.stringify(data)}\n\n`);
+    publish = (key: string, data: { [key: string]: any }) => {
+        if (this.responseStream[key]) {
+            this.responseStream[key].write(`data: ${JSON.stringify(data)}\n\n`);
+            // this.responseStream[key].end();
+        }
     };
     deRegister = (key: string) => {
         if (this.responseStream[key]) {

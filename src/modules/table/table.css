@@ -38,6 +38,7 @@
 
 .tbody {
     height: calc(100% - 96px);
+    min-height: 56px;
     overflow-y: scroll;
     display: block;
 }
@@ -89,11 +90,11 @@
     visibility: hidden;
 }
 
-/*.td-span-sortable .sort-icon {*/
+/*.td-span-sortable .sort-Icon {*/
 /*    visibility: hidden;*/
 /*}*/
 
-/*:not(.td-span-sort-active) .td-span-sortable:hover .sort-icon {*/
+/*:not(.td-span-sort-active) .td-span-sortable:hover .sort-Icon {*/
 /*    visibility: visible;*/
 /*}*/
 
@@ -187,32 +188,11 @@
 }
 
 .progress {
-    background-color: white;
     overflow: hidden;
     width: 100%;
     height: 5px;
     display: block;
     position: relative;
-}
-
-.progress .indeterminate {
-    width: 100%;
-    display: block;
-    height: 5px;
-    position: absolute;
-    border: none;
-    padding: 0;
-}
-
-.indeterminate:before {
-    content: '';
-    position: absolute;
-    background-color: rgb(34, 52, 60);
-    top: 0;
-    left: 0;
-    bottom: 0;
-    will-change: left, right;
-    animation: indeterminate 3.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
 }
 
 .tfoot {
@@ -251,7 +231,7 @@
     background: transparent;
     color: currentColor;
     border-radius: 5px;
-    width: 40%;
+    width: 65px !important;
     text-align: center;
 }
 

@@ -8,6 +8,7 @@ dotenv.config({
     path: rootDirectoryPath + '/.env'
 });
 
+export const startMailServer = (process.env.START_MAIL_SERVER || 'true').toString().toLocaleLowerCase() === 'true';
 export const environment = process.env.NODE_ENV;
 export const port = process.env.PORT;
 export const timezone = process.env.TZ;

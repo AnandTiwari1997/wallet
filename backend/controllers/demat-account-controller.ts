@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AsyncApiHandler } from '../core/async-handler.js';
+import { AsyncApiHandler } from '../core/api-handler.js';
 import { BadRequestError, InternalError } from '../core/api-error.js';
 import { ApiRequestPathParam } from '../types/api-request-path-param.js';
 import { ApiResponseBody } from '../types/api-response-body.js';
@@ -57,6 +57,26 @@ router.post(
             };
             dematAccountSyncHandler.sync([account], false);
             return new SuccessResponse<ApiResponseBody<DematAccount>>(apiResponse).send(res);
+        }
+    )
+);
+router.post(
+    '/sync',
+    AsyncApiHandler(
+        async (
+            req: Request<ApiRequestPathParam, { message: string }, ApiRequestBody<DematAccount>>,
+            res: Response<{
+                message: string;
+            }>
+        ) => {
+            let where = RepositoryUtils.getWhereClause(req.body.criteria);
+            let dematAccounts = await dematAccountRepository.find({
+                where: where
+            });
+            dematAccountSyncHandler.sync(dematAccounts, true);
+            return new SuccessResponse<{
+                message: string;
+            }>({ message: 'Sync request has been submitted.' }).send(res);
         }
     )
 );

@@ -69,7 +69,15 @@ export class ArrayUtil {
     }
 }
 
-export const ALL_STOCKS = [
+export interface StockInfo {
+    EXCHANGE: string;
+    SYMBOL_CODE: string;
+    SYMBOL: string;
+    NAME_OF_COMPANY: string;
+    ISIN_NUMBER: string;
+}
+
+export const ALL_STOCKS: StockInfo[] = [
     {
         EXCHANGE: 'NSE',
         SYMBOL_CODE: '20MICRONS',
@@ -10483,7 +10491,7 @@ export const ALL_STOCKS = [
         EXCHANGE: 'NSE',
         SYMBOL_CODE: 'SBICARD',
         SYMBOL: 'SBICARD',
-        NAME_OF_COMPANY: 'SBI Cards and Payment Services Limited',
+        NAME_OF_COMPANY: 'SBI Card and Payment Services Limited',
         ISIN_NUMBER: 'INE018E01016'
     },
     {
@@ -34066,7 +34074,7 @@ export const ALL_STOCKS = [
         EXCHANGE: 'BSE',
         SYMBOL_CODE: '534190',
         SYMBOL: 'OLPCL',
-        NAME_OF_COMPANY: 'Olympic Cards Limited',
+        NAME_OF_COMPANY: 'Olympic Card Limited',
         ISIN_NUMBER: 'INE550L01013'
     },
     {

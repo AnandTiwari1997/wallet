@@ -1,9 +1,8 @@
+import { ApiResponse, getInvestmentsTransaction } from 'backend/BackendApi';
+import { MutualFundTransaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-
-import { MutualFundTransaction } from '../../../data/models';
-import { ArrayUtil } from '../../../data/transaction-data';
-import { ApiResponse, getInvestmentsTransaction } from '../../../modules/backend/BackendApi';
 
 const MutualFundInvestmentChart = () => {
     const [mutualFundInvestedAmountCharData, setMutualFundInvestedAmountChartData] = useState<
@@ -74,12 +73,6 @@ const MutualFundInvestmentChart = () => {
                 }}
                 options={{
                     responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Investment Per Fund'
-                        }
-                    },
                     scales: {
                         x: {
                             display: true,

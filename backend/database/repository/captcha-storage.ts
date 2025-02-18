@@ -1,16 +1,16 @@
 import { Storage } from './storage.js';
 
-class CaptchaStorage implements Storage<{ captchaId: string; captchaText?: string }> {
-    data: { [key: string]: { captchaId: string; captchaText?: string } } = {};
+class CaptchaStorage implements Storage<{ id: string; text?: string }> {
+    data: { [key: string]: { id: string; text?: string } } = {};
 
-    add(item: { captchaId: string; captchaText?: string }): { captchaId: string; captchaText?: string } {
-        if (!this.data[item.captchaId]) {
-            this.data[item.captchaId] = item;
+    add(item: { id: string; text?: string }): { id: string; text?: string } {
+        if (!this.data[item.id]) {
+            this.data[item.id] = item;
         }
-        return this.data[item.captchaId];
+        return this.data[item.id];
     }
 
-    addAll(items: { captchaId: string; captchaText?: string }[]): { captchaId: string; captchaText?: string }[] {
+    addAll(items: { id: string; text?: string }[]): { id: string; text?: string }[] {
         return [];
     }
 
@@ -23,15 +23,15 @@ class CaptchaStorage implements Storage<{ captchaId: string; captchaText?: strin
         return false;
     }
 
-    get(id: string): { captchaId: string; captchaText?: string } | undefined {
+    get(id: string): { id: string; text?: string } | undefined {
         return this.data[id] ? this.data[id] : undefined;
     }
 
-    getAll(): { captchaId: string; captchaText?: string }[] {
+    getAll(): { id: string; text?: string }[] {
         return Object.values(this.data);
     }
 
-    update(item: { captchaId: string; captchaText?: string }): { captchaId: string; captchaText?: string } | undefined {
+    update(item: { id: string; text?: string }): { id: string; text?: string } | undefined {
         return undefined;
     }
 }

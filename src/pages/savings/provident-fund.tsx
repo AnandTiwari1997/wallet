@@ -1,14 +1,13 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { darkGreen, darkRed } from 'App';
+import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from 'backend/BackendApi';
+import { ProvidentFundTransaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { format } from 'date-fns/esm';
+import useAPI from 'hooks/useAPI';
+import { indianRupee } from 'icons/icons';
+import { Icon } from 'modules';
+import { Table, TableColumn, TableData } from 'modules/table';
 import { useEffect, useState } from 'react';
-
-import { darkGreen, darkRed } from '../../App';
-import { ProvidentFundTransaction } from '../../data/models';
-import { ArrayUtil } from '../../data/transaction-data';
-import useAPI from '../../hooks/app-hooks';
-import { indianRupee } from '../../icons/icons';
-import { ApiRequestBody, ApiResponse, getInvestmentsTransaction } from '../../modules/backend/BackendApi';
-import Table, { TableColumn, TableData } from '../../modules/table/table';
 
 const ProvidentFund = () => {
     const [initialData, setInitialData] = useState<ProvidentFundTransaction[]>([]);
@@ -44,9 +43,7 @@ const ProvidentFund = () => {
                 );
                 setInitialData(sortedTransactions);
             })
-            .catch((reason) => {
-                console.log(reason);
-            });
+            .catch((reason) => {});
     };
 
     useEffect(() => {
@@ -65,10 +62,32 @@ const ProvidentFund = () => {
             label: 'Salary Month',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Salary Month:`}</div>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>{rows[0].wage_month}</div>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
+                            {rows[0].wage_month}
+                        </div>
                     </div>
+                );
+            },
+            customRender: (row: ProvidentFundTransaction) => {
+                return (
+                    <span
+                        style={{
+                            textAlign: 'right'
+                        }}
+                    >
+                        {row.wage_month}
+                    </span>
                 );
             }
         },
@@ -77,13 +96,16 @@ const ProvidentFund = () => {
             label: 'Transaction Date',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div style={{ width: '100%', textAlign: 'left' }}>{`Recent Transaction:`}</div>
                         <div
                             style={{
                                 width: '100%',
                                 textAlign: 'left',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
                             }}
                         >
                             {format(rows[0].transaction_date, 'dd MMM yyy')}
@@ -104,10 +126,25 @@ const ProvidentFund = () => {
             label: 'Employee Contribution',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
                             <i className="table-body-column-icon icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (item) => item.employee_contribution).toFixed(2)}
                         </div>
@@ -116,9 +153,22 @@ const ProvidentFund = () => {
             },
             customRender: (row: ProvidentFundTransaction) => {
                 return (
-                    <span style={{ color: row.employee_contribution > 0 ? `${darkGreen}` : `${darkRed}` }}>
+                    <span
+                        style={{
+                            color: row.employee_contribution > 0 ? `${darkGreen}` : `${darkRed}`,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    >
                         <i className="table-body-column-icon icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {row.employee_contribution.toFixed(2)}
                     </span>
@@ -126,7 +176,7 @@ const ProvidentFund = () => {
             },
             columnFooter: (rows: TableData<ProvidentFundTransaction>[]) => {
                 return (
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div
                             style={{
                                 width: '100%',
@@ -138,11 +188,18 @@ const ProvidentFund = () => {
                                 width: '100%',
                                 display: 'flex',
                                 justifyContent: 'right',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                alignItems: `center`
                             }}
                         >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) =>
                                 ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employee_contribution)
@@ -158,10 +215,25 @@ const ProvidentFund = () => {
             label: 'Employer Contribution',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
                             <i className="table-body-column-icon icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (a: ProvidentFundTransaction) => a.employer_contribution).toFixed(2)}
                         </div>
@@ -170,9 +242,22 @@ const ProvidentFund = () => {
             },
             customRender: (row: ProvidentFundTransaction) => {
                 return (
-                    <span style={{ color: row.employer_contribution > 0 ? `${darkGreen}` : `${darkRed}` }}>
+                    <span
+                        style={{
+                            color: row.employer_contribution > 0 ? `${darkGreen}` : `${darkRed}`,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    >
                         <i className="table-body-column-icon icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {row.employer_contribution.toFixed(2)}
                     </span>
@@ -180,7 +265,7 @@ const ProvidentFund = () => {
             },
             columnFooter: (rows: TableData<ProvidentFundTransaction>[]) => {
                 return (
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div
                             style={{
                                 width: '100%',
@@ -192,11 +277,18 @@ const ProvidentFund = () => {
                                 width: '100%',
                                 display: 'flex',
                                 justifyContent: 'right',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                alignItems: `center`
                             }}
                         >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) =>
                                 ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.employer_contribution)
@@ -212,10 +304,25 @@ const ProvidentFund = () => {
             label: 'Pension Amount',
             groupByRender: (rows: ProvidentFundTransaction[]) => {
                 return (
-                    <div style={{ display: 'block' }}>
-                        <div style={{ width: '100%', textAlign: 'left', fontWeight: '700' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                        <div
+                            style={{
+                                width: '100%',
+                                textAlign: 'left',
+                                fontWeight: '700',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                        >
                             <i className="table-body-column-icon icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (a: ProvidentFundTransaction) => a.pension_amount).toFixed(2)}
                         </div>
@@ -224,9 +331,22 @@ const ProvidentFund = () => {
             },
             customRender: (row: ProvidentFundTransaction) => {
                 return (
-                    <span style={{ color: row.pension_amount > 0 ? `${darkGreen}` : `${darkRed}` }}>
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
+                    <span
+                        style={{
+                            color: row.pension_amount > 0 ? `${darkGreen}` : `${darkRed}`,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <i className="table-body-column-icon icon">
+                            <Icon
+                                icon={indianRupee}
+                                svgProps={{
+                                    height: '12px',
+                                    width: '12px'
+                                }}
+                            />
                         </i>
                         {row.pension_amount.toFixed(2)}
                     </span>
@@ -234,7 +354,7 @@ const ProvidentFund = () => {
             },
             columnFooter: (rows: TableData<ProvidentFundTransaction>[]) => {
                 return (
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
                         <div
                             style={{
                                 width: '100%',
@@ -246,11 +366,18 @@ const ProvidentFund = () => {
                                 width: '100%',
                                 display: 'flex',
                                 justifyContent: 'right',
-                                fontWeight: '700'
+                                fontWeight: '700',
+                                alignItems: `center`
                             }}
                         >
-                            <i className="icon">
-                                <FontAwesomeIcon icon={indianRupee} />
+                            <i className="table-body-column-icon icon">
+                                <Icon
+                                    icon={indianRupee}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                             {ArrayUtil.sum(rows, (a: TableData<ProvidentFundTransaction>) =>
                                 ArrayUtil.sum(a.data, (b: ProvidentFundTransaction) => b.pension_amount)

@@ -15,7 +15,7 @@ export class MaharashtraStateElectricityDistributionBillProcessor {
             logger.info(`Opened https://wss.mahadiscom.in/wss/wss?uiActionName=getViewPayBill`);
             await driver.sleep(2000);
             await driver.findElement(By.xpath('//input[@id="consumerNo"]')).sendKeys(billConsumerNumber);
-            // await driver.findElement(By.xpath('//button[@id="btnCaptchaRefViewpaybill"]')).click();
+            // await driver.findElement(By.xpath('//Button[@id="btnCaptchaRefViewpaybill"]')).click();
             driver.sleep(2000);
             let webCookies: IWebDriverCookie[] = await driver.manage().getCookies();
             let cookies: string[] = webCookies.map((cookie) => `${cookie.name}=${cookie.value};`);
@@ -44,7 +44,7 @@ export class MaharashtraStateElectricityDistributionBillProcessor {
             );
             let body = await response.json();
             await driver.findElement(By.xpath('//input[@id="txtInput"]')).sendKeys(body as string);
-            await driver.findElement(By.xpath('//button[@id="submitButton"]')).click();
+            await driver.findElement(By.xpath('//Button[@id="submitButton"]')).click();
             let amount = await driver
                 .findElement(
                     By.xpath(electricityParam.MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD.bill_amount_xpath)

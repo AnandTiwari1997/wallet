@@ -1,31 +1,24 @@
-import Tabs from '../../modules/tabs/tabs';
-
-import './bill.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import 'pages/bills/bill.css';
+import { ApiCriteria, ApiRequestBody, ApiResponse, getBills, updateBill } from 'backend/BackendApi';
+import { Badge } from 'boxed-material-ui/modules';
 import CSS from 'csstype';
+import { Bill, billCategoryMap } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { addMonths, format } from 'date-fns';
-import { useEffect, useState } from 'react';
-
-import AddBill from './add-bill';
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
-import { Bill, billCategoryMap } from '../../data/models';
-import { ArrayUtil } from '../../data/transaction-data';
-import useAPI from '../../hooks/app-hooks';
-import { indianRupee, menu } from '../../icons/icons';
-import { ApiCriteria, ApiResponse, getBills, updateBill } from '../../modules/backend/BackendApi';
-import Badge from '../../modules/badge/badge';
-import Button from '../../modules/button/button';
-import Dialog from '../../modules/dialog/dialog';
-import IconButton from '../../modules/icon/icon-button';
-import Menu from '../../modules/menu/menu';
-import MenuOption from '../../modules/menu/menu-option';
-import Table, { TableColumn, TableData } from '../../modules/table/table';
-import Tab from '../../modules/tabs/tab';
+import useAPI from 'hooks/useAPI';
+import useSnackbar from 'hooks/useSnackbar';
+import { indianRupee, menu } from 'icons/icons';
+import { Dialog, Icon, IconButton, Tab, Table, TableColumn, TableData, Tabs } from 'modules';
+import AddBill from 'pages/bills/add-bill';
+import { useCallback, useEffect, useState } from 'react';
+import FilterActionHeader from 'shared/filter-action-header/FilterActionHeader';
+import { Menu, MenuOption } from 'boxed-material-ui';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
     flexDirection: 'column',
-    height: '100%'
+    height: '100%',
+    margin: '1%'
 };
 
 const BillsPage = () => {
@@ -34,10 +27,10 @@ const BillsPage = () => {
     const [selectedTab, setSelectedTab] = useState('ACTIVE');
     const [showAddBill, setShowAddBill] = useState(false);
     const [selectedBill, setSelectedBill] = useState<Bill | undefined>(undefined);
-    const [showBillActionMenu, setShowBillActionMenu] = useState(false);
-    const [billMenuOptionFor, setBillMenuOptionFor] = useState<string>('');
     const [dueBillsCount, setDueBillsCount] = useState<number>(0);
     const [getData, loading] = useAPI<ApiRequestBody<Bill>, ApiResponse<Bill>>(getBills);
+    const [abortController, setAbortController] = useState<AbortController>(new AbortController());
+    const [snackBarConfig, setSnackbarConfig] = useSnackbar();
 
     const VENDOR: TableColumn = {
         label: 'Vendor',
@@ -101,9 +94,13 @@ const BillsPage = () => {
                             fontWeight: '700'
                         }}
                     >
-                        <i className="icon">
-                            <FontAwesomeIcon icon={indianRupee} />
-                        </i>
+                        <Icon
+                            icon={indianRupee}
+                            svgProps={{
+                                height: '16px',
+                                width: '16px'
+                            }}
+                        />
                         {ArrayUtil.sum(rows, (a: TableData<Bill>) =>
                             ArrayUtil.sum(a.data, (b: Bill) => (b.bill_status === 'UNPAID' ? b.bill_amount : 0))
                         ).toFixed(2)}
@@ -121,27 +118,18 @@ const BillsPage = () => {
                     <IconButton
                         id={`account-menu-${row.bill_id}`}
                         icon={menu}
-                        onClick={() => {
-                            setBillMenuOptionFor(row.bill_id);
-                            setSelectedBill(row);
-                            setShowBillActionMenu(true);
+                        onClick={() => setSelectedBill(row)}
+                        svgProps={{
+                            height: '16px',
+                            width: '16px'
                         }}
                     />
                     <Menu
-                        open={row.bill_id === selectedBill?.bill_id}
-                        onClose={() => {
-                            setShowBillActionMenu(false);
-                            setBillMenuOptionFor('');
-                            setSelectedBill(undefined);
-                        }}
-                        menuFor={`account-menu-${billMenuOptionFor}`}
+                        open={row.bill_id === selectedBill?.bill_id && !showAddBill}
+                        onClose={() => setSelectedBill(undefined)}
+                        menuFor={`account-menu-${row.bill_id}`}
                     >
-                        <MenuOption
-                            label={'Edit'}
-                            onMenuOptionClick={(event) => {
-                                setShowAddBill(true);
-                            }}
-                        />
+                        <MenuOption label={'Edit'} onMenuOptionClick={(event) => setShowAddBill(true)} />
                         <MenuOption
                             label={'Paid'}
                             onMenuOptionClick={(event) => {
@@ -165,6 +153,10 @@ const BillsPage = () => {
                                         if (selectedTab === 'DUE') {
                                             getDueBillsCount();
                                         }
+                                        setSnackbarConfig({
+                                            open: true,
+                                            message: 'Bill marked paid.'
+                                        });
                                     })
                                     .finally(() => setSelectedBill(undefined));
                             }}
@@ -188,7 +180,7 @@ const BillsPage = () => {
         ALL: [VENDOR, NAME, BILL_CONSUMER_NO, CATEGORY, NEXT_BILL_DATE, TRANSACTION_DATE, STATUS, BILL_AMOUNT, ACTION]
     };
 
-    const fetchBills = () => {
+    const fetchBills = useCallback(() => {
         let body: ApiRequestBody<Bill> = {
             criteria: {
                 sorts: [{ key: 'next_bill_date', ascending: false }]
@@ -198,23 +190,24 @@ const BillsPage = () => {
             const criteria = buildCriteria(selectedTab);
             body = { criteria: criteria };
         }
-        getData(body).then((value) => {
+        getData(body, abortController).then((value) => {
             setBills(value.results);
             setCount(value.num_found);
         });
-    };
-    const getDueBillsCount = () => {
+    }, [abortController, getData, selectedTab]);
+
+    const getDueBillsCount = useCallback(() => {
         const criteria = buildCriteria('DUE');
         const body: ApiRequestBody<Bill> = { criteria: criteria };
-        getData(body).then((value) => {
+        getData(body, abortController).then((value) => {
             setDueBillsCount(value.num_found);
         });
-    };
+    }, [abortController, getData, selectedTab]);
 
     useEffect(() => {
         fetchBills();
         getDueBillsCount();
-    }, [selectedTab]);
+    }, []);
 
     const buildCriteria = (label: string) => {
         const criteria: ApiCriteria = {
@@ -230,22 +223,23 @@ const BillsPage = () => {
     };
 
     const _renderTabData = (tab: string) => {
-        return (
-            <Table
-                columns={columnsPerTab[tab]}
-                rows={bills}
-                selectable={false}
-                onSort={(sortedColumn) => console.log(sortedColumn)}
-                onPagination={(tablePagination) => console.log(tablePagination)}
-                count={count}
-                isLoading={loading}
-            />
-        );
+        return <Table columns={columnsPerTab[tab]} rows={bills} selectable={false} count={count} isLoading={loading} />;
     };
 
     const _renderBadgedLabel = (count: number) => {
         return (
-            <Badge badgeContent={count} anchorOrigin={{ vertical: 'center', horizontal: 'center' }}>
+            <Badge
+                badgeContent={count}
+                anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
+                childProps={{
+                    label: {
+                        style: {
+                            position: 'relative',
+                            marginLeft: '5px'
+                        }
+                    }
+                }}
+            >
                 Due Bills
             </Badge>
         );
@@ -253,26 +247,19 @@ const BillsPage = () => {
 
     return (
         <div style={topDiv}>
-            <div
-                style={{
-                    height: 'calc(3rem - 10px)',
-                    display: 'flex',
-                    justifyContent: 'end',
-                    alignItems: 'center',
-                    marginTop: '10px',
-                    marginRight: '10px'
-                }}
-            >
-                <Button
-                    onClick={() => {
-                        setShowAddBill(true);
-                        setSelectedBill(undefined);
-                    }}
-                >
-                    Add
-                </Button>
-            </div>
-            <div style={{ background: 'white', margin: '10px', height: 'calc(100% - 3rem - 20px)' }}>
+            <FilterActionHeader
+                actions={[
+                    {
+                        onClick: () => {
+                            setShowAddBill(true);
+                            setSelectedBill(undefined);
+                        },
+                        name: 'Add',
+                        hidden: false
+                    }
+                ]}
+            />
+            <div style={{ background: 'white', height: 'calc(98% - 66px)' }}>
                 <Tabs selectedTab={selectedTab} onTabChange={(selectedTab) => setSelectedTab(selectedTab.tabValue)}>
                     <Tab label={'Upcoming Bills'} value={'ACTIVE'} classes={'tab--width'}>
                         {_renderTabData('ACTIVE')}
@@ -292,15 +279,19 @@ const BillsPage = () => {
                     setShowAddBill(false);
                 }}
                 header="Bill"
+                hideAction
             >
                 <AddBill
                     bill={selectedBill}
                     onSubmit={(success, data) => {
                         if (success) {
+                            setAbortController(new AbortController());
                             fetchBills();
-                            console.log(`Account ${data} has been add Successfully.`);
+                            setSnackbarConfig({
+                                open: true,
+                                message: `Account ${data?.bill_consumer_no} has been add Successfully.`
+                            });
                         } else {
-                            console.log(`Error occurred while adding Account ${data}.`);
                         }
                         setSelectedBill(undefined);
                         setShowAddBill(false);

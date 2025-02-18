@@ -1,10 +1,8 @@
+import { addAccount, ApiResponse, getBanks, updateAccount } from 'backend/BackendApi';
+import { Account, Bank } from 'data/models';
 import { format, parse } from 'date-fns';
-import { useEffect, useState } from 'react';
-
-import { Account, Bank } from '../../data/models';
-import { addAccount, ApiResponse, getBanks, updateAccount } from '../../modules/backend/BackendApi';
-import Select, { SelectOption } from '../../modules/select/select';
-import TextBox from '../../modules/text-box/text-box';
+import React, { useEffect, useState } from 'react';
+import { Button, InputField, Select, SelectOption } from 'boxed-material-ui';
 
 const AddAccount = ({
     account,
@@ -39,19 +37,26 @@ const AddAccount = ({
                     return { value: value1.bank_id, label: value1.name };
                 });
             setBankOption(options);
+            if (bankId === 0) {
+                setBankId(options[0].value);
+            }
         });
     };
 
     useEffect(() => {
         setEdit(!!account);
-        setAccountId(account ? account.account_id : 0);
+        setAccountId(account ? account.account_id ?? 0 : 0);
         setAccountType(account ? account.account_type : 'CASH');
         setAccountName(account ? account.account_name : '');
         setAccountNumber(account ? account.account_number : '');
         setAccountBalance(account ? account.account_balance : 0);
         setStartDate(format(account ? new Date(account.start_date) : new Date(), 'dd-MM-yyyy'));
-        setBankId(account ? (account.bank ? account.bank.bank_id : 0) : 0);
         setSearchText(account ? account.search_text : '');
+        if (account) {
+            setBankId(account.bank ? account.bank.bank_id : 0);
+        } else {
+            setBankId(0);
+        }
         _getBanks();
     }, [account]);
 
@@ -73,8 +78,9 @@ const AddAccount = ({
     return (
         <>
             <div style={{ width: '250px' }}>
-                <p style={{ margin: '0.5em 0' }}>Account Type</p>
+                <div style={{ margin: '0.5em 0' }} />
                 <Select
+                    label={'Account Type'}
                     selectedOption={accountType}
                     options={[
                         { value: 'CASH', label: 'Cash' },
@@ -91,8 +97,9 @@ const AddAccount = ({
                         setAccountType(event.value);
                     }}
                 />
-                <p style={{ margin: '0.5em 0' }}>Account Name</p>
-                <TextBox
+                <div style={{ margin: '0.5em 0' }} />
+                <InputField
+                    label={'Account Name'}
                     value={accountName}
                     placeholder={'Enter Account Name'}
                     onChange={(event) => {
@@ -102,17 +109,20 @@ const AddAccount = ({
 
                 {accountType !== 'CASH' && (
                     <>
-                        <p style={{ margin: '0.5em 0' }}>Bank</p>
+                        <div style={{ margin: '0.5em 0' }} />
                         <Select
-                            selectedOption={bankId}
-                            options={bankOption}
+                            label={'Bank'}
                             onSelectionChange={(event) => {
                                 setBankId(Number.parseInt(event.value));
                             }}
+                            loading={bankOption.length === 0}
+                            options={bankOption}
+                            selectedOption={bankId}
                         />
 
-                        <p style={{ margin: '0.5em 0' }}>Account/Card Number</p>
-                        <TextBox
+                        <div style={{ margin: '0.5em 0' }} />
+                        <InputField
+                            label={'Account/Card Number'}
                             value={accountNumber}
                             placeholder={'Enter Account/Card Number'}
                             onChange={(event) => {
@@ -120,8 +130,10 @@ const AddAccount = ({
                             }}
                         />
 
-                        <p>Loan Start Date</p>
-                        <TextBox
+                        <div style={{ margin: '0.5em 0' }} />
+                        <InputField
+                            label={'Loan Start Date'}
+                            showLabel={true}
                             value={startDate}
                             placeholder={'Enter Loan Start Date in dd-MM-yyyy'}
                             onChange={(event) => {
@@ -131,10 +143,11 @@ const AddAccount = ({
                     </>
                 )}
 
-                {(accountType == 'LOAN' || accountType == 'CREDIT_CARD') && (
+                {(accountType === 'LOAN' || accountType === 'CREDIT_CARD') && (
                     <>
-                        <p style={{ margin: '0.5em 0' }}>Search Text</p>
-                        <TextBox
+                        <div style={{ margin: '0.5em 0' }} />
+                        <InputField
+                            label={'Search Text'}
                             value={searchText}
                             placeholder={'Enter Text to filter mail'}
                             onChange={(event) => {
@@ -144,8 +157,9 @@ const AddAccount = ({
                     </>
                 )}
 
-                <p style={{ margin: '0.5em 0' }}>Balance</p>
-                <TextBox
+                <div style={{ margin: '0.5em 0' }} />
+                <InputField
+                    label={'Balance'}
                     value={accountBalance}
                     type={'number'}
                     placeholder={'Enter Balance'}
@@ -155,12 +169,12 @@ const AddAccount = ({
                 />
 
                 <div style={{ height: '40px', display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
-                    <button
+                    <Button
+                        appearance={'filled'}
                         className="button"
                         onClick={() => {
                             setBankOption([]);
                             const account: Account = {
-                                account_id: accountId,
                                 account_name: accountName,
                                 account_balance: accountBalance,
                                 account_number: accountNumber,
@@ -189,7 +203,7 @@ const AddAccount = ({
                         }}
                     >
                         Add
-                    </button>
+                    </Button>
                 </div>
             </div>
         </>

@@ -1,8 +1,20 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 import { close } from '../../icons/icons';
 import './dailog.css';
-import Overlay from '../overlay/overlay';
+import Overlay from '../../boxed-material-ui/modules/Overlay/Overlay';
+
+import { ComponentPropsWithoutRef } from 'react';
+
+import { Icon } from '../icon';
+
+type DialogProp = {
+    open: boolean;
+    children: any;
+    onBackdrop?: () => void;
+    onClose?: () => void;
+    header?: any;
+    hideAction?: boolean;
+    onSubmit?: (...args: any) => void;
+} & ComponentPropsWithoutRef<'div'>;
 
 const Dialog = ({
     open,
@@ -10,35 +22,36 @@ const Dialog = ({
     onBackdrop,
     onClose,
     header,
-    noAction = false,
-    onSubmit
-}: {
-    open: boolean;
-    children: any;
-    onBackdrop?: () => void;
-    onClose: () => void;
-    header: any;
-    noAction?: boolean;
-    onSubmit?: (...args: any) => void;
-}) => {
+    hideAction = false,
+    onSubmit,
+    ...props
+}: DialogProp) => {
     return (
         <Overlay
-            trigger={null}
+            anchorElement={null}
             open={open}
-            onBackdrop={onBackdrop ? onBackdrop : onClose}
+            onBackdrop={onBackdrop ? onBackdrop : onClose ? onClose : () => console.log('Clicked')}
             parent={document.getElementsByTagName('body')[0]}
-            backdropClass={'dialog-overlay-background'}
-            containerClass={'dialog-overlay-container'}
+            childClasses={{
+                backdrop: 'dialog-overlay-background',
+                container: 'dialog-overlay-container'
+            }}
         >
-            <div className="dialog-content">
+            <div {...props} className={`dialog-content ${props.className ? props.className : ''}`}>
                 <div className="dialog-header">
                     <div className="dialog-header-content">{header}</div>
                     <button className="dialog-header-close" onClick={onClose}>
-                        <FontAwesomeIcon icon={close} />
+                        <Icon
+                            icon={close}
+                            svgProps={{
+                                height: '16px',
+                                width: '16px'
+                            }}
+                        />
                     </button>
                 </div>
                 <div className="dialog-body">{children}</div>
-                {!noAction && (
+                {!hideAction && (
                     <div className="dialog-footer">
                         <button className="button dialog-footer-action-button" onClick={onClose}>
                             Cancel

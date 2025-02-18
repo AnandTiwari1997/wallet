@@ -1,4 +1,3 @@
-import { accountRepository } from '../database/repository/account-repository.js';
 import { ISyncHandler } from './sync-handler.js';
 import { Account } from '../database/models/account.js';
 import { Logger } from '../core/logger.js';
@@ -6,6 +5,7 @@ import { accountTransactionRepository } from '../database/repository/account-tra
 import { TransactionType } from '../database/models/account-transaction.js';
 import { commonAccountTransactionSyncHandler } from '../singleton.js';
 import { RepositoryUtils } from '../database/util/repository-utils.js';
+import { accountRepository } from '../database/repository/account-repository.js';
 
 const logger = new Logger('CreditCardAccountTransactionSyncHandler');
 

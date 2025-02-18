@@ -20,26 +20,35 @@ const ALERTS_EMAIL_MAP: { [key: string]: string } = {
 };
 
 export class SbiBankProcessor extends BankProcessor {
-    getAccountNumber(mailString: string, regex: RegExp | undefined): string {
+    getAccountNumber(mailString: string): string {
         return '';
     }
 
-    getAmount(mailString: string, regex: RegExp | undefined): string {
+    getAmount(mailString: string): string {
         return '';
     }
 
-    getDate(mailString: string, regex: RegExp | undefined): string {
+    getDate(mailString: string): string {
         return '';
     }
 
-    getDescription(mailString: string, regex: RegExp | undefined): string {
+    getDescription(mailString: string): string {
         return '';
     }
 
-    getMailText(parsedMail: ParsedMail, onText: (text: string) => string | undefined): string {
+    getMailText(parsedMail: ParsedMail): string {
         let mailText = '';
         if (parsedMail.html) {
-            mailText = htmlParserUtil(parsedMail.html, onText);
+            mailText = htmlParserUtil(parsedMail.html, (text: string) => {
+                if (text.trim().includes('Rs') || text.trim().includes('INR')) {
+                    return text.trim();
+                } else if (text.trim().includes('credited') || text.trim().includes('debited')) {
+                    return text.trim();
+                } else if (text.trim().includes('Info')) {
+                    return text.trim();
+                }
+                return;
+            });
         } else {
             mailText = parsedMail.text?.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/gm, ' ') || '';
         }
@@ -49,25 +58,16 @@ export class SbiBankProcessor extends BankProcessor {
     processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         let emailId = parsedMail.from?.value[0].address;
         if (emailId) {
-            let mailText = this.getMailText(parsedMail, (text: string) => text);
+            let mailText = this.getMailText(parsedMail);
             let name = ALERTS_EMAIL_MAP[emailId];
             if (mailText.includes(name) && mailText.includes(account.account_number)) {
                 let bankProcessor = ProcessorFactory.getProcessor(emailId, undefined) as BankProcessor;
-                let bankMailText = bankProcessor?.getMailText(parsedMail, (text: string) => {
-                    if (text.trim().includes('Rs') || text.trim().includes('INR')) {
-                        return text.trim();
-                    } else if (text.trim().includes('credited') || text.trim().includes('debited')) {
-                        return text.trim();
-                    } else if (text.trim().includes('Info')) {
-                        return text.trim();
-                    }
-                    return;
-                });
+                let bankMailText = bankProcessor?.getMailText(parsedMail);
                 let note: { [key: string]: string } = {
-                    transactionDate: bankProcessor?.getDate(bankMailText || '', undefined) || '',
+                    transactionDate: bankProcessor?.getDate(bankMailText || '') || '',
                     transactionAccount: account.account_number,
                     transactionInfo: 'Credited to Loan Account',
-                    transactionAmount: bankProcessor?.getAmount(bankMailText || '', undefined) || ''
+                    transactionAmount: bankProcessor?.getAmount(bankMailText || '') || ''
                 };
                 if (note.transactionAmount.length > 0) {
                     return {

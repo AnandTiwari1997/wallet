@@ -1,10 +1,10 @@
 import './week-picker.css';
-import { addMonths, endOfDay, endOfWeek, startOfDay, startOfWeek, subMonths, getDaysInMonth } from 'date-fns';
+import { OnCalenderPickerChange } from 'boxed-material-ui/modules/CalenderPicker/CalenderPicker';
+import { addMonths, endOfDay, endOfWeek, getDaysInMonth, startOfDay, startOfWeek, subMonths } from 'date-fns';
 import { useState } from 'react';
 
 import { arrowLeft, arrowRight } from '../../icons/icons';
-import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
-import IconButton from '../icon/icon-button';
+import IconButton from '../icon-button/icon-button';
 
 const WeekPicker = ({
     value,
@@ -177,9 +177,25 @@ const WeekPicker = ({
     return (
         <div className="week-picker-options" id="week-selector">
             <div className="title-week">
-                <IconButton icon={arrowLeft} className={'arrow-container'} onClick={() => handleDate(false)} />
+                <IconButton
+                    icon={arrowLeft}
+                    className={'arrow-container'}
+                    onClick={() => handleDate(false)}
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
+                />
                 {`${months[date.getMonth()]} ${date.getFullYear()}`}
-                <IconButton icon={arrowRight} className={'arrow-container'} onClick={() => handleDate(true)} />
+                <IconButton
+                    icon={arrowRight}
+                    className={'arrow-container'}
+                    onClick={() => handleDate(true)}
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
+                />
             </div>
             <div className="rdrWeekDays">
                 <span className="rdrWeekDay">Sun</span>

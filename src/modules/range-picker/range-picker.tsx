@@ -1,8 +1,6 @@
 import './range-picker.css';
-import Checkbox from '../checkbox/checkbox';
 
-import 'react-date-range/dist/styles.css'; // main style file
-import 'react-date-range/dist/theme/default.css';
+import { OnCalenderPickerChange } from 'boxed-material-ui/modules/CalenderPicker/CalenderPicker';
 import {
     differenceInDays,
     differenceInMonths,
@@ -18,8 +16,8 @@ import {
 } from 'date-fns/esm';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import Button from '../button/button';
-import { OnCalenderPickerChange } from '../calender-picker/calender-picker';
+import Button from '../../boxed-material-ui/modules/Button/Button';
+import Checkbox from '../checkbox/checkbox';
 import DatePicker, { DateRange } from '../date-picker/date-picker';
 
 const RangePicker = ({

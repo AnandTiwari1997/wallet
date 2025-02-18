@@ -1,7 +1,7 @@
 import { Account } from '../database/models/account.js';
 import { connection } from '../processors/mail-service.js';
 import { simpleParser } from 'mailparser';
-import { AsyncExceptionHandler } from '../core/async-handler.js';
+import { AsyncExceptionHandler } from '../core/api-handler.js';
 import { AccountTransaction } from '../database/models/account-transaction.js';
 import { Logger } from '../core/logger.js';
 import { IProcessor, ProcessorFactory } from '../processors/processor-factory.js';

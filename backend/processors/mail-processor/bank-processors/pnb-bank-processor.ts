@@ -19,20 +19,20 @@ export class PnbBankProcessor extends BankProcessor {
     infoRegexExpression = new RegExp('thru (.*) Aval');
     dateRegexExpression = new RegExp('\\d+-\\d+-\\d+((.*)\\d+:\\d+:\\d+)?');
 
-    getAccountNumber(mailString: string, regex: RegExp | undefined): string {
-        let matchArray = mailString?.match(regex || this.accountNumberRegexExpression);
+    getAccountNumber(mailString: string): string {
+        let matchArray = mailString?.match(this.accountNumberRegexExpression);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getAmount(mailString: string, regex: RegExp | undefined): string {
-        let matchArray = mailString?.match(regex || this.decimalAmountRegexExpression);
+    getAmount(mailString: string): string {
+        let matchArray = mailString?.match(this.decimalAmountRegexExpression);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getDate(mailString: string, regex: RegExp | undefined): string {
-        let matchArray = mailString?.match(regex || this.dateRegexExpression);
+    getDate(mailString: string): string {
+        let matchArray = mailString?.match(this.dateRegexExpression);
         let transactionDateTime = '';
         if (matchArray) {
             transactionDateTime = matchArray[0];
@@ -40,19 +40,19 @@ export class PnbBankProcessor extends BankProcessor {
         return transactionDateTime;
     }
 
-    getDescription(mailString: string, regex: RegExp | undefined): string {
-        let matchArray = mailString?.match(regex || this.infoRegexExpression);
+    getDescription(mailString: string): string {
+        let matchArray = mailString?.match(this.infoRegexExpression);
         if (matchArray) return matchArray[1];
         return '';
     }
 
-    getMailText(parsedMail: ParsedMail, onText: (text: string) => string | undefined): string {
+    getMailText(parsedMail: ParsedMail): string {
         return parsedMail.text?.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/gm, ' ') || '';
     }
 
     processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
-            let mailText: string = this.getMailText(parsedMail, (text: string) => text);
+            let mailText: string = this.getMailText(parsedMail);
             let amount: string = '';
             let accountNo: string = '';
             let transactionDateTime: string = '';
@@ -62,10 +62,10 @@ export class PnbBankProcessor extends BankProcessor {
             let isCredit: boolean | undefined = mailText.toLowerCase().includes('credited');
             if (!isCredit && !isDebit) return;
 
-            amount = this.getAmount(mailText, this.decimalAmountRegexExpression);
-            accountNo = this.getAccountNumber(mailText, this.accountNumberRegexExpression);
-            transactionDateTime = this.getDate(mailText, this.dateRegexExpression);
-            transactionInfo = this.getDescription(mailText, this.infoRegexExpression);
+            amount = this.getAmount(mailText);
+            accountNo = this.getAccountNumber(mailText);
+            transactionDateTime = this.getDate(mailText);
+            transactionInfo = this.getDescription(mailText);
             let note = {
                 transactionDate: transactionDateTime,
                 transactionAccount: accountNo,

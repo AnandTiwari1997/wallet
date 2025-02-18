@@ -17,7 +17,7 @@ import {
 import { useState } from 'react';
 
 import { arrowLeft, arrowRight } from '../../icons/icons';
-import IconButton from '../icon/icon-button';
+import IconButton from '../icon-button/icon-button';
 
 export interface DateRange {
     startDate: Date;
@@ -267,7 +267,7 @@ const DatePicker = ({
                 forward: undefined
             });
         } else {
-            if (softSelection?.middle.length == 0) {
+            if (softSelection?.middle.length === 0) {
                 setSoftSelection(undefined);
             }
         }
@@ -403,6 +403,10 @@ const DatePicker = ({
         <div className="render-date-picker" id="date-picker">
             <div className="render-header">
                 <IconButton
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
                     icon={arrowLeft}
                     className={'arrow-container'}
                     style={{ color: 'rgb(37, 52, 60)' }}
@@ -437,6 +441,10 @@ const DatePicker = ({
                     </span>
                 </span>
                 <IconButton
+                    svgProps={{
+                        height: '16px',
+                        width: '16px'
+                    }}
                     icon={arrowRight}
                     className={'arrow-container'}
                     style={{ color: 'rgb(37, 52, 60)' }}

@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AsyncApiHandler } from '../core/async-handler.js';
+import { AsyncApiHandler } from '../core/api-handler.js';
 import { ApiResponseBody } from '../types/api-response-body.js';
 import { ApiRequestBody } from '../types/api-request-body.js';
 import { SuccessResponse } from '../core/api-response.js';

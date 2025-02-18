@@ -1,9 +1,8 @@
+import { Transaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { format, parse } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-
-import { Transaction } from '../../../data/models';
-import { ArrayUtil } from '../../../data/transaction-data';
 
 const ExpenseChart = ({ data }: { data: Transaction[] }) => {
     const [expenseChartData, setExpenseChartData] = useState<{ key: string; value: number }[]>([]);
@@ -45,10 +44,6 @@ const ExpenseChart = ({ data }: { data: Transaction[] }) => {
             options={{
                 responsive: true,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'Expense Per Day'
-                    },
                     decimation: {
                         enabled: true,
                         algorithm: 'lttb'
@@ -57,9 +52,6 @@ const ExpenseChart = ({ data }: { data: Transaction[] }) => {
                 scales: {
                     x: {
                         display: true,
-                        title: {
-                            display: true
-                        },
                         ticks: {
                             callback: (tickValue, index) => {
                                 return format(parse(expenseChartData[index].key, 'dd-MM-yyyy', new Date()), 'dd-MM');

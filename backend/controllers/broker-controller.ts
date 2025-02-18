@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { brokerRepository } from '../database/repository/broker-repository.js';
 import { RepositoryUtils } from '../database/util/repository-utils.js';
-import { AsyncApiHandler } from '../core/async-handler.js';
+import { AsyncApiHandler } from '../core/api-handler.js';
 import { ApiResponseBody } from '../types/api-response-body.js';
 import { ApiRequestBody } from '../types/api-request-body.js';
 import { Broker } from '../database/models/broker.js';

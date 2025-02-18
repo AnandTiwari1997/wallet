@@ -1,10 +1,10 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 
 import GroupByRow from './group-by-row';
 import { collapseStyle, expandStyle, GroupedTableData, RowExpandContext, TableColumn } from './table';
 import { expand } from '../../icons/icons';
 import Checkbox from '../checkbox/checkbox';
+import { Icon } from '../icon';
 
 const GroupByRows = ({
     columns,
@@ -97,7 +97,13 @@ const GroupByRows = ({
                                                     : expandStyle
                                             }
                                         >
-                                            <FontAwesomeIcon icon={expand} />
+                                            <Icon
+                                                icon={expand}
+                                                svgProps={{
+                                                    height: '16px',
+                                                    width: '16px'
+                                                }}
+                                            />
                                         </i>
                                     </button>
                                 </span>

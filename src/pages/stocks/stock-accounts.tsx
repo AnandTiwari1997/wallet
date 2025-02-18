@@ -1,15 +1,12 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { ApiRequestBody, ApiResponse, getStockAccount, syncStockAccount } from 'backend/BackendApi';
 import CSS from 'csstype';
+import { DematAccount } from 'data/models';
+import useAPI from 'hooks/useAPI';
+import { menu } from 'icons/icons';
+import { Dialog, Icon, Snackbar, Table, TableColumn } from 'modules';
+import AddStockAccount from 'pages/stocks/add-stock-account';
 import { useEffect, useState } from 'react';
-
-import { ApiRequestBody } from '../../../backend/types/api-request-body';
-import { DematAccount } from '../../data/models';
-import useAPI from '../../hooks/app-hooks';
-import { menu } from '../../icons/icons';
-import { ApiResponse, getStockAccount, syncAccount } from '../../modules/backend/BackendApi';
-import Menu from '../../modules/menu/menu';
-import MenuOption from '../../modules/menu/menu-option';
-import Table, { TableColumn } from '../../modules/table/table';
+import { Menu, MenuOption } from 'boxed-material-ui';
 
 const topDiv: CSS.Properties = {
     display: 'flex',
@@ -21,17 +18,19 @@ const StockAccountPage = () => {
     const [accounts, setAccounts] = useState<DematAccount[]>([]);
     const [count, setCount] = useState<number>(0);
     const [showAddAccount, setShowAddAccount] = useState(false);
-    const [showAccountMenu, setShowAccountMenu] = useState(false);
-    const [accountMenuOptionFor, setAccountMenuOptionFor] = useState<string>('');
     const [selectedAccount, setSelectedAccount] = useState<DematAccount | undefined>(undefined);
     const [getData, loading] = useAPI<ApiRequestBody<DematAccount>, ApiResponse<DematAccount>>(getStockAccount);
+    const [snackBarConfig, setSnackbarConfig] = useState<{
+        open: boolean;
+        message: string | null | undefined;
+    }>({ open: false, message: '' });
 
     useEffect(() => {
         getData({}).then((apiResponse) => {
             setCount(apiResponse.num_found);
             setAccounts(apiResponse.results);
         });
-    }, [setAccounts, getStockAccount]);
+    }, []);
 
     const columns: TableColumn[] = [
         {
@@ -52,7 +51,7 @@ const StockAccountPage = () => {
             customRender: (row: DematAccount) => {
                 return (
                     <>
-                        <div style={{}}>{row.broker.broker_name}</div>
+                        <div>{row.broker.broker_name}</div>
                     </>
                 );
             }
@@ -86,22 +85,25 @@ const StockAccountPage = () => {
                             className="icon-button"
                             id={`account-menu-${row.account_bo_id}`}
                             onClick={() => {
-                                setAccountMenuOptionFor(row.account_bo_id);
-                                setShowAccountMenu(true);
                                 setSelectedAccount(row);
                             }}
                         >
                             <i className="icon">
-                                <FontAwesomeIcon icon={menu} />
+                                <Icon
+                                    icon={menu}
+                                    svgProps={{
+                                        height: '16px',
+                                        width: '16px'
+                                    }}
+                                />
                             </i>
                         </button>
                         <Menu
-                            open={showAccountMenu}
+                            open={row.account_bo_id === selectedAccount?.account_bo_id && !showAddAccount}
                             onClose={() => {
-                                setAccountMenuOptionFor('');
-                                setShowAccountMenu(false);
+                                setSelectedAccount(undefined);
                             }}
-                            menuFor={`account-menu-${accountMenuOptionFor}`}
+                            menuFor={`account-menu-${row.account_bo_id}`}
                         >
                             <MenuOption
                                 label={'Edit'}
@@ -112,22 +114,19 @@ const StockAccountPage = () => {
                             <MenuOption
                                 label={'Sync'}
                                 onMenuOptionClick={(event) => {
-                                    console.log(row);
                                     if (!selectedAccount) {
                                         return;
                                     }
-                                    syncAccount({
+                                    syncStockAccount({
                                         criteria: {
-                                            filters: [
-                                                {
-                                                    key: 'account_type',
-                                                    value: [selectedAccount.account_type.toString()]
-                                                },
-                                                { key: 'account_id', value: [selectedAccount.account_bo_id.toString()] }
-                                            ]
+                                            filters: [{ key: 'account_bo_id', value: [selectedAccount.account_bo_id] }]
                                         }
                                     }).then((response) => {
-                                        console.log(response.message);
+                                        setSelectedAccount(undefined);
+                                        setSnackbarConfig({
+                                            open: true,
+                                            message: response.message
+                                        });
                                     });
                                 }}
                             />
@@ -141,7 +140,43 @@ const StockAccountPage = () => {
 
     return (
         <>
+            <Snackbar
+                open={snackBarConfig.open}
+                onClose={() => {
+                    setSnackbarConfig({ open: false, message: '' });
+                }}
+                anchorOrigin={{
+                    horizontal: 'right',
+                    vertical: 'bottom'
+                }}
+                autoCloseDuration={6000}
+            >
+                {snackBarConfig.message}
+            </Snackbar>
             <Table columns={columns} rows={accounts} count={count} isLoading={loading} />
+            <Dialog
+                open={showAddAccount}
+                onClose={() => {
+                    setSelectedAccount(undefined);
+                    setShowAddAccount(false);
+                }}
+                header="Bill"
+                hideAction
+            >
+                <AddStockAccount
+                    account={selectedAccount}
+                    onSubmit={(success, data) => {
+                        setSnackbarConfig({
+                            open: true,
+                            message: 'Demat Account Added Successfully'
+                        });
+                        getData({}).then((apiResponse) => {
+                            setCount(apiResponse.num_found);
+                            setAccounts(apiResponse.results);
+                        });
+                    }}
+                />
+            </Dialog>
         </>
     );
 };

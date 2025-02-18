@@ -1,29 +1,16 @@
-import CSS from 'csstype';
-import './dashboard.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Chart, registerables } from 'chart.js';
-import { startOfMonth } from 'date-fns';
-import { useEffect, useState } from 'react';
+import 'pages/dashboard/dashboard.css';
 
-import AmountPerTransactionTypeChart from './charts/ammount-per-transaction-type-chart';
-import BalancePerAccountChart from './charts/balance-per-account-chart';
-import CreditCardBalancePerAccountChart from './charts/credit-card-balance-per-account-chart';
-import CreditCardUsagePerMonthChart from './charts/credit-card-usage-per-month-chart';
-import ExpenseChart from './charts/expense-chart';
-import ExpensePerCategoryChart from './charts/expense-per-category-chart';
-import LoanAccountBalancePerAccountChart from './charts/loan-account-balance-per-account-chart';
-import MutualFundInvestmentChart from './charts/mutual-fund-investment-chart';
-import ProvidentFundInvestmentChart from './charts/provident-fund-investment-chart';
-import StockInvestmentChart from './charts/stock-investment-chart';
-import StocksInvestmentChart from './charts/stocks-investment-chart';
-import { Account, Transaction } from '../../data/models';
-import { edit, indianRupee, plus } from '../../icons/icons';
-import { ApiCriteria, getAccounts, getAllTransactions } from '../../modules/backend/BackendApi';
-import CalenderPicker from '../../modules/calender-picker/calender-picker';
-import Dialog from '../../modules/dialog/dialog';
-import Icon from '../../modules/icon/icon';
-import IconButton from '../../modules/icon/icon-button';
-import AddAccount from '../account/add-account';
+import { ApiCriteria, ApiRequestBody, ApiResponse, getAccounts, getAllTransactions } from 'backend/BackendApi';
+import { CalenderPicker } from 'boxed-material-ui/modules';
+import { Chart, registerables } from 'chart.js';
+import CSS from 'csstype';
+import { Account, Transaction } from 'data/models';
+import { startOfMonth } from 'date-fns';
+import useAPI from 'hooks/useAPI';
+import { edit, enlarge, indianRupee } from 'icons/icons';
+import { Dialog, Icon, IconButton } from 'modules';
+import AddAccount from 'pages/account/add-account';
+import { ReactNode, useEffect, useState } from 'react';
 
 Chart.register(...registerables);
 
@@ -32,8 +19,8 @@ const accountTopDivStyle: CSS.Properties = {
     flexDirection: 'row',
     height: '19%',
     margin: '1%',
-    background: 'rgb(255, 255, 255)',
-    boxShadow: 'rgba(255, 255, 255, 0.45) -3px -3px 7px, rgba(128, 135, 148, 0.56) 2px 2px 5px'
+    background: 'rgb(255, 255, 255)'
+    // boxShadow: 'rgba(255, 255, 255, 0.45) -3px -3px 7px, rgba(128, 135, 148, 0.56) 2px 2px 5px'
 };
 
 const cardWrapperStyle: CSS.Properties = {
@@ -63,7 +50,7 @@ const scrollableDiv: CSS.Properties = {
     display: 'flex',
     flexDirection: 'row',
     overflowX: 'scroll',
-    width: '85%',
+    width: '100%',
     alignItems: 'center'
 };
 
@@ -83,6 +70,12 @@ const DashboardPage = () => {
         to: new Date()
     });
     const [accountForDashboard, setAccountForDashboard] = useState<Account | undefined>(undefined);
+    const [getTransactions, isAllTransactionsDone] = useAPI<ApiRequestBody<Transaction>, ApiResponse<Transaction>>(
+        getAllTransactions
+    );
+    const [showFullViewChart, setShowFullViewChart] = useState(false);
+    const [fullViewChartComponent, setFullViewChartComponent] = useState<ReactNode>();
+    const [fullViewChartTitle, setFullViewChartTitle] = useState<string>('');
 
     const _getCriteria = (start: Date, end: Date) => {
         const criteria: ApiCriteria = {
@@ -102,11 +95,22 @@ const DashboardPage = () => {
         return criteria;
     };
 
+    const enlargeButton = (
+        <IconButton
+            svgProps={{
+                height: '16px',
+                width: '16px'
+            }}
+            icon={enlarge}
+            onClick={(event) => {}}
+        />
+    );
+
     useEffect(() => {
         getAccounts().then((response) => {
             setAccounts(response.results);
         });
-        getAllTransactions({
+        getTransactions({
             criteria: _getCriteria(range.from, range.to)
         }).then((response) => {
             setTransactions(response.results);
@@ -116,8 +120,10 @@ const DashboardPage = () => {
     const accountCards = accounts.map((account) => {
         const backgroundColor: CSS.Properties = {
             backgroundColor: `${
+                // eslint-disable-next-line no-nested-ternary
                 typeof account.bank === 'object'
-                    ? accountForDashboard
+                    ? // eslint-disable-next-line no-nested-ternary
+                      accountForDashboard
                         ? accountForDashboard.account_id === account.account_id
                             ? account.bank.primary_color
                             : '#ccd2db'
@@ -139,6 +145,10 @@ const DashboardPage = () => {
             >
                 <div className={'pencil'}>
                     <IconButton
+                        svgProps={{
+                            height: '16px',
+                            width: '16px'
+                        }}
                         icon={edit}
                         className={'alternate'}
                         onClick={(event) => {
@@ -161,7 +171,14 @@ const DashboardPage = () => {
                     </div>
                     <div className="account-balance">
                         <span className="">
-                            <Icon icon={indianRupee} className={'custom-font-size'} />
+                            <Icon
+                                icon={indianRupee}
+                                className={'custom-font-size'}
+                                svgProps={{
+                                    height: '16px',
+                                    width: '16px'
+                                }}
+                            />
                             {account.account_balance.toFixed(2)}
                         </span>
                     </div>
@@ -173,20 +190,20 @@ const DashboardPage = () => {
     return (
         <div style={topDiv}>
             <div style={accountTopDivStyle}>
-                <div style={addAccountCardStyle}>
-                    <button
-                        className="add-account-button"
-                        onClick={() => {
-                            setShowAddAccount(true);
-                            setSelectedAccount(undefined);
-                        }}
-                    >
-                        <i className="icon">
-                            <FontAwesomeIcon icon={plus} />
-                        </i>
-                        <span>Add Account</span>
-                    </button>
-                </div>
+                {/*<div style={addAccountCardStyle}>*/}
+                {/*    <Button*/}
+                {/*        className="add-account-Button"*/}
+                {/*        onClick={() => {*/}
+                {/*            setShowAddAccount(true);*/}
+                {/*            setSelectedAccount(undefined);*/}
+                {/*        }}*/}
+                {/*    >*/}
+                {/*        <i className="Icon">*/}
+                {/*            <Icon Icon={plus} />*/}
+                {/*        </i>*/}
+                {/*        <span>Add Account</span>*/}
+                {/*    </Button>*/}
+                {/*</div>*/}
                 {accountForDashboard && (
                     <div style={resetAccountSelectionStyle}>
                         <button
@@ -211,65 +228,214 @@ const DashboardPage = () => {
                     range={range}
                 />
             </div>
-            <div className="dashboard_chart_body_wrapper">
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <ExpenseChart data={transactions} />
-                        </div>
-                    </div>
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <AmountPerTransactionTypeChart data={transactions} />
-                        </div>
-                    </div>
-                </div>
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <ExpensePerCategoryChart data={transactions} />
-                        </div>
-                    </div>
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <BalancePerAccountChart data={accounts} />
-                        </div>
-                    </div>
-                </div>
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <LoanAccountBalancePerAccountChart data={accounts} />
-                        </div>
-                    </div>
-                </div>
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <div className="dashboard_chart">
-                            <CreditCardBalancePerAccountChart data={accounts} />
-                        </div>
-                    </div>
-                    <div className="dashboard_chart_wrapper">
-                        <CreditCardUsagePerMonthChart range={range} />
-                    </div>
-                </div>
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <MutualFundInvestmentChart />
-                    </div>
-                    <div className="dashboard_chart_wrapper">
-                        <ProvidentFundInvestmentChart />
-                    </div>
-                </div>
-                <div className="dashboard_chart_row_wrapper">
-                    <div className="dashboard_chart_wrapper">
-                        <StocksInvestmentChart />
-                    </div>
-                    <div className="dashboard_chart_wrapper">
-                        <StockInvestmentChart />
-                    </div>
-                </div>
+            <div
+                style={{
+                    overflow: 'scroll',
+                    height: 'calc(82% - 3rem)',
+                    width: `100%`
+                }}
+            >
+                {/*<Grids spacing={1} style={{ margin: '1%' }}>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader*/}
+                {/*                header={'Expense Per Day'}*/}
+                {/*                action={*/}
+                {/*                    <IconButton*/}
+                {/*                        svgProps={{*/}
+                {/*                            height: '16px',*/}
+                {/*                            width: '16px'*/}
+                {/*                        }}*/}
+                {/*                        Icon={enlarge}*/}
+                {/*                        onClick={(event) => {*/}
+                {/*                            setFullViewChartComponent(<ExpenseChart data={transactions} />);*/}
+                {/*                            setShowFullViewChart(true);*/}
+                {/*                            setFullViewChartTitle('Expense Per Day');*/}
+                {/*                        }}*/}
+                {/*                    />*/}
+                {/*                }*/}
+                {/*            />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <ExpenseChart data={transactions} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Credit Card Usage Per Month'} action={enlargeButton} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <CreditCardUsagePerMonthChart range={range} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader*/}
+                {/*                components={{*/}
+                {/*                    heading: 'Amount Per Transaction Type'*/}
+                {/*                }}*/}
+                {/*            />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <AmountPerTransactionTypeChart data={transactions} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Expense Per Category'} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <ExpensePerCategoryChart data={transactions} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={4} xl={4}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Amount Per Balance Account Type'} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <BalancePerAccountChart data={accounts} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={4} xl={4}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Remaining Amount Per Credit Card'} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <CreditCardBalancePerAccountChart data={accounts} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={4} xl={4}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Remaining Amount Per Loan Account'} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <LoanAccountBalancePerAccountChart data={accounts} />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Investment Per Fund'} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <MutualFundInvestmentChart />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Contribution Per Financial Year'} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <ProvidentFundInvestmentChart />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader header={'Investment Per Stocks'} action={enlargeButton} />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <StocksInvestmentChart />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*    <Grid lg={6} xl={6}>*/}
+                {/*        <Card className={'dashboard_chart_wrapper'} loading={isAllTransactionsDone}>*/}
+                {/*            <CardHeader*/}
+                {/*                header={'Investment Per Stock'}*/}
+                {/*                action={*/}
+                {/*                    <IconButton*/}
+                {/*                        Icon={enlarge}*/}
+                {/*                        onClick={(event) => {*/}
+                {/*                            setFullViewChartComponent(<StockInvestmentChart />);*/}
+                {/*                            setShowFullViewChart(true);*/}
+                {/*                            setFullViewChartTitle('Investment Per Stock');*/}
+                {/*                        }}*/}
+                {/*                    />*/}
+                {/*                }*/}
+                {/*            />*/}
+                {/*            <CardBody*/}
+                {/*                style={{*/}
+                {/*                    height: '76%',*/}
+                {/*                    display: 'flex',*/}
+                {/*                    justifyContent: 'center',*/}
+                {/*                    alignItems: 'center'*/}
+                {/*                }}*/}
+                {/*            >*/}
+                {/*                <StockInvestmentChart />*/}
+                {/*            </CardBody>*/}
+                {/*        </Card>*/}
+                {/*    </Grid>*/}
+                {/*</Grids>*/}
             </div>
+
             <Dialog
                 open={showAddAccount}
                 onClose={() => {
@@ -277,6 +443,7 @@ const DashboardPage = () => {
                     setSelectedAccount(undefined);
                 }}
                 header="Account"
+                hideAction
             >
                 <AddAccount
                     account={selectedAccount}
@@ -285,14 +452,36 @@ const DashboardPage = () => {
                             getAccounts().then((response) => {
                                 setAccounts(response.results);
                             });
-                            console.log(`Account ${data} has been add Successfully.`);
                         } else {
-                            console.log(`Error occurred while adding Account ${data}.`);
                         }
                         setSelectedAccount(undefined);
                         setShowAddAccount(false);
                     }}
                 />
+            </Dialog>
+
+            <Dialog
+                open={showFullViewChart}
+                onClose={() => {
+                    setShowFullViewChart(false);
+                    setFullViewChartComponent(undefined);
+                    setFullViewChartTitle('');
+                }}
+                header={fullViewChartTitle}
+                hideAction
+                style={{
+                    maxHeight: '100vh',
+                    maxWidth: '100vw'
+                }}
+            >
+                <div
+                    style={{
+                        height: '80vh',
+                        width: '80vw'
+                    }}
+                >
+                    {fullViewChartComponent}
+                </div>
             </Dialog>
         </div>
     );

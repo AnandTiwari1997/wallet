@@ -1,5 +1,4 @@
-import { createContext, useEffect, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { createContext, ReactNode, useEffect, useState } from 'react';
 
 import { caretLeft, caretRight, expandAll, hide, show } from '../../icons/icons';
 import { ArrayUtil } from '../../data/transaction-data';
@@ -10,9 +9,11 @@ import CSS from 'csstype';
 import GroupByRow from './group-by-row';
 import GroupByRows from './group-by-rows';
 import SortColumn, { SortedColumn } from './sort-column';
-import IconButton from '../icon/icon-button';
-import Select from '../select/select';
 import Checkbox from '../checkbox/checkbox';
+import { Icon } from '../icon';
+import IconButton from '../icon-button/icon-button';
+import { IndeterminateLinearProgress } from '../progress-bar';
+import { Select } from 'boxed-material-ui';
 
 export interface TableColumn {
     key: string;
@@ -78,7 +79,8 @@ const Table = ({
     onSort,
     onPagination,
     count,
-    isLoading
+    isLoading,
+    loader = <IndeterminateLinearProgress />
 }: {
     columns: TableColumn[];
     rows: any[];
@@ -88,6 +90,7 @@ const Table = ({
     onPagination?: (tablePagination: TablePagination) => any | void;
     count: number;
     isLoading?: boolean;
+    loader?: ReactNode;
 }) => {
     const [tableData, setTableData] = useState<TableData<any>[]>([]);
     const [initialData, setInitialData] = useState<any[]>(rows);
@@ -151,14 +154,14 @@ const Table = ({
     }, [rows, columns, loading]);
 
     const _columns = (): TableColumn[] => {
-        if (!groupByColumn || groupByColumn.length == 0) {
+        if (!groupByColumn || groupByColumn.length === 0) {
             return columns;
         }
         return columns.filter((col) => groupByColumn.find((tableCol) => col.key === tableCol.key) === undefined);
     };
 
     const _columnAlignment = (column: string) => {
-        if (initialData.length == 0) {
+        if (initialData.length === 0) {
             return 'end';
         }
         return typeof initialData[0][column] === 'number' || initialData[0][column] instanceof Date ? 'end' : 'start';
@@ -254,7 +257,7 @@ const Table = ({
                                                 : {}
                                         }
                                     >
-                                        <FontAwesomeIcon icon={expandAll} />
+                                        <Icon icon={expandAll} />
                                     </i>
                                 </button>
                             </span>
@@ -278,6 +281,10 @@ const Table = ({
                                 )}
                                 {hidden[column.key] !== undefined ? (
                                     <IconButton
+                                        svgProps={{
+                                            height: '16px',
+                                            width: '16px'
+                                        }}
                                         style={{
                                             marginLeft: '10px'
                                         }}
@@ -298,7 +305,15 @@ const Table = ({
                 </tr>
                 {isLoading && (
                     <tr className="progress">
-                        <td className="indeterminate"></td>
+                        <td
+                            style={{
+                                height: '100%',
+                                width: '100%',
+                                position: 'absolute'
+                            }}
+                        >
+                            {loader}
+                        </td>
                     </tr>
                 )}
             </thead>
@@ -416,7 +431,11 @@ const Table = ({
                             <div className="td-footer-page-size-container">
                                 <div className="td-footer-page-size-title">Rows per Page</div>
                                 <Select
-                                    className="td-select"
+                                    showLabel={false}
+                                    size={'sm'}
+                                    spotClasses={{
+                                        root: 'td-select'
+                                    }}
                                     selectedOption={currentPageSize}
                                     onSelectionChange={(option) => {
                                         if (!onPagination) {
@@ -440,6 +459,10 @@ const Table = ({
                             </div>
                             <div className="td-footer-page-update">
                                 <IconButton
+                                    svgProps={{
+                                        height: '16px',
+                                        width: '16px'
+                                    }}
                                     icon={caretLeft}
                                     onClick={() => {
                                         if (!onPagination) {
@@ -457,6 +480,10 @@ const Table = ({
                                     <div>{_paginationPageDetails()}</div>
                                 </div>
                                 <IconButton
+                                    svgProps={{
+                                        height: '16px',
+                                        width: '16px'
+                                    }}
                                     icon={caretRight}
                                     onClick={() => {
                                         if (!onPagination) {

@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { AsyncApiHandler } from '../core/async-handler.js';
+import { AsyncApiHandler } from '../core/api-handler.js';
 import { ApiResponseBody } from '../types/api-response-body.js';
 import { ApiRequestBody } from '../types/api-request-body.js';
 import { SuccessResponse } from '../core/api-response.js';
@@ -68,7 +68,6 @@ router.post(
                 (item: StockTransaction) => item.transaction_date,
                 true
             );
-            logger.info(transactions);
             let totalShare = 0;
             let investedAmount = 0;
             for (let t of transactions) {

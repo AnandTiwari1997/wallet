@@ -1,8 +1,8 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 
 import { SortableColumn, TableColumn } from './table';
 import { sortDown, sortUp } from '../../icons/icons';
+import { Icon } from '../icon';
 
 export interface SortedColumn {
     column: TableColumn;
@@ -57,7 +57,13 @@ const SortColumn = ({
         if (column.sortable && !sortOption.placeAfter) {
             return (
                 <i style={{ paddingRight: '5px' }} className="sort-icon">
-                    <FontAwesomeIcon icon={sortOption.active ? (sortOption.ascending ? sortUp : sortDown) : sortUp} />
+                    <Icon
+                        svgProps={{
+                            height: '16px',
+                            width: '16px'
+                        }}
+                        icon={sortOption.active ? (sortOption.ascending ? sortUp : sortDown) : sortUp}
+                    />
                 </i>
             );
         }
@@ -68,7 +74,13 @@ const SortColumn = ({
         if (column.sortable && sortOption.placeAfter) {
             return (
                 <i style={{ paddingLeft: '5px' }} className="sort-icon">
-                    <FontAwesomeIcon icon={sortOption.active ? (sortOption.ascending ? sortUp : sortDown) : sortUp} />
+                    <Icon
+                        svgProps={{
+                            height: '16px',
+                            width: '16px'
+                        }}
+                        icon={sortOption.active ? (sortOption.ascending ? sortUp : sortDown) : sortUp}
+                    />
                 </i>
             );
         }

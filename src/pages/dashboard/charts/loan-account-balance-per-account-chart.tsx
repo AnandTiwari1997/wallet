@@ -1,7 +1,6 @@
+import { Account } from 'data/models';
 import { useEffect, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-
-import { Account } from '../../../data/models';
 
 const LoanAccountBalancePerAccountChart = ({ data }: { data: Account[] }) => {
     const [loanAccountChartData, setLoanAccountChartData] = useState<{ key: string; value: number }[]>([]);
@@ -32,10 +31,6 @@ const LoanAccountBalancePerAccountChart = ({ data }: { data: Account[] }) => {
                     plugins: {
                         legend: {
                             position: 'right'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Remaining Amount Per Loan Account'
                         }
                     }
                 }}

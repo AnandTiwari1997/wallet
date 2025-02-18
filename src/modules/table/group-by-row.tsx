@@ -1,10 +1,10 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 
 import { TableColumn } from './table';
 import { hide, right, show } from '../../icons/icons';
-import IconButton from '../icon/icon-button';
 import Checkbox from '../checkbox/checkbox';
+import { Icon } from '../icon';
+import IconButton from '../icon-button/icon-button';
 
 const GroupByRow = ({
     groupingKey,
@@ -65,7 +65,13 @@ const GroupByRow = ({
                     <span className="td-span">
                         <button className="td-icon-button">
                             <i className="icon table-body-column-icon">
-                                <FontAwesomeIcon icon={right} />
+                                <Icon
+                                    icon={right}
+                                    svgProps={{
+                                        height: '12px',
+                                        width: '12px'
+                                    }}
+                                />
                             </i>
                         </button>
                     </span>

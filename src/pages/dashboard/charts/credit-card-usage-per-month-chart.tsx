@@ -1,11 +1,10 @@
+import { ApiCriteria, getAllTransactions } from 'backend/BackendApi';
 import { ChartDataset } from 'chart.js';
+import { Transaction } from 'data/models';
+import { ArrayUtil } from 'data/transaction-data';
 import { format, subYears } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-
-import { Transaction } from '../../../data/models';
-import { ArrayUtil } from '../../../data/transaction-data';
-import { ApiCriteria, getAllTransactions } from '../../../modules/backend/BackendApi';
 
 const CreditCardUsagePerMonthChart = ({ range }: { range: { from: Date; to: Date } }) => {
     const [dataset, setDataset] = useState<ChartDataset<'line'>[]>([]);
@@ -51,7 +50,7 @@ const CreditCardUsagePerMonthChart = ({ range }: { range: { from: Date; to: Date
                         (groupByMonthYear[key] || 0) +
                         (transaction.transaction_type === 'Expense' ? transaction.amount : 0);
                 }
-                const data = [];
+                const data: any[] = [];
                 for (const gt in groupByMonthYear) {
                     if (!labels[gt]) {
                         label.push(gt);
@@ -81,12 +80,6 @@ const CreditCardUsagePerMonthChart = ({ range }: { range: { from: Date; to: Date
                 }}
                 options={{
                     responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Credit Card Usage Per Month'
-                        }
-                    },
                     scales: {
                         x: {
                             display: true,

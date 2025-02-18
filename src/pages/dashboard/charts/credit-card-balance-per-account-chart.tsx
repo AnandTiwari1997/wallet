@@ -1,7 +1,6 @@
+import { Account } from 'data/models';
 import { useEffect, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-
-import { Account } from '../../../data/models';
 
 const CreditCardBalancePerAccountChart = ({ data }: { data: Account[] }) => {
     const [creditCardAccountChartData, setCreditCardChartData] = useState<{ key: string; value: number }[]>([]);
@@ -33,10 +32,6 @@ const CreditCardBalancePerAccountChart = ({ data }: { data: Account[] }) => {
                     plugins: {
                         legend: {
                             position: 'right'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Remaining Amount Per Credit Card'
                         },
                         colors: {
                             enabled: true

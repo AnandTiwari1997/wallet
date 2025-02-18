@@ -14,7 +14,7 @@ import {
 } from '../singleton.js';
 import { Logger } from '../core/logger.js';
 import { HttpRequestLogger } from '../core/api-middleware.js';
-import { AsyncApiHandler } from '../core/async-handler.js';
+import { AsyncApiHandler } from '../core/api-handler.js';
 
 const logger = new Logger('AccountController');
 
@@ -66,6 +66,12 @@ router.post(
         ) => {
             let clientAccount: Account | undefined = req.body.data;
             if (!clientAccount) throw new BadRequestError('Invalid account provided');
+            const lastAccount = await accountRepository.find({
+                order: {
+                    account_id: 'DESC'
+                }
+            });
+            if (lastAccount.length > 0) clientAccount.account_id = lastAccount[0].account_id + 1;
             let inputAccount: Account = Object.assign(Account.prototype, clientAccount);
             if (!inputAccount) throw new BadRequestError('Invalid account details provided');
             let account = await accountRepository.save(inputAccount);
@@ -147,7 +153,6 @@ router.post(
                 where: where,
                 relations: { bank: true }
             });
-            logger.info(accounts);
             let bankAccounts = accounts.filter((account) => account.account_type === 'BANK');
             let loanAccounts = accounts.filter((account) => account.account_type === 'LOAN');
             let creditCardAccount = accounts.filter((account) => account.account_type === 'CREDIT_CARD');

@@ -17,6 +17,10 @@ class ProvidentFundRepository extends Repository<ProvidentFundTransaction> {
         this.dataSource = dataSource;
     }
 
+    getTransactionId(providentFundTransaction: ProvidentFundTransaction) {
+        return `${providentFundTransaction.financial_year}_${providentFundTransaction.wage_month}_${providentFundTransaction.transaction_type}_${providentFundTransaction.transaction_date}`;
+    }
+
     createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<ProvidentFundTransaction> {
         let selectQueryBuilderExtended = new SelectQueryBuilderExtended<ProvidentFundTransaction>(
             this.dataSource,

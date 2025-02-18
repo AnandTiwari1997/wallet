@@ -12,7 +12,7 @@ export class StockLatestTradingPriceScheduler implements IScheduler<Holding> {
         setInterval(this.sync.bind(this), intervalInMS);
     }
 
-    private sync(): void {
+    public sync(): void {
         logger.info(`Stock LTP Sync Started`);
         holdingRepository.find({}).then((holdings) => {
             holdings.forEach(async (holding) => {
@@ -21,6 +21,7 @@ export class StockLatestTradingPriceScheduler implements IScheduler<Holding> {
                 let price = 0;
                 for (let key in exchanges) {
                     let url: string = `https://www.groww.in/v1/api/stocks_data/v1/tr_live_prices/exchange/${key}/segment/CASH/${holding.stock_symbol_code}/latest`;
+                    // let url = `https://priceapi.moneycontrol.com/pricefeed/nse/equitycash/${holding.stock_symbol_code}`;
                     try {
                         let response = await fetch(url);
                         if (response) {
