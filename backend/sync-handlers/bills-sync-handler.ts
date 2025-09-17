@@ -4,164 +4,95 @@ import { Bill } from '../database/models/bill.js';
 import { billRepository } from '../database/repository/bill-repository.js';
 import { ISyncHandler } from './sync-handler.js';
 
+export enum BillStatus {
+    UNPAID = 'UNPAID',
+    PAID = 'PAID'
+}
+
+export enum BillLabel {
+    ACTIVE = 'ACTIVE',
+    DUE = 'DUE',
+    UPCOMING = 'UPCOMING'
+}
+
+// Create a new Logger instance with the name 'BillsSyncHandler'
 const logger = new Logger('BillsSyncHandler');
 
+/**
+ * Handles the synchronization of bills by updating their status based on the current date.
+ * @implements {ISyncHandler<Bill>}
+ */
 export class BillsSyncHandler implements ISyncHandler<Bill> {
+    /**
+     * Synchronizes a single bill, updating its status and bill dates as needed.
+     *
+     * @param bill The bill to be synchronized.
+     * @returns {boolean} - True if the bill was updated, false otherwise.
+     * @private
+     */
+    private syncSingleBill(bill: Bill): boolean {
+        // If the bill is set to auto_sync, skip it, as it's likely managed by another process.
+        if (bill.auto_sync) return false;
+
+        const currentDate = new Date();
+        let needsUpdate = false;
+        const nextBillDate = bill.next_bill_date;
+        const isApproachingDueDate = differenceInDays(nextBillDate, currentDate) < 7;
+
+        // Case 1: The bill's due date is upcoming (within 7 days) and it's before the due date.
+        // The bill is marked as ACTIVE and UNPAID.
+        if (isBefore(currentDate, nextBillDate) && isApproachingDueDate) {
+            bill.label = BillLabel.ACTIVE;
+            bill.bill_status = BillStatus.UNPAID;
+            needsUpdate = true;
+        }
+        // Case 2: It's the bill's due date.
+        // The bill's date is rolled over to the next month, and the previous bill date is updated.
+        else if (isSameDay(currentDate, nextBillDate)) {
+            bill.previous_bill_date = nextBillDate;
+            bill.next_bill_date = addMonths(nextBillDate, 1);
+            needsUpdate = true;
+        }
+        // Case 3: The bill is unpaid and past its previous due date.
+        // The bill is marked as DUE.
+        else if (bill.bill_status === BillStatus.UNPAID && isAfter(currentDate, bill.previous_bill_date)) {
+            bill.label = BillLabel.DUE;
+            needsUpdate = true;
+        }
+
+        // If any of the above conditions were met, update the bill in the database.
+        if (needsUpdate) {
+            billRepository.update(bill.bill_id, bill).then();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * The syncer function iterates over a list of bills and updates their status based on the current date.
+     * @param bills An array of Bill objects to be processed.
+     */
     syncer(bills: Bill[]) {
-        bills.forEach((bill) => {
-            if (bill.auto_sync) return;
-            let currentDate = new Date();
-            let nextBillDate = bill.next_bill_date;
-            let diffDays = differenceInDays(nextBillDate, currentDate) < 7;
-            if (isBefore(currentDate, nextBillDate) && diffDays) {
-                bill.label = 'ACTIVE';
-                bill.bill_status = 'UNPAID';
-                billRepository.update(bill.bill_id, bill);
-                return;
-            }
-            if (isSameDay(currentDate, nextBillDate)) {
-                bill.previous_bill_date = nextBillDate;
-                bill.next_bill_date = addMonths(nextBillDate, 1);
-                billRepository.update(bill.bill_id, bill);
-                return;
-            }
-            let status = bill.bill_status;
-            if (status === 'UNPAID' && isAfter(currentDate, bill.previous_bill_date)) {
-                bill.label = 'DUE';
-                billRepository.update(bill.bill_id, bill);
-                return;
-            }
-            logger.debug('No New Bills.');
+        const syncPromises = bills.map((bill) => this.syncSingleBill(bill));
+        Promise.allSettled(syncPromises).then((results) => {
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled') {
+                    if (result.value) {
+                        const billName = bills[index].bill_name;
+                        logger.info(`New bill for : ${billName}`);
+                    }
+                }
+            });
         });
     }
 
+    /**
+     * The sync function is the main entry point for the synchronization process.
+     * @param bills An array of Bill objects to be processed.
+     * @param deltaSync A boolean indicating whether to perform a delta sync.
+     */
     sync(bills: Bill[], deltaSync: boolean) {
         this.syncer(bills);
-        // bills.forEach((bill) => {
-        //     if (bill.category !== 'INTERNET_BILL') return;
-        //     if (bill.label === 'ACTIVE') {
-        //         if (isBefore(new Date(), addDays(bill.previous_bill_date, 10))) {
-        //             bill.label = 'DUE';
-        //             billRepository.update(bill.bill_id, bill).then();
-        //             return;
-        //         }
-        //     }
-        //     let syncDate: Date = new Date();
-        //     if (isBefore(syncDate, bill.next_bill_date)) return;
-        //     connection.search(
-        //         [
-        //             ['SINCE', bill.next_bill_date],
-        //             ['SUBJECT', bill.bill_consumer_no]
-        //         ],
-        //         (error, uids) => {
-        //             if (error) {
-        //                 logger.error(error.message);
-        //                 return;
-        //             }
-        //             if (uids.length === 0) return;
-        //             const iFetch = connection.fetch(uids, {
-        //                 bodies: ''
-        //             });
-        //             iFetch.on('message', function (msg, sequenceNumber) {
-        //                 msg.once('body', function (stream, info) {
-        //                     simpleParser(stream, async (error, parsedMail) => {
-        //                         if (error) {
-        //                             logger.error(error.message);
-        //                             return;
-        //                         }
-        //                         if (!parsedMail.from?.text) return;
-        //                         let billProcessor = ProcessorFactory.getProcessor(parsedMail.from?.text, undefined);
-        //                         if (billProcessor) {
-        //                             let updatedBill = billProcessor.processMail(parsedMail, bill);
-        //                             if (updatedBill) billRepository.update(bill.bill_id, bill).then();
-        //                         }
-        //                     });
-        //                 });
-        //             });
-        //             iFetch.on('error', (error) => {
-        //                 logger.error(`Error On Processing Mail ${error.message}`);
-        //             });
-        //             iFetch.on('end', () => {
-        //                 logger.info(`Message has been processed`);
-        //             });
-        //         }
-        //     );
-        // });
-        // (async () => {
-        //     for (let bill of bills) {
-        //         if (bill.category !== 'ELECTRICITY_BILL') continue;
-        //         if (bill.label === 'ACTIVE') continue;
-        //         let billProcessor = ElectricityBillProcessorFactory.getProcessor(
-        //             electricityVendorMap[bill.vendor_name]
-        //         );
-        //         if (!billProcessor) continue;
-        //         let driver = await getFirefoxWebDriver('', true);
-        //         let result = await billProcessor.process(bill.bill_consumer_no, driver);
-        //         if (result) {
-        //             if (isAfter(result.billDueDate, bill.previous_bill_date)) {
-        //                 bill.bill_amount = result.billAmount;
-        //                 bill.previous_bill_date = result.billDueDate;
-        //                 bill.next_bill_date = result.billDueDate;
-        //                 bill.label = 'ACTIVE';
-        //                 bill.bill_status = 'UNPAID';
-        //                 await billRepository.update(bill.bill_id, bill);
-        //             }
-        //         }
-        //     }
-        // })();
-        // (async () => {
-        //     for (let bill of bills) {
-        //         if (bill.category !== 'CREDIT_CARD_BILL') continue;
-        //         if (bill.label === 'ACTIVE') {
-        //             if (isBefore(new Date(), addDays(bill.previous_bill_date, 15))) {
-        //                 bill.label = 'DUE';
-        //                 billRepository.update(bill.bill_id, bill).then();
-        //                 continue;
-        //             }
-        //         }
-        //         let syncDate: Date = new Date();
-        //         if (isBefore(syncDate, bill.next_bill_date)) continue;
-        //         connection.search(
-        //             [
-        //                 ['SINCE', subMonths(bill.next_bill_date, 1)],
-        //                 ['SUBJECT', bill.bill_consumer_no]
-        //             ],
-        //             (error, uids) => {
-        //                 if (error) {
-        //                     logger.error(error.message);
-        //                     return;
-        //                 }
-        //                 if (uids.length === 0) return;
-        //                 const iFetch = connection.fetch(uids, {
-        //                     bodies: ''
-        //                 });
-        //                 iFetch.on('message', function (msg, sequenceNumber) {
-        //                     msg.once('body', function (stream, info) {
-        //                         simpleParser(stream, async (error, parsedMail) => {
-        //                             if (error) {
-        //                                 logger.error(error.message);
-        //                                 return;
-        //                             }
-        //                             if (!parsedMail.from?.text) return;
-        //                             let billProcessor = CreditCardBillProcessorFactory.getProcessor(
-        //                                 parsedMail.from?.text
-        //                             );
-        //                             if (billProcessor) {
-        //                                 let updatedBill = billProcessor.process(parsedMail, bill);
-        //                                 if (updatedBill) billRepository.update(bill.bill_id, bill).then();
-        //                             }
-        //                         });
-        //                     });
-        //                 });
-        //                 iFetch.on('error', (error) => {
-        //                     logger.error(`Error On Processing Mail ${error.message}`);
-        //                 });
-        //                 iFetch.on('end', () => {
-        //                     logger.info(`Message has been processed`);
-        //                 });
-        //             }
-        //         );
-        //     }
-        // })();
     }
 }

@@ -1,3 +1,8 @@
+/**
+ * @file Defines the repository for MutualFundTransaction entities.
+ * @author anandt1@
+ */
+
 import { Logger } from '../../core/logger.js';
 import { DataSource, Repository } from 'typeorm';
 import { databaseProvider } from '../database-provider.js';
@@ -6,16 +11,30 @@ import { FindManyOptionsExtended } from '../find-options/FindManyOptionsExtended
 import { SelectQueryBuilderExtended } from '../query-builder/SelectQueryBuilderExtended.js';
 import { DriverUtils } from 'typeorm/driver/DriverUtils.js';
 
+// Logger for the MutualFundRepository.
 const logger: Logger = new Logger('MutualFundRepository');
 
+/**
+ * Repository for handling database operations for MutualFundTransaction entities.
+ * @extends Repository<MutualFundTransaction>
+ */
 class MutualFundRepository extends Repository<MutualFundTransaction> {
     private readonly dataSource: DataSource;
 
+    /**
+     * Creates an instance of MutualFundRepository.
+     * @param {DataSource} dataSource - The TypeORM data source.
+     */
     constructor(dataSource: DataSource) {
         super(MutualFundTransaction, dataSource.manager, dataSource.createQueryRunner());
         this.dataSource = dataSource;
     }
 
+    /**
+     * Creates an extended query builder for more complex queries.
+     * @param {string} [alias] - The alias for the table.
+     * @returns {SelectQueryBuilderExtended<MutualFundTransaction>} - The extended query builder.
+     */
     createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<MutualFundTransaction> {
         let selectQueryBuilderExtended = new SelectQueryBuilderExtended<MutualFundTransaction>(
             this.dataSource,
@@ -30,6 +49,11 @@ class MutualFundRepository extends Repository<MutualFundTransaction> {
         }
     }
 
+    /**
+     * Counts the number of groups based on the provided options.
+     * @param {FindManyOptionsExtended<MutualFundTransaction>} options - The find options.
+     * @returns {Promise<number>} - The number of groups.
+     */
     async countWithGroupBy(options: FindManyOptionsExtended<MutualFundTransaction>): Promise<number> {
         let innerQuery = this.createExtendedQueryBuilder(this.metadata.targetName);
         innerQuery.select('COUNT(1)');
@@ -42,6 +66,11 @@ class MutualFundRepository extends Repository<MutualFundTransaction> {
         return (await innerQuery.getRawMany()).length;
     }
 
+    /**
+     * Finds entities with grouping based on the provided options.
+     * @param {FindManyOptionsExtended<MutualFundTransaction>} options - The find options.
+     * @returns {Promise<MutualFundTransaction[]>} - The found entities.
+     */
     async findWithGroupBy(options: FindManyOptionsExtended<MutualFundTransaction>): Promise<MutualFundTransaction[]> {
         try {
             let innerQuery = this.createExtendedQueryBuilder(this.metadata.targetName);
@@ -60,6 +89,10 @@ class MutualFundRepository extends Repository<MutualFundTransaction> {
         }
     }
 
+    /**
+     * Finds all distinct fund ISINs.
+     * @returns {Promise<string[]>} - A list of distinct ISINs.
+     */
     async findAllDistinctFundByISIN(): Promise<string[]> {
         try {
             let queryResult = await this.createQueryBuilder().select('isin').groupBy('isin').getRawMany<{
@@ -72,6 +105,12 @@ class MutualFundRepository extends Repository<MutualFundTransaction> {
         }
     }
 
+    /**
+     * Updates the NAV for a given ISIN.
+     * @param {string} isin - The ISIN of the fund to update.
+     * @param {number} latestNAV - The latest NAV.
+     * @returns {Promise<number | undefined>} - The number of affected rows.
+     */
     async updateByISIN(isin: string, latestNAV: number): Promise<number | undefined> {
         try {
             let result = await this.createQueryBuilder()
@@ -87,4 +126,7 @@ class MutualFundRepository extends Repository<MutualFundTransaction> {
     }
 }
 
+/**
+ * The singleton instance of the MutualFundRepository.
+ */
 export const mutualFundRepository = new MutualFundRepository(databaseProvider.database);

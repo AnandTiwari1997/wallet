@@ -12,7 +12,7 @@ import { dataChannel } from '../utils/data-channel-util.js';
 import { MutualFundTransaction } from '../database/models/mutual-fund-transaction.js';
 import { ProvidentFundTransaction } from '../database/models/provident-fund-transaction.js';
 import { StockTransaction } from '../database/models/stock-transaction.js';
-import { captchaStorage } from '../database/repository/captcha-storage.js';
+import { inMemoryStorage } from '../database/repository/in-memory-storage.js';
 import { RepositoryUtils } from '../database/util/repository-utils.js';
 import { MutualFundSyncHandler } from '../sync-handlers/mutual-fund-sync-handler.js';
 import { ProvidentFundSyncHandler } from '../sync-handlers/provident-fund-sync-handler.js';
@@ -121,7 +121,10 @@ router.post(
                 message: string;
             }>
         ) => {
-            captchaStorage.add({ captchaId: req.body.data?.id || '', captchaText: req.body.data?.captcha });
+            inMemoryStorage.add({
+                key: req.body.data?.id || '',
+                value: { captchaId: req.body.data?.id || '', captchaText: req.body.data?.captcha }
+            });
             return new SuccessResponse<{ message: string }>({ message: 'Captcha Inserted' }).send(res);
         }
     )

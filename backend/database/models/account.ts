@@ -36,6 +36,9 @@ export class Account {
     @Column()
     search_text: string;
 
+    @Column()
+    associated_email: string;
+
     constructor(
         account_id: number,
         account_name: string,
@@ -46,7 +49,8 @@ export class Account {
         start_date: Date,
         last_synced_on: Date,
         search_text: string,
-        bank: Bank
+        bank: Bank,
+        associated_email: string
     ) {
         this.account_id = account_id;
         this.account_name = account_name;
@@ -58,5 +62,6 @@ export class Account {
         this.last_synced_on = last_synced_on;
         this.search_text = search_text;
         this.bank = bank;
+        this.associated_email = associated_email;
     }
 }

@@ -72,7 +72,7 @@ export class AxisBankProcessor extends BankProcessor {
         };
     }
 
-    processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
+    processForAccount(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
             let mailText: string = this.getMailText(parsedMail, (text: string) => {
                 if (text.trim().includes('Rs') || text.trim().includes('INR')) {

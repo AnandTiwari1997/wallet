@@ -37,7 +37,7 @@ export abstract class BankProcessor implements IBankProcessor {
                             logger.info(
                                 `Mail - From: ${parsedMail.from?.value[0].address}, Subject: ${parsedMail.subject}, Account: ${account.account_name}`
                             );
-                            const transaction = this.processMail(parsedMail, account);
+                            const transaction = this.processForAccount(parsedMail, account);
                             if (!transaction) return;
                             transaction.account = account;
                             let id = RepositoryUtils.generateAccountTransactionId(transaction);
@@ -91,7 +91,7 @@ export abstract class BankProcessor implements IBankProcessor {
         return '';
     }
 
-    processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
+    processForAccount(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         return undefined;
     }
 }

@@ -1,3 +1,6 @@
+/**
+ * @file This file contains the implementation of the MutualFundProcessor class, which is responsible for processing mutual fund-related emails.
+ */
 import { IAnonymousProcessor } from '../processor-factory.js';
 import { ParsedMail } from 'mailparser';
 import fs from 'fs';
@@ -13,29 +16,47 @@ import { PythonUtil } from '../../utils/python-util.js';
 
 const logger: Logger = new Logger('MutualFundProcessor');
 
+/**
+ * @class MutualFundProcessor
+ * @description This class implements the IAnonymousProcessor interface and is responsible for processing mutual fund-related emails.
+ */
 export class MutualFundProcessor implements IAnonymousProcessor {
+    /**
+     * @description This method downloads the attachment from the parsed mail.
+     * @param parsedMail The parsed mail object.
+     * @returns The name of the downloaded file.
+     */
+    private downloadAttachment(parsedMail: ParsedMail) {
+        let attachment = parsedMail.attachments[0];
+        const buffer = Buffer.from(attachment.content);
+        const mutualFundDir = path.resolve(rootDirectoryPath, 'reports', 'mutual_fund');
+        fs.mkdirSync(mutualFundDir, { recursive: true });
+        const fileName = attachment.filename ? attachment.filename : 'anand_tiwari_mutual_fund';
+        const pdfFile = path.resolve(rootDirectoryPath, 'reports', 'mutual_fund', `${fileName}.pdf`);
+        fs.writeFileSync(pdfFile, buffer);
+        return fileName;
+    }
+
+    /**
+     * @description This method processes the parsed mail and extracts the mutual fund transactions.
+     * @param parsedMail The parsed mail object.
+     */
     process(parsedMail: ParsedMail): any {
         // Check if are we waiting for mail from CAMS
         // If Yes Process the mail
         // If NO, ignore this mail
         if (parsedMail.attachments.length > 0) {
-            let attachment = parsedMail.attachments[0];
-            const buffer = Buffer.from(attachment.content);
-            fs.mkdirSync(path.resolve(rootDirectoryPath, 'reports', 'mutual_fund'), {
-                recursive: true
-            });
-            const fileName = attachment.filename ? attachment.filename : 'anand_tiwari_mutual_fund';
-            fs.writeFileSync(path.resolve(rootDirectoryPath, 'reports', 'mutual_fund', `${fileName}.pdf`), buffer);
+            const fileName = this.downloadAttachment(parsedMail);
             PythonUtil.run(
                 ['mutual_fund', `${fileName}.pdf`, `${fileName}.json`, `${mfParam.password}`],
                 async (data: any) => {
+                    // TODO: fix explicit replace operation.
                     let newData = data.replaceAll("'", '"');
-                    const parsedData: {
-                        [key: string]: string;
-                    }[] = JSON.parse(newData);
+                    const parsedData: MutualFundTransaction[] = JSON.parse(newData);
+                    // removing all data, as we will reinsert data from the beginning to maintain consistency.
                     await mutualFundRepository.delete({});
                     for (let parseData of parsedData) {
-                        let mutualFund = Object.assign(MutualFundTransaction.prototype, parseData);
+                        let mutualFund = parseData;
                         let id = RepositoryUtils.generateMutualFundTransactionId(mutualFund);
                         let mfTransaction = await mutualFundRepository.findOne({
                             where: {
@@ -64,7 +85,12 @@ export class MutualFundProcessor implements IAnonymousProcessor {
         }
     }
 
-    processMail(parsedMail: ParsedMail, anyParam: any): any {
+    /**
+     * @description This method is not implemented yet.
+     * @param parsedMail The parsed mail object.
+     * @param anyParam Any parameter.
+     */
+    processForAccount(parsedMail: ParsedMail, anyParam: any): any {
         return;
     }
 }

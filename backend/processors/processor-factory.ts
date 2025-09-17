@@ -1,3 +1,8 @@
+/**
+ * This file contains the factory classes for creating different types of processors.
+ * Processors are responsible for handling and extracting data from various sources,
+ * such as emails and bills.
+ */
 import { ParsedMail } from 'mailparser';
 import { Account } from '../database/models/account.js';
 import { AccountTransaction } from '../database/models/account-transaction.js';
@@ -18,7 +23,16 @@ import {
     zerodhaContractNoteProcessor
 } from '../singleton.js';
 
+/**
+ * Factory class for creating email processors.
+ */
 export class ProcessorFactory {
+    /**
+     * Returns the appropriate processor based on the email sender's ID and subject.
+     * @param emailId The email address of the sender.
+     * @param subject The subject of the email.
+     * @returns An instance of IProcessor or undefined if no suitable processor is found.
+     */
     static getProcessor = (emailId: string, subject: string | undefined): IProcessor<any, any> | undefined => {
         switch (emailId) {
             case 'alerts@axisbank.com':
@@ -48,32 +62,57 @@ export class ProcessorFactory {
     };
 }
 
-export interface IBankProcessor extends IProcessor<Account, AccountTransaction> {
-    process: (parsedMail: ParsedMail) => void | any | undefined;
-    processMail: (parsedMail: ParsedMail, account: Account) => AccountTransaction | undefined;
-}
+/**
+ * Interface for bank transaction processors.
+ */
+export interface IBankProcessor extends IProcessor<Account, AccountTransaction> {}
 
-export interface IContractNoteProcessor extends IProcessor<DematAccount, Date> {
-    process: (parsedMail: ParsedMail) => void | any | undefined;
-    processMail: (parsedMail: ParsedMail, dematAccount: DematAccount) => Date | undefined;
-}
+/**
+ * Interface for contract note processors.
+ */
+export interface IContractNoteProcessor extends IProcessor<DematAccount, Date> {}
 
-export interface IBillProcessor extends IProcessor<Bill, Bill> {
-    process: (parsedMail: ParsedMail) => void | any;
-    processMail: (parsedMail: ParsedMail, bill: Bill) => Bill | undefined;
-}
+/**
+ * Interface for bill processors.
+ */
+export interface IBillProcessor extends IProcessor<Bill, Bill> {}
 
-export interface IAnonymousProcessor extends IProcessor<any, any> {
-    process: (parsedMail: ParsedMail) => void | any | undefined;
-    processMail: (parsedMail: ParsedMail, anyParam: any) => any | undefined;
-}
+/**
+ * Interface for anonymous processors.
+ */
+export interface IAnonymousProcessor extends IProcessor<any, any> {}
 
+/**
+ * Generic processor interface.
+ * @template T The account type.
+ * @template U The processed data type.
+ */
 export interface IProcessor<T, U> {
+    /**
+     * Processes a parsed email.
+     * @param parsedMail The parsed email object.
+     */
     process: (parsedMail: ParsedMail) => void | any | undefined;
-    processMail: (parsedMail: ParsedMail, account: T) => U | undefined;
+
+    /**
+     * Processes a parsed email for a specific account.
+     * @param parsedMail The parsed email object.
+     * @param account The account to process the email for.
+     * @returns The processed data or undefined.
+     */
+    processForAccount: (parsedMail: ParsedMail, account: T) => U | undefined;
 }
 
+/**
+ * Interface for electricity bill processors.
+ */
 export interface ElectricityBillProcessor {
+    /**
+     * Processes an electricity bill.
+     * @param billConsumerNumber The consumer number for the bill.
+     * @param driver The WebDriver instance for browser automation.
+     * @returns A promise that resolves with the bill amount and due date, or undefined.
+     */
     process: (
         billConsumerNumber: string,
         driver: WebDriver
@@ -86,7 +125,15 @@ export interface ElectricityBillProcessor {
     >;
 }
 
+/**
+ * Factory class for creating electricity bill processors.
+ */
 export class ElectricityBillProcessorFactory {
+    /**
+     * Returns the appropriate electricity bill processor based on the consumer name.
+     * @param billConsumerName The name of the electricity distribution company.
+     * @returns An instance of ElectricityBillProcessor or undefined if no suitable processor is found.
+     */
     static getProcessor = (billConsumerName: string): ElectricityBillProcessor | undefined => {
         switch (billConsumerName) {
             case 'MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD':

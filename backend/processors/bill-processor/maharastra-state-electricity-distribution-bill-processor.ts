@@ -11,16 +11,25 @@ export class MaharashtraStateElectricityDistributionBillProcessor {
         driver: WebDriver
     ): Promise<{ billAmount: number; billDueDate: Date } | undefined> {
         try {
+            // Navigate to the bill payment page
             await driver.get('https://wss.mahadiscom.in/wss/wss?uiActionName=getViewPayBill');
             logger.info(`Opened https://wss.mahadiscom.in/wss/wss?uiActionName=getViewPayBill`);
             await driver.sleep(2000);
+
+            // Enter the consumer number
             await driver.findElement(By.xpath('//input[@id="consumerNo"]')).sendKeys(billConsumerNumber);
+
+            // It appears there's a CAPTCHA. This part of the code is commented out, but it seems it would have originally clicked a refresh button for the CAPTCHA.
             // await driver.findElement(By.xpath('//button[@id="btnCaptchaRefViewpaybill"]')).click();
-            driver.sleep(2000);
+            await driver.sleep(2000);
+
+            // Get cookies from the browser session
             let webCookies: IWebDriverCookie[] = await driver.manage().getCookies();
             let cookies: string[] = webCookies.map((cookie) => `${cookie.name}=${cookie.value};`);
             let cookie = cookies.join(' ');
-            driver.sleep(2000);
+            await driver.sleep(2000);
+
+            // This fetch request seems to be getting the CAPTCHA value
             let response = await fetch(
                 'https://wss.mahadiscom.in/wss/wss?uiActionName=RefreshCaptchaViewPay&IsAjax=true',
                 {
@@ -43,20 +52,30 @@ export class MaharashtraStateElectricityDistributionBillProcessor {
                 }
             );
             let body = await response.json();
+
+            // Enter the CAPTCHA
             await driver.findElement(By.xpath('//input[@id="txtInput"]')).sendKeys(body as string);
+
+            // Click the submit button
             await driver.findElement(By.xpath('//button[@id="submitButton"]')).click();
+
+            // Get the bill amount
             let amount = await driver
                 .findElement(
                     By.xpath(electricityParam.MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD.bill_amount_xpath)
                 )
                 .getText();
             await driver.sleep(2000);
+
+            // Get the due date
             let date = await driver
                 .findElement(
                     By.xpath(electricityParam.MAHARASHTRA_STATE_ELECTRICITY_DISTRIBUTION_CO_LTD.due_date_xpath)
                 )
                 .getText();
             await driver.sleep(2000);
+
+            // Return the bill amount and due date
             return {
                 billAmount: Number.parseFloat(amount),
                 billDueDate: new Date(date)
@@ -65,6 +84,7 @@ export class MaharashtraStateElectricityDistributionBillProcessor {
             logger.error('Error while fetching electricity bill for consumer', billConsumerNumber);
             logger.error(e);
         } finally {
+            // Quit the driver
             await driver.quit();
         }
     }

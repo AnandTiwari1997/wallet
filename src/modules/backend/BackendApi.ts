@@ -47,18 +47,13 @@ export interface ApiRequestBody<T> {
 }
 
 export const getBanks = async (apiRequestBody: ApiRequestBody<Bank> = {}): Promise<any> => {
-    return await axios
-        .post<ApiResponse<Bank>>(`/wallet/bank/_search`, {})
-        .then((value) => value.data);
+    return await axios.post<ApiResponse<Bank>>(`/wallet/bank/_search`, {}).then((value) => value.data);
 };
 
 export const getAllTransactions = async (
     apiRequestBody: ApiRequestBody<Transaction>
 ): Promise<ApiResponse<Transaction>> => {
-    const response = await axios.post<ApiResponse<Transaction>>(
-        `/wallet/transaction/_search`,
-        apiRequestBody
-    );
+    const response = await axios.post<ApiResponse<Transaction>>(`/wallet/transaction/_search`, apiRequestBody);
     let data = response.data.results.map<Transaction>((transaction) => {
         return {
             transaction_id: transaction.transaction_id,
@@ -90,9 +85,7 @@ export const addTransaction = async (transaction: Transaction): Promise<ApiRespo
     );
 };
 
-export const getAccounts = async (
-    apiRequestBody: ApiRequestBody<Transaction> = {}
-): Promise<ApiResponse<Account>> => {
+export const getAccounts = async (apiRequestBody: ApiRequestBody<Transaction> = {}): Promise<ApiResponse<Account>> => {
     const response = await axios.post(`/wallet/account/_search`, apiRequestBody);
     return { results: response.data.results, num_found: response.data.num_found };
 };
@@ -341,15 +334,11 @@ export const addStockTransaction = async (
 export const updateAccountTransaction = async (
     requestBody: ApiRequestBody<Transaction> = {}
 ): Promise<ApiResponse<Transaction>> => {
-    let response = await axios.put<ApiResponse<Transaction>>(
-        `/wallet/transaction`,
-        requestBody,
-        {
-            headers: {
-                'Content-Type': 'application/json'
-            }
+    let response = await axios.put<ApiResponse<Transaction>>(`/wallet/transaction`, requestBody, {
+        headers: {
+            'Content-Type': 'application/json'
         }
-    );
+    });
     let data = response.data.results.map<Transaction>((transaction) => {
         return {
             transaction_id: transaction.transaction_id,

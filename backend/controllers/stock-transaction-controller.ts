@@ -10,9 +10,9 @@ import { stockTransactionRepository } from '../database/repository/stock-transac
 import { StockTransaction } from '../database/models/stock-transaction.js';
 import { RepositoryUtils } from '../database/util/repository-utils.js';
 import { BadRequestError, InternalError } from '../core/api-error.js';
-import { ArrayUtil } from '../constant.js';
 import { FindOperator } from 'typeorm';
 import { HttpRequestLogger } from '../core/api-middleware.js';
+import { ArrayUtil } from '../utils/array-util.js';
 
 const logger: Logger = new Logger('StockTransactionController');
 

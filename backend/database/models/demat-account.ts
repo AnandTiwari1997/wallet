@@ -28,6 +28,9 @@ export class DematAccount {
     @CreateDateColumn()
     last_synced_on: Date;
 
+    @Column()
+    associated_email: string;
+
     constructor(
         account_bo_id: string,
         account_client_id: string,
@@ -36,7 +39,8 @@ export class DematAccount {
         broker: Broker,
         start_date: Date,
         last_synced_on: Date,
-        holdings: Holding[]
+        holdings: Holding[],
+        associated_email: string
     ) {
         this.account_bo_id = account_bo_id;
         this.account_client_id = account_client_id;
@@ -45,5 +49,6 @@ export class DematAccount {
         this.broker = broker;
         this.start_date = start_date;
         this.last_synced_on = last_synced_on;
+        this.associated_email = associated_email;
     }
 }

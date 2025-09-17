@@ -1,3 +1,9 @@
+/**
+ * @file provident-fund-sync-handler.ts
+ * @description This file contains the handler for syncing provident fund data.
+ * It uses selenium-webdriver to automate the process of downloading provident fund statements.
+ */
+
 import path from 'path';
 import fs from 'fs';
 import { Builder, By, until } from 'selenium-webdriver';
@@ -5,15 +11,26 @@ import { Options } from 'selenium-webdriver/chrome.js';
 import { Logger } from '../core/logger.js';
 import { pfParam, rootDirectoryPath } from '../config.js';
 import { dataChannel } from '../utils/data-channel-util.js';
-import { captchaStorage } from '../database/repository/captcha-storage.js';
+import { inMemoryStorage } from '../database/repository/in-memory-storage.js';
 import { syncTrackerStorage } from '../database/repository/sync-tracker-storage.js';
 import { PythonUtil } from '../utils/python-util.js';
 
 const logger: Logger = new Logger('ProvidentFundSyncHandler');
 
+/**
+ * @class ProvidentFundSyncHandler
+ * @description Handles the synchronization of provident fund data.
+ */
 export class ProvidentFundSyncHandler {
+    /**
+     * @method sync
+     * @description This method automates the process of downloading provident fund statements.
+     * It uses selenium-webdriver to login to the EPF India website, download the statements,
+     * and then processes them using a python script.
+     */
     sync(): void {
         (async function sync() {
+            // Setup download directory
             let downloadDirectory = path.resolve(rootDirectoryPath, 'reports', 'provident_fund');
             fs.rm(downloadDirectory, { recursive: true, force: true }, (err) => {
                 if (err) {
@@ -21,6 +38,8 @@ export class ProvidentFundSyncHandler {
                 }
             });
             logger.info(`Removed Reports Folder`);
+
+            // Initialize selenium-webdriver
             let driverBuilder = new Builder().forBrowser('chrome');
             driverBuilder.setChromeOptions(
                 new Options()
@@ -35,14 +54,20 @@ export class ProvidentFundSyncHandler {
             let years: string[] = [];
             try {
                 let id = new Date().getTime().toString();
+
+                // Navigate to the login page
                 await driver.get('https://passbook.epfindia.gov.in/MemberPassBook/login');
                 logger.info(`Opened https://passbook.epfindia.gov.in/MemberPassBook/login`);
+
+                // Enter login credentials
                 let username = await driver.findElement(By.id('username'));
                 await username.sendKeys(pfParam.username);
                 logger.info(`Entered Username`);
                 let password = await driver.findElement(By.id('password'));
                 await password.sendKeys(pfParam.password);
                 logger.info(`Entered Password`);
+
+                // Handle CAPTCHA
                 let imageElement = await driver.findElement(By.id('captcha_id'));
                 let captchaInput = await driver.findElement(By.id('captcha'));
                 imageElement.getAttribute('src').then((r) => {
@@ -54,11 +79,13 @@ export class ProvidentFundSyncHandler {
                     dataChannel.deRegister('sync');
                 });
                 logger.info(`Captcha Image sent to Client`);
+
+                // Wait for the CAPTCHA to be solved
                 let interval: NodeJS.Timeout;
                 let captcha = await new Promise<string | undefined>((resolve) => {
                     interval = setInterval(() => {
-                        if (captchaStorage.get(id)) {
-                            resolve(captchaStorage.get(id)?.captchaText);
+                        if (inMemoryStorage.get(id)) {
+                            resolve(inMemoryStorage.get(id)?.value['captchaText']);
                             clearInterval(interval);
                         }
                     }, 1000);
@@ -66,6 +93,8 @@ export class ProvidentFundSyncHandler {
                 if (!captcha) return [];
                 await captchaInput.sendKeys(captcha);
                 logger.info(`Entered Captcha`);
+
+                // Login and navigate to the passbook page
                 await driver.findElement(By.id('login')).click();
                 logger.info(`Clicked Login`);
                 await driver.wait(until.elementLocated(By.xpath('//a[@data-name="passbook"]')), 10000);
@@ -77,9 +106,13 @@ export class ProvidentFundSyncHandler {
                 logger.info(`Passbook now visible`);
                 await driver.findElement(By.xpath('//a[@data-name="passbook"]')).click();
                 logger.info(`Clicked Passbook`);
+
+                // Get the available years
                 let elements = await driver.findElements(By.xpath('//*[@id="pb-container"]/div[1]/div/div'));
                 years = await elements[0].getText().then((text) => text.split('\n'));
                 logger.info(`Years ${years}`);
+
+                // Download the passbook for each year
                 for (let index = 0; index < elements.length; index++) {
                     const element = elements[index];
                     const texts = await element.getText().then((text) => text.split('\n'));
@@ -122,6 +155,8 @@ export class ProvidentFundSyncHandler {
                         await driver.sleep(5000);
                     }
                 }
+
+                // Logout
                 await driver.sleep(5000);
                 await driver.findElement(By.id('logout')).click();
                 logger.info(`Clicked Logout`);
@@ -131,6 +166,7 @@ export class ProvidentFundSyncHandler {
             }
         })()
             .then((years) => {
+                // Process the downloaded files
                 const pfData: { [key: string]: string }[] = [];
                 for (let year of years) {
                     PythonUtil.run(
@@ -159,6 +195,7 @@ export class ProvidentFundSyncHandler {
                 }
             })
             .catch((reason) => {
+                // Handle errors
                 logger.error(reason);
                 const syncTracker = syncTrackerStorage.get('provident_fund');
                 if (!syncTracker) return;
@@ -168,5 +205,11 @@ export class ProvidentFundSyncHandler {
             });
     }
 
+    /**
+     * @method manualSync
+     * @description This method is a placeholder for manual synchronization.
+     * @param {any[]} accounts - The accounts to sync.
+     * @param {boolean} deltaSync - Whether to perform a delta sync.
+     */
     manualSync(accounts: any[], deltaSync: boolean) {}
 }

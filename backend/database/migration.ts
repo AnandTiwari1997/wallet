@@ -12,14 +12,15 @@ export const migrations: {
          );`,
     V2: `CREATE TABLE IF NOT EXISTS account
          (
-             account_id      INT8             NOT NULL,
-             account_name    TEXT             NOT NULL,
-             account_balance DOUBLE PRECISION NOT NULL,
-             account_number  TEXT,
-             account_type    TEXT             NOT NULL,
-             bank            INT8             NOT NULL,
-             start_date      TIMESTAMPTZ      NOT NULL,
-             last_synced_on  TIMESTAMPTZ,
+             account_id         INT8             NOT NULL,
+             account_name       TEXT             NOT NULL,
+             account_balance    DOUBLE PRECISION NOT NULL,
+             account_number     TEXT,
+             account_type       TEXT             NOT NULL,
+             bank               INT8             NOT NULL,
+             start_date         TIMESTAMPTZ      NOT NULL,
+             last_synced_on     TIMESTAMPTZ,
+             associated_email   TEXT             NOT NULL,
              CONSTRAINT account_id_pk PRIMARY KEY (account_id),
              CONSTRAINT accounts_bank_fk FOREIGN KEY (bank) REFERENCES bank (bank_id)
          );`,
@@ -84,6 +85,7 @@ export const migrations: {
              auto_sync          BOOLEAN          NOT NULL,
              bill_amount        DOUBLE PRECISION NOT NULL,
              bill_consumer_no   TEXT             NOT NULL,
+             associated_email   TEXT             NULL,
              CONSTRAINT bill_id_pk PRIMARY KEY (bill_id)
          );`,
     V7: `CREATE TABLE IF NOT EXISTS stock_broker
@@ -103,6 +105,7 @@ export const migrations: {
              broker            TEXT        NOT NULL,
              start_date        TIMESTAMPTZ NOT NULL,
              last_synced_on    TIMESTAMPTZ,
+             associated_email  TEXT        NOT NULL,
              CONSTRAINT demat_account_bo_id_pk PRIMARY KEY (account_bo_id),
              CONSTRAINT stock_broker_fk FOREIGN KEY (broker) REFERENCES stock_broker (broker_id)
          )`,
@@ -139,5 +142,15 @@ export const migrations: {
     V12: `ALTER TABLE IF EXISTS account_transaction RENAME COLUMN account TO account_id;`,
     V13: `ALTER TABLE IF EXISTS demat_account RENAME COLUMN broker TO broker_id;`,
     V14: `ALTER TABLE IF EXISTS stock RENAME COLUMN holding TO holding_id;`,
-    V15: `ALTER TABLE IF EXISTS stock RENAME COLUMN demat_account TO demat_account_id;`
+    V15: `ALTER TABLE IF EXISTS stock RENAME COLUMN demat_account TO demat_account_id;`,
+    V16: `CREATE TABLE IF NOT EXISTS consent
+          (
+              email         TEXT        NOT NULL,
+              provider      TEXT        NOT NULL,
+              access_token  TEXT        NOT NULL,
+              refresh_token TEXT        NOT NULL,
+              expiration    TIMESTAMPTZ NOT NULL,
+              CONSTRAINT consents_email_pk PRIMARY KEY (email)
+          );`,
+    V17: `ALTER TABLE IF EXISTS account ADD COLUMN IF NOT EXISTS search_text TEXT;`
 };

@@ -1,0 +1,90 @@
+# Figma Component Guide – Wallet Dashboard (Soft Pastel Light Theme)
+
+## 🖼️ Grid & Layout
+
+- **Frame size**: Desktop – 1440px width
+- **Grid system**:
+    - 12-column layout, 20px gutters
+    - Margin: 40px (left/right)
+    - Spacing: 24px between cards
+
+## 🧩 Components
+
+### 1. Sidebar Navigation
+
+- **Width**: 240px
+- **Background**: `#F3F4F6` (light gray)
+- **Content**:
+    - App Logo (top, 60px height)
+    - Navigation (Dashboard, Account, Transactions, Savings, Stocks, Settings)
+    - User profile & logout (bottom)
+- **Typography**: Inter Medium 16px
+
+### 2. Top Row
+
+#### Current Balance Card
+
+- **Width**: 840px (7 columns)
+- **Height**: 240px
+- **Elements**:
+    - **Title**: “Current Balance” (Inter Bold 18px)
+    - **Amount**: $12,560.00 (Inter ExtraBold 32px, pastel blue accent)
+    - **Subtitle**: “Consolidated across all accounts” (Inter Regular 14px, muted gray)
+    - Mini line chart (sparkline, last 6 months)
+
+#### Stock Portfolio Performance
+
+- **Width**: 480px (5 columns)
+- **Height**: 240px
+- **Elements**:
+    - **Title**: “Portfolio Performance” (Inter Bold 18px)
+    - **Line chart**: Time-based (Y = portfolio value, X = months)
+    - **Stat labels**: +12% gain in pastel green
+
+### 3. Second Row
+
+#### Spending by Category
+
+- **Width**: 400px (4 columns)
+- **Height**: 280px
+- Pie Chart with pastel colors (Food = pastel orange, Transport = pastel blue, Shopping = pastel purple, Bills = pastel green, Other = pastel pink)
+- Legend to the right
+
+#### Monthly Expenses
+
+- **Width**: 400px (4 columns)
+- **Height**: 280px
+- Bar Chart (6 months)
+- Bars in pastel blue, current month = darker accent
+
+#### Recent Transactions
+
+- **Width**: 400px (4 columns)
+- **Height**: 280px
+- **Table with 5 rows**:
+    - **Column headers**: Date | Description | Category | Amount
+    - **Row text**: Inter Regular 14px
+    - **Amount column**:
+        - Negative = pastel red
+        - Positive = pastel green
+
+## 🎨 Theme & Styles
+
+- **Colors**:
+    - **Background**: `#FFFFFF`
+    - **Primary text**: `#111827` (dark gray)
+    - **Secondary text**: `#6B7280` (gray)
+    - **Accent palette**:
+        - Pastel Blue `#A5C9FF`
+        - Pastel Green `#A7F3D0`
+        - Pastel Orange `#FCD5B5`
+        - Pastel Pink `#FBCFE8`
+        - Pastel Purple `#DDD6FE`
+- **Corner radius**: 16px for all cards
+- **Shadows**: Subtle elevation (0 2px 6px rgba(0,0,0,0.08))
+
+## ⚡ Interactions (Optional)
+
+- Hover on nav → pastel highlight background
+- Hover on transaction row → light gray background
+- Charts animate on load (fade + slide-in)

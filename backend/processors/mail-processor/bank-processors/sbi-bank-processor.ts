@@ -46,7 +46,7 @@ export class SbiBankProcessor extends BankProcessor {
         return mailText;
     }
 
-    processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
+    processForAccount(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         let emailId = parsedMail.from?.value[0].address;
         if (emailId) {
             let mailText = this.getMailText(parsedMail, (text: string) => text);

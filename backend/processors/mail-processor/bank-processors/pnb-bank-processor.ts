@@ -50,7 +50,7 @@ export class PnbBankProcessor extends BankProcessor {
         return parsedMail.text?.replace(/(\r\n|\n|\r)/gm, '').replace(/\s/gm, ' ') || '';
     }
 
-    processMail(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
+    processForAccount(parsedMail: ParsedMail, account: Account): AccountTransaction | undefined {
         if (parsedMail.from?.text.includes(this.emailId)) {
             let mailText: string = this.getMailText(parsedMail, (text: string) => text);
             let amount: string = '';

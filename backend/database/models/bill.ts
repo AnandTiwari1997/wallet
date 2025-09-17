@@ -38,6 +38,9 @@ export class Bill {
     @Column()
     bill_consumer_no: string;
 
+    @Column()
+    associated_email: string;
+
     constructor(
         bill_id: string,
         bill_name: string,
@@ -50,7 +53,8 @@ export class Bill {
         transaction_date: Date | undefined,
         auto_sync: boolean,
         bill_amount: number,
-        bill_consumer_no: string
+        bill_consumer_no: string,
+        associated_email: string
     ) {
         this.bill_id = bill_id;
         this.bill_name = bill_name;
@@ -64,5 +68,6 @@ export class Bill {
         this.auto_sync = auto_sync;
         this.bill_amount = bill_amount;
         this.bill_consumer_no = bill_consumer_no;
+        this.associated_email = associated_email;
     }
 }

@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      # Optimize for performance
+      OLLAMA_NUM_PARALLEL: 4        # parallel requests (tune for CPU/GPU cores)
+      OLLAMA_KEEP_ALIVE: 300        # keep models in memory (seconds)
+      OLLAMA_NOHISTORY: 1           # disable history if you don’t need it
+      OLLAMA_MAX_MEMORY: 8G
+      OLLAMA_NUM_THREADS: 4
+    entrypoint: >
+      sh -c "
+        ollama serve & 
+        sleep 5 && ollama pull mistral:7b-instruct-v0.3-q5_0 && wait
+      "
+    deploy:
+      resources:
+        limits:
+          cpus: "6"                  # limit Ollama to 6 CPU cores
+          memory: 12g                # cap RAM usage
+        reservations:
+          cpus: "4"                  # reserve at least 4 cores
+          memory: 8g                 # reserve 8GB RAM
+    # GPU support (only enable if you have NVIDIA GPU + drivers + runtime)
+    # runtime: nvidia
+    # environment:
+    #   NVIDIA_VISIBLE_DEVICES: all
+    #   NVIDIA_DRIVER_CAPABILITIES: compute,utility
+
+volumes:
+  ollama_data:
+  vllm_data:

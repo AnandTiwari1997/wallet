@@ -1,3 +1,8 @@
+/**
+ * @file Defines the repository for ProvidentFundTransaction entities.
+ * @author anandt1@
+ */
+
 import { Logger } from '../../core/logger.js';
 import { DataSource, Repository } from 'typeorm';
 import { ProvidentFundTransaction } from '../models/provident-fund-transaction.js';
@@ -7,16 +12,30 @@ import { SelectQueryBuilderExtended } from '../query-builder/SelectQueryBuilderE
 import { DriverUtils } from 'typeorm/driver/DriverUtils.js';
 import { MutualFundTransaction } from '../models/mutual-fund-transaction.js';
 
+// Logger for the ProvidentFundRepository.
 const logger: Logger = new Logger('ProvidentFundRepository');
 
+/**
+ * Repository for handling database operations for ProvidentFundTransaction entities.
+ * @extends Repository<ProvidentFundTransaction>
+ */
 class ProvidentFundRepository extends Repository<ProvidentFundTransaction> {
     private readonly dataSource: DataSource;
 
+    /**
+     * Creates an instance of ProvidentFundRepository.
+     * @param {DataSource} dataSource - The TypeORM data source.
+     */
     constructor(dataSource: DataSource) {
         super(ProvidentFundTransaction, dataSource.manager, dataSource.createQueryRunner());
         this.dataSource = dataSource;
     }
 
+    /**
+     * Creates an extended query builder for more complex queries.
+     * @param {string} [alias] - The alias for the table.
+     * @returns {SelectQueryBuilderExtended<ProvidentFundTransaction>} - The extended query builder.
+     */
     createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<ProvidentFundTransaction> {
         let selectQueryBuilderExtended = new SelectQueryBuilderExtended<ProvidentFundTransaction>(
             this.dataSource,
@@ -31,6 +50,11 @@ class ProvidentFundRepository extends Repository<ProvidentFundTransaction> {
         }
     }
 
+    /**
+     * Counts the number of groups based on the provided options.
+     * @param {FindManyOptionsExtended<MutualFundTransaction>} options - The find options.
+     * @returns {Promise<number>} - The number of groups.
+     */
     async countWithGroupBy(options: FindManyOptionsExtended<MutualFundTransaction>): Promise<number> {
         let innerQuery = this.createExtendedQueryBuilder(this.metadata.targetName);
         innerQuery.select('COUNT(1)');
@@ -43,6 +67,11 @@ class ProvidentFundRepository extends Repository<ProvidentFundTransaction> {
         return (await innerQuery.getRawMany()).length;
     }
 
+    /**
+     * Finds entities with grouping based on the provided options.
+     * @param {FindManyOptionsExtended<ProvidentFundTransaction>} options - The find options.
+     * @returns {Promise<ProvidentFundTransaction[]>} - The found entities.
+     */
     async findWithGroupBy(
         options: FindManyOptionsExtended<ProvidentFundTransaction>
     ): Promise<ProvidentFundTransaction[]> {
@@ -64,4 +93,7 @@ class ProvidentFundRepository extends Repository<ProvidentFundTransaction> {
     }
 }
 
+/**
+ * The singleton instance of the ProvidentFundRepository.
+ */
 export const providentFundRepository = new ProvidentFundRepository(databaseProvider.database);

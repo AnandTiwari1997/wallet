@@ -1,3 +1,8 @@
+/**
+ * @file Defines the repository for StockTransaction entities.
+ * @author anandt1@
+ */
+
 import { Logger } from '../../core/logger.js';
 import { DataSource, Repository } from 'typeorm';
 import { StockTransaction } from '../models/stock-transaction.js';
@@ -6,16 +11,30 @@ import { FindManyOptionsExtended } from '../find-options/FindManyOptionsExtended
 import { SelectQueryBuilderExtended } from '../query-builder/SelectQueryBuilderExtended.js';
 import { DriverUtils } from 'typeorm/driver/DriverUtils.js';
 
+// Logger for the StockTransactionRepository.
 const logger: Logger = new Logger('StockTransactionRepository');
 
+/**
+ * Repository for handling database operations for StockTransaction entities.
+ * @extends Repository<StockTransaction>
+ */
 class StockTransactionRepository extends Repository<StockTransaction> {
     private readonly dataSource: DataSource;
 
+    /**
+     * Creates an instance of StockTransactionRepository.
+     * @param {DataSource} dataSource - The TypeORM data source.
+     */
     constructor(dataSource: DataSource) {
         super(StockTransaction, dataSource.manager, dataSource.createQueryRunner());
         this.dataSource = dataSource;
     }
 
+    /**
+     * Creates an extended query builder for more complex queries.
+     * @param {string} [alias] - The alias for the table.
+     * @returns {SelectQueryBuilderExtended<StockTransaction>} - The extended query builder.
+     */
     createExtendedQueryBuilder(alias?: string): SelectQueryBuilderExtended<StockTransaction> {
         let selectQueryBuilderExtended = new SelectQueryBuilderExtended<StockTransaction>(
             this.dataSource,
@@ -30,6 +49,11 @@ class StockTransactionRepository extends Repository<StockTransaction> {
         }
     }
 
+    /**
+     * Finds entities with grouping based on the provided options.
+     * @param {FindManyOptionsExtended<StockTransaction>} options - The find options.
+     * @returns {Promise<StockTransaction[]>} - The found entities.
+     */
     async findWithGroupBy(options: FindManyOptionsExtended<StockTransaction>): Promise<StockTransaction[]> {
         logger.info(`findWithGroupBy :: Fetch :: Start`);
         let innerQuery1 = this.createExtendedQueryBuilder('stock');
@@ -71,4 +95,7 @@ class StockTransactionRepository extends Repository<StockTransaction> {
     }
 }
 
+/**
+ * The singleton instance of the StockTransactionRepository.
+ */
 export const stockTransactionRepository = new StockTransactionRepository(databaseProvider.database);
